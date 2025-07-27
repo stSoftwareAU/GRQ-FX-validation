@@ -12,8 +12,7 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-    <!-- Chart.js Financial Plugin for Candlestick -->
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.1.1/dist/chartjs-chart-financial.min.js"></script>
+
 
     <!-- Custom styles -->
     <link rel="stylesheet" href="styles.css">
@@ -100,8 +99,7 @@
                                         <div class="col-md-4">
                       <h6>Historical Data:</h6>
                       <ul class="list-unstyled">
-                        <li><span style="color: #28a745;">■</span> Bullish weekly candles (close ≥ open)</li>
-                        <li><span style="color: #dc3545;">■</span> Bearish weekly candles (close < open)</li>
+                        <li><span style="color: #6c757d;">●</span> Weekly average rates (52 weeks)</li>
                       </ul>
                     </div>
                     <div class="col-md-4">
@@ -127,7 +125,7 @@
                  <div class="alert alert-info mb-0">
                    <small>
                      <i class="fas fa-info-circle me-1"></i>
-                     Historical data shows weekly OHLC candlesticks. Actual rates will appear on this chart as they become available over time.
+                     Historical data shows actual weekly average rates from CSV files. Future actual rates will appear on this chart as they become available over time.
                    </small>
                  </div>
                </div>
@@ -169,43 +167,70 @@
       return `${sign}${value.toFixed(2)}%`;
     }
 
-    function generateWeeklyCandlestickData(predictionDate, currentRate, weeks = 52) {
-      const data = [];
-      const predictionDateObj = new Date(predictionDate);
-      
-      // Generate weekly candlestick data (52 weeks before prediction date)
-      for (let week = weeks; week >= 0; week--) {
-        const weekStart = new Date(predictionDateObj);
-        weekStart.setDate(weekStart.getDate() - (week * 7));
-        
-        // Generate OHLC for this week
-        const baseRate = currentRate * (1 + (Math.random() - 0.5) * 0.1); // Base rate with some variation
-        const weeklyVolatility = 0.02; // 2% weekly volatility
-        
-        // Generate 5 daily rates for the week (Mon-Fri)
-        const dailyRates = [];
-        for (let day = 0; day < 5; day++) {
-          const dayRate = baseRate * (1 + (Math.random() - 0.5) * weeklyVolatility);
-          dailyRates.push(dayRate);
+          async function loadHistoricalData(predictionDate, fxPair) {
+        // Load the CSV file for this FX pair
+        const response = await fetch(`${predictionDate}/${fxPair}.csv`);
+        if (!response.ok) {
+          throw new Error(`Failed to load ${fxPair}.csv`);
         }
         
-        // Calculate OHLC
-        const open = dailyRates[0];
-        const high = Math.max(...dailyRates);
-        const low = Math.min(...dailyRates);
-        const close = dailyRates[4];
+        const csvText = await response.text();
+        const lines = csvText.split('\n').filter(line => line.trim());
         
-        data.push({
-          x: weekStart.getTime(),
-          o: open,
-          h: high,
-          l: low,
-          c: close
-        });
+        // Skip header line
+        const dataLines = lines.slice(1);
+        
+        // Parse CSV data
+        const dailyData = [];
+        for (const line of dataLines) {
+          const [dateStr, rateStr] = line.split(',');
+          if (dateStr && rateStr) {
+            const date = new Date(dateStr);
+            const rate = parseFloat(rateStr);
+            if (!isNaN(rate)) {
+              dailyData.push({ date, rate });
+            }
+          }
+        }
+        
+        // Calculate weekly averages
+        const weeklyData = [];
+        
+        // Group data by weeks (Monday to Sunday)
+        const weeklyGroups = {};
+        
+        for (const point of dailyData) {
+          // Get the Monday of the week containing this date
+          const dayOfWeek = point.date.getDay();
+          const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday = 0, Monday = 1
+          const monday = new Date(point.date);
+          monday.setDate(monday.getDate() - daysToMonday);
+          
+          const weekKey = monday.toISOString().split('T')[0];
+          
+          if (!weeklyGroups[weekKey]) {
+            weeklyGroups[weekKey] = [];
+          }
+          weeklyGroups[weekKey].push(point.rate);
+        }
+        
+        // Calculate weekly averages and create chart data
+        for (const [weekKey, rates] of Object.entries(weeklyGroups)) {
+          if (rates.length > 0) {
+            const averageRate = rates.reduce((sum, rate) => sum + rate, 0) / rates.length;
+            const weekDate = new Date(weekKey);
+            
+            weeklyData.push({
+              x: weekDate.getTime(),
+              y: averageRate
+            });
+          }
+        }
+        
+        // Sort by date and return last 52 weeks
+        weeklyData.sort((a, b) => a.x - b.x);
+        return weeklyData.slice(-52);
       }
-      
-      return data;
-    }
 
     // Main FX Validator class
     class GRQFXValidator {
@@ -384,9 +409,9 @@
         }
       }
 
-      selectFXPair(pairName) {
+      async selectFXPair(pairName) {
         this.selectedPair = pairName;
-        this.showChartView();
+        await this.showChartView();
       }
 
       showFXPairs() {
@@ -399,14 +424,14 @@
         document.getElementById('chartView').style.display = 'none';
       }
 
-      showChartView() {
+      async showChartView() {
         document.getElementById('fxPairsContainer').style.display = 'none';
         document.getElementById('chartView').style.display = 'block';
         
-        this.updateChartView();
+        await this.updateChartView();
       }
 
-      updateChartView() {
+      async updateChartView() {
         if (!this.predictionData || !this.selectedPair) return;
 
         const pair = this.predictionData.results.find(p => p.pair === this.selectedPair);
@@ -434,10 +459,10 @@
           chartTitle.textContent = `${pair.pair} Rate Analysis`;
         }
 
-        this.updateChart(pair);
+        await this.updateChart(pair);
       }
 
-      updateChart(pair) {
+      async updateChart(pair) {
         if (this.chart) {
           this.chart.destroy();
         }
@@ -448,8 +473,15 @@
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Generate weekly candlestick data
-        const candlestickData = generateWeeklyCandlestickData(this.predictionData.date, pair.currentRate);
+        // Load actual historical data from CSV
+        let weeklyData;
+        try {
+          weeklyData = await loadHistoricalData(this.predictionData.date, pair.pair);
+        } catch (error) {
+          console.error(`Error loading historical data for ${pair.pair}:`, error);
+          this.showError(`No historical data available for ${pair.pair}. CSV file may be missing.`);
+          return;
+        }
 
         // Create prediction line data (smooth curve through prediction points)
         const predictionLineData = [];
@@ -473,21 +505,18 @@
 
         const datasets = [
           {
-            label: 'Historical Weekly Candlesticks',
-            data: candlestickData,
-            type: 'candlestick',
+            label: 'Historical Weekly Averages',
+            data: weeklyData,
             borderColor: '#6c757d',
-            backgroundColor: function(context) {
-              const point = context.raw;
-              return point.c >= point.o ? '#28a745' : '#dc3545'; // Green for bullish, red for bearish
-            },
-            borderWidth: 1,
-            pointRadius: 0
+            backgroundColor: 'rgba(108, 117, 125, 0.1)',
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: false,
+            tension: 0.1
           },
           {
             label: 'Predicted Path',
             data: predictionLineData,
-            type: 'line',
             borderColor: '#667eea',
             backgroundColor: 'rgba(102, 126, 234, 0.1)',
             borderWidth: 3,
@@ -505,7 +534,6 @@
             x: predictionDate.getTime(),
             y: pair.currentRate
           }],
-          type: 'line',
           borderColor: '#dc3545',
           backgroundColor: '#dc3545',
           borderWidth: 0,
@@ -528,7 +556,6 @@
               x: date.getTime(),
               y: prediction.predictedRate
             }],
-            type: 'line',
             borderColor: predictionColors[index],
             backgroundColor: predictionColors[index],
             borderWidth: 0,
@@ -540,7 +567,7 @@
 
         if (typeof Chart !== 'undefined') {
           this.chart = new Chart(ctx, {
-            type: 'candlestick',
+            type: 'line',
             data: { datasets },
             options: {
               responsive: true,
@@ -568,17 +595,7 @@
                       });
                     },
                     label: function(context) {
-                      if (context.dataset.type === 'candlestick') {
-                        const point = context.raw;
-                        return [
-                          `Open: ${formatCurrency(point.o)}`,
-                          `High: ${formatCurrency(point.h)}`,
-                          `Low: ${formatCurrency(point.l)}`,
-                          `Close: ${formatCurrency(point.c)}`
-                        ];
-                      } else {
-                        return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
-                      }
+                      return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
                     }
                   }
                 }
