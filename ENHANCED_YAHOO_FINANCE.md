@@ -4,9 +4,10 @@ The Yahoo Finance integration has been significantly enhanced to provide compreh
 
 ## New Features
 
-### 1. **FX Pair Descriptions**
-- **Human-readable descriptions**: Each FX pair now shows a clear description (e.g., "Australian Dollar → US Dollar" for AUDUSD)
-- **Comprehensive coverage**: Supports 100+ major FX pairs with proper descriptions
+### 1. **Dynamic FX Pair Descriptions**
+- **Dynamic fetching**: FX pair descriptions are fetched directly from Yahoo Finance
+- **No hardcoded data**: All descriptions are retrieved dynamically from the API
+- **Automatic updates**: Descriptions update automatically as Yahoo Finance data changes
 - **Yahoo Finance links**: Direct links to view each pair on Yahoo Finance
 
 ### 2. **Comprehensive Historical Ranges**
@@ -36,8 +37,8 @@ The Yahoo Finance integration has been significantly enhanced to provide compreh
 
 ### **Time Periods Used**
 - **1 Year**: Last 12 months of daily data
-- **5 Year**: Last 5 years of daily data  
-- **10 Year**: Last 10 years of daily data (maximum available)
+- **5 Year**: Last 5 years of weekly data (optimized for performance)
+- **10 Year**: Last 10 years of monthly data (optimized for performance)
 
 ## Data Validation Features
 
@@ -56,43 +57,38 @@ The Yahoo Finance integration has been significantly enhanced to provide compreh
 
 ## FX Pair Coverage
 
-The system supports major FX pairs including:
+The system dynamically supports any FX pair available on Yahoo Finance:
 
-### **Major Pairs**
-- AUDUSD, USDAUD (Australian Dollar)
-- EURUSD, USDEUR (Euro)
-- GBPUSD, USDGBP (British Pound)
-- USDJPY, JPYUSD (Japanese Yen)
-- USDCAD, CADUSD (Canadian Dollar)
+### **Dynamic Support**
+- **No hardcoded pairs**: Supports any FX pair that Yahoo Finance provides
+- **Automatic discovery**: New FX pairs are automatically supported
+- **Real-time validation**: Only shows pairs that have valid data
+- **Flexible naming**: Supports standard FX pair formats (e.g., AUDUSD, EURUSD, etc.)
 
-### **Commodity Pairs**
-- USDCHF, CHFUSD (Swiss Franc)
-- USDNZD, NZDUSD (New Zealand Dollar)
-
-### **Emerging Market Pairs**
-- USDCNY, CNYUSD (Chinese Yuan)
-- USDMXN, MXNUSD (Mexican Peso)
-- USDBRL, BRLUSD (Brazilian Real)
-- USDINR, INRUSD (Indian Rupee)
-- USDKRW, KRWUSD (South Korean Won)
-
-### **Cross Pairs**
-- AUDCAD, CADAUD
-- AUDEUR, EURAUD
-- AUDGBP, GBPAUD
-- EURJPY, JPYEUR
-- And many more...
+### **Common FX Pairs**
+The system works with major, minor, and exotic FX pairs including:
+- **Major pairs**: USD, EUR, GBP, JPY, AUD, CAD, CHF, CNY
+- **Cross pairs**: Any combination of major currencies
+- **Emerging markets**: MXN, BRL, INR, KRW, SGD, HKD, and many more
+- **Commodity currencies**: AUD, CAD, NZD, NOK, RUB
 
 ## Technical Implementation
 
 ### **API Endpoints Used**
 ```
-https://query1.finance.yahoo.com/v8/finance/chart/{SYMBOL}=X
+https://query1.finance.yahoo.com/v8/finance/chart/{SYMBOL}=X?interval={INTERVAL}
 ```
+
+**Available Intervals:**
+- `1d` - Daily data (default for 1Y periods)
+- `1wk` - Weekly data (used for 5Y periods)
+- `1mo` - Monthly data (used for 10Y periods)
 
 ### **Data Processing**
 - **Multi-proxy fallback**: Uses 3 different CORS proxies for reliability
 - **Rate limiting protection**: Delays between requests to avoid limits
+- **Optimized intervals**: Uses weekly/monthly data for longer periods to reduce data size
+- **Dynamic descriptions**: Fetches FX pair descriptions directly from Yahoo Finance
 - **Error handling**: Comprehensive error handling and fallback mechanisms
 - **Data validation**: Ensures data quality and completeness
 
