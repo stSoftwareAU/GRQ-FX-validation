@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GRQ FX Validation - Setup Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .test-section {
+        background: white;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .success {
+        color: #28a745;
+        font-weight: bold;
+      }
+      .error {
+        color: #dc3545;
+        font-weight: bold;
+      }
+      .info {
+        color: #17a2b8;
+      }
+      button {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+      }
+      button:hover {
+        background: #764ba2;
+      }
+      #results {
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>GRQ FX Validation - Setup Test</h1>
+
+    <div class="test-section">
+      <h2>Setup Verification</h2>
+      <p>
+        This page tests the GRQ FX validation setup to ensure everything is
+        working correctly.
+      </p>
+
+      <button onclick="runTests()">Run All Tests</button>
+      <button onclick="testIndexFile()">Test Index File</button>
+      <button onclick="testPredictionFile()">Test Prediction File</button>
+      <button onclick="testMainPage()">Test Main Page</button>
+
+      <div id="results"></div>
+    </div>
+
+    <div class="test-section">
+      <h2>Files Check</h2>
+      <div id="filesCheck"></div>
+    </div>
+
+    <script>
+      function log(message, type = 'info') {
+        const results = document.getElementById('results');
+        const div = document.createElement('div');
+        div.className = type;
+        div.textContent = `[${
+          new Date().toLocaleTimeString()
+        }] ${message}`;
+        results.appendChild(div);
+      }
+
+      function checkFiles() {
+        const files = [
+          'index.json',
+          'index.html',
+          'app.js',
+          'styles.css',
+          'list.html',
+          'list.js',
+          'list.css',
+          'logo.png',
+          '2025-07-27/predictions.json',
+        ];
+
+        const filesCheck = document.getElementById('filesCheck');
+        filesCheck.innerHTML = '<h3>Required Files:</h3>';
+
+        files.forEach((file) => {
+          fetch(file)
+            .then((response) => {
+              const div = document.createElement('div');
+              if (response.ok) {
+                div.innerHTML =
+                  `<span class="success">✓</span> ${file} - Found`;
+              } else {
+                div.innerHTML =
+                  `<span class="error">✗</span> ${file} - Missing (${response.status})`;
+              }
+              filesCheck.appendChild(div);
+            })
+            .catch((error) => {
+              const div = document.createElement('div');
+              div.innerHTML =
+                `<span class="error">✗</span> ${file} - Error: ${error.message}`;
+              filesCheck.appendChild(div);
+            });
+        });
+      }
+
+      async function testIndexFile() {
+        log('Testing index.json file...');
+        try {
+          const response = await fetch('index.json');
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const data = await response.json();
+          log(
+            `✓ Index file loaded successfully. Found ${
+              Object.keys(data.entries).length
+            } entries.`,
+            'success',
+          );
+          return true;
+        } catch (error) {
+          log(`✗ Failed to load index.json: ${error.message}`, 'error');
+          return false;
+        }
+      }
+
+      async function testPredictionFile() {
+        log('Testing prediction file...');
+        try {
+          const response = await fetch('2025-07-27/predictions.json');
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const data = await response.json();
+          log(
+            `✓ Prediction file loaded successfully. Found ${data.totalPredictions} predictions.`,
+            'success',
+          );
+          return true;
+        } catch (error) {
+          log(
+            `✗ Failed to load prediction file: ${error.message}`,
+            'error',
+          );
+          return false;
+        }
+      }
+
+      async function testMainPage() {
+        log('Testing main page functionality...');
+        try {
+          const response = await fetch('index.html');
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+          const html = await response.text();
+          if (html.includes('GRQ FX Validation Dashboard')) {
+            log('✓ Main page HTML loaded successfully.', 'success');
+            return true;
+          } else {
+            throw new Error('Main page content not found');
+          }
+        } catch (error) {
+          log(`✗ Failed to load main page: ${error.message}`, 'error');
+          return false;
+        }
+      }
+
+      async function runTests() {
+        log('Starting comprehensive tests...');
+        document.getElementById('results').innerHTML = '';
+
+        const tests = [
+          testIndexFile,
+          testPredictionFile,
+          testMainPage,
+        ];
+
+        let passed = 0;
+        for (const test of tests) {
+          const result = await test();
+          if (result) passed++;
+        }
+
+        log(
+          `Tests completed: ${passed}/${tests.length} passed.`,
+          passed === tests.length ? 'success' : 'error',
+        );
+
+        if (passed === tests.length) {
+          log(
+            '🎉 All tests passed! The FX validation setup is working correctly.',
+            'success',
+          );
+        } else {
+          log(
+            '⚠️ Some tests failed. Please check the errors above.',
+            'error',
+          );
+        }
+      }
+
+      // Run file check on page load
+      checkFiles();
+    </script>
+  </body>
+</html>
