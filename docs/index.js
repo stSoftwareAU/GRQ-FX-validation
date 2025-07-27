@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.12";
+const VERSION = "1.0.13";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -932,7 +932,7 @@ class GRQFXValidator {
         this.displayYahooFinanceData(fullData, pair, comprehensiveData);
         
         // Add Yahoo Finance data to chart if available
-        this.addYahooFinanceToChart(fullData, comprehensiveData);
+        this.addYahooFinanceToChart(comprehensiveData);
       } else {
         this.showYahooFinanceError('No valid data received from Yahoo Finance');
       }
@@ -1162,7 +1162,7 @@ class GRQFXValidator {
     return validationHTML;
   }
 
-  addYahooFinanceToChart(yahooData, comprehensiveData = null) {
+  addYahooFinanceToChart(comprehensiveData = null) {
     if (!this.chart) return;
 
     // Only add historical range lines, not daily data
