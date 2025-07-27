@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
-        const VERSION="1.0.2";
+        const VERSION="1.0.3";
         document.title=`GRQ FX Validation Dashboard v${VERSION}`;
     </script>
     <link rel="icon" type="image/png" href="logo.png">
@@ -92,6 +92,73 @@
                   </div>
                 </div>
 
+              <!-- Yahoo Finance Data -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="card-title mb-0">Yahoo Finance Data Validation</h5>
+                </div>
+                <div class="card-body">
+                  <div id="yahooDataLoading" class="text-center py-3" style="display: none;">
+                    <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Loading Yahoo Finance data...</span>
+                    </div>
+                    <p class="mt-2">Fetching Yahoo Finance data for validation...</p>
+                  </div>
+                  
+                  <div id="yahooDataContent" style="display: none;">
+                    <div class="row">
+                      <div class="col-md-6">
+                        <h6>Yahoo Finance Summary:</h6>
+                        <div class="table-responsive">
+                          <table class="table table-sm">
+                            <tbody>
+                              <tr>
+                                <td><strong>Current Rate:</strong></td>
+                                <td id="yahooCurrentRate">-</td>
+                              </tr>
+                              <tr>
+                                <td><strong>Data Range:</strong></td>
+                                <td id="yahooDataRange">-</td>
+                              </tr>
+                              <tr>
+                                <td><strong>Min Rate:</strong></td>
+                                <td id="yahooMinRate">-</td>
+                              </tr>
+                              <tr>
+                                <td><strong>Max Rate:</strong></td>
+                                <td id="yahooMaxRate">-</td>
+                              </tr>
+                              <tr>
+                                <td><strong>Data Points:</strong></td>
+                                <td id="yahooDataPoints">-</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <h6>Data Validation:</h6>
+                        <div id="yahooValidationResults">
+                          <div class="alert alert-info">
+                            <small>
+                              <i class="fas fa-info-circle me-1"></i>
+                              Yahoo Finance data will be used to validate your CSV data and show min/max ranges.
+                            </small>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div id="yahooDataError" class="alert alert-warning" style="display: none;">
+                    <small>
+                      <i class="fas fa-exclamation-triangle me-1"></i>
+                      Unable to fetch Yahoo Finance data. This may be due to rate limiting or network issues.
+                    </small>
+                  </div>
+                </div>
+              </div>
+
               <!-- Legend -->
               <div class="card">
                   <div class="card-header">
@@ -99,29 +166,37 @@
                   </div>
                   <div class="card-body">
                     <div class="row">
-                                        <div class="col-md-4">
-                      <h6>Historical Data:</h6>
-                      <ul class="list-unstyled">
-                        <li><span style="color: #6c757d;">●</span> Weekly average rates (52 weeks)</li>
-                      </ul>
-                    </div>
-                    <div class="col-md-4">
-                      <h6>Prediction Elements:</h6>
-                      <ul class="list-unstyled">
-                        <li><span style="color: #dc3545;">◆</span> Prediction date marker</li>
-                        <li><span style="color: #667eea;">┅</span> Predicted path (theoretical trajectory)</li>
-                      </ul>
-                        </div>
-                    <div class="col-md-4">
-                      <h6>Predicted Rates:</h6>
-                      <ul class="list-unstyled">
-                        <li><span style="color: #ff6b6b;">●</span> Monthly (30 days)</li>
-                        <li><span style="color: #4ecdc4;">●</span> Quarterly (90 days)</li>
-                        <li><span style="color: #45b7d1;">●</span> Half-Year (180 days)</li>
-                        <li><span style="color: #96ceb4;">●</span> 3-Quarters (270 days)</li>
-                        <li><span style="color: #feca57;">●</span> Full-Year (365 days)</li>
-                      </ul>
-                    </div>
+                      <div class="col-md-3">
+                        <h6>Historical Data:</h6>
+                        <ul class="list-unstyled">
+                          <li><span style="color: #6c757d;">●</span> Weekly average rates (52 weeks)</li>
+                          <li><span style="color: #28a745;">●</span> Yahoo Finance daily rates</li>
+                        </ul>
+                      </div>
+                      <div class="col-md-3">
+                        <h6>Prediction Elements:</h6>
+                        <ul class="list-unstyled">
+                          <li><span style="color: #dc3545;">◆</span> Prediction date marker</li>
+                          <li><span style="color: #667eea;">┅</span> Predicted path (theoretical trajectory)</li>
+                        </ul>
+                      </div>
+                      <div class="col-md-3">
+                        <h6>Predicted Rates:</h6>
+                        <ul class="list-unstyled">
+                          <li><span style="color: #ff6b6b;">●</span> Monthly (30 days)</li>
+                          <li><span style="color: #4ecdc4;">●</span> Quarterly (90 days)</li>
+                          <li><span style="color: #45b7d1;">●</span> Half-Year (180 days)</li>
+                          <li><span style="color: #96ceb4;">●</span> 3-Quarters (270 days)</li>
+                          <li><span style="color: #feca57;">●</span> Full-Year (365 days)</li>
+                        </ul>
+                      </div>
+                      <div class="col-md-3">
+                        <h6>Yahoo Finance Range:</h6>
+                        <ul class="list-unstyled">
+                          <li><span style="color: #dc3545;">┅</span> Min rate (dashed)</li>
+                          <li><span style="color: #ffc107;">┅</span> Max rate (dashed)</li>
+                        </ul>
+                      </div>
                     </div>
                                  <div class="row mt-3">
                <div class="col-12">
@@ -153,6 +228,114 @@
   <script>
     // Set version display
     document.getElementById('version').textContent = VERSION;
+  </script>
+
+  <script>
+    // Yahoo Finance API utilities
+    class YahooFinanceAPI {
+      constructor() {
+        this.proxies = [
+          'https://api.allorigins.win/raw?url=',
+          'https://corsproxy.io/?',
+          'https://thingproxy.freeboard.io/fetch/'
+        ];
+      }
+
+      // Convert FX pair to Yahoo Finance symbol format
+      convertFXPairToSymbol(fxPair) {
+        // Yahoo Finance uses format like "USDAUD=X" for FX pairs
+        return `${fxPair}=X`;
+      }
+
+      // Fetch FX data from Yahoo Finance with multiple proxy fallbacks
+      async fetchFXData(fxPair, startDate, endDate) {
+        const symbol = this.convertFXPairToSymbol(fxPair);
+        const startTimestamp = Math.floor(startDate.getTime() / 1000);
+        const endTimestamp = Math.floor(endDate.getTime() / 1000);
+        
+        const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${startTimestamp}&period2=${endTimestamp}&interval=1d`;
+        
+        console.log(`Fetching ${fxPair} data from Yahoo Finance...`);
+        
+        for (let i = 0; i < this.proxies.length; i++) {
+          try {
+            console.log(`Attempting ${fxPair} fetch with proxy ${i + 1}/${this.proxies.length}...`);
+            const proxyUrl = this.proxies[i] + encodeURIComponent(yahooUrl);
+            
+            const response = await Promise.race([
+              fetch(proxyUrl, { method: 'GET' }),
+              new Promise((_, reject) => setTimeout(() => reject(new Error(`${fxPair} request timeout`)), 8000))
+            ]);
+            
+            if (!response.ok) {
+              throw new Error(`${fxPair} API request failed: ${response.status} ${response.statusText}`);
+            }
+            
+            const responseText = await response.text();
+            if (responseText.includes('Too Many Requests') || responseText.includes('rate limit')) {
+              throw new Error('Yahoo Finance rate limit exceeded');
+            }
+            
+            const data = JSON.parse(responseText);
+            console.log(`${fxPair} raw data (proxy ${i + 1}):`, data);
+            return data;
+          } catch (error) {
+            console.warn(`${fxPair} fetch failed with proxy ${i + 1}:`, error);
+            if (i === this.proxies.length - 1) {
+              console.warn(`${fxPair} fetch failed with all proxies`);
+              return null;
+            }
+          }
+        }
+        return null;
+      }
+
+      // Process Yahoo Finance data for FX pairs
+      processFXData(yahooData, fxPair) {
+        if (!yahooData.chart || !yahooData.chart.result || !yahooData.chart.result[0]) {
+          console.warn(`No data available for ${fxPair}`);
+          return null;
+        }
+
+        const result = yahooData.chart.result[0];
+        const timestamps = result.timestamp;
+        const quotes = result.indicators.quote[0];
+        const closes = quotes.close;
+        const highs = quotes.high;
+        const lows = quotes.low;
+
+        const data = [];
+        for (let i = 0; i < timestamps.length; i++) {
+          if (closes[i] !== null && closes[i] !== undefined) {
+            const date = new Date(timestamps[i] * 1000);
+            data.push({
+              date: date,
+              close: closes[i],
+              high: highs[i] || closes[i],
+              low: lows[i] || closes[i]
+            });
+          }
+        }
+
+        // Calculate min/max range
+        const validData = data.filter(d => d.high && d.low);
+        const minRate = validData.length > 0 ? Math.min(...validData.map(d => d.low)) : null;
+        const maxRate = validData.length > 0 ? Math.max(...validData.map(d => d.high)) : null;
+
+        return {
+          fxPair: fxPair,
+          data: data,
+          initialPrice: data.length > 0 ? data[0].close : null,
+          currentPrice: data.length > 0 ? data[data.length - 1].close : null,
+          minRate: minRate,
+          maxRate: maxRate,
+          dataPoints: data.length
+        };
+      }
+    }
+
+    // Global Yahoo Finance API instance
+    const yahooAPI = new YahooFinanceAPI();
   </script>
 
   <script>
@@ -636,6 +819,187 @@
             },
           });
         }
+        
+        // Load Yahoo Finance data for validation
+        this.loadYahooFinanceData(pair);
+      }
+
+      async loadYahooFinanceData(pair) {
+        // Show loading state
+        this.showElement('yahooDataLoading');
+        this.hideElement('yahooDataContent');
+        this.hideElement('yahooDataError');
+
+        try {
+          // Calculate date range (1 year from prediction date)
+          const predictionDate = new Date(this.predictionData.date);
+          const startDate = new Date(predictionDate);
+          startDate.setFullYear(startDate.getFullYear() - 1);
+          const endDate = new Date();
+
+          // Fetch Yahoo Finance data
+          const yahooData = await yahooAPI.fetchFXData(pair.pair, startDate, endDate);
+          
+          if (yahooData) {
+            const processedData = yahooAPI.processFXData(yahooData, pair.pair);
+            if (processedData) {
+              this.displayYahooFinanceData(processedData, pair);
+              
+              // Add Yahoo Finance data to chart if available
+              this.addYahooFinanceToChart(processedData);
+            } else {
+              this.showYahooFinanceError('No valid data received from Yahoo Finance');
+            }
+          } else {
+            this.showYahooFinanceError('Failed to fetch data from Yahoo Finance');
+          }
+        } catch (error) {
+          console.error('Error loading Yahoo Finance data:', error);
+          this.showYahooFinanceError('Error loading Yahoo Finance data: ' + error.message);
+        }
+      }
+
+      displayYahooFinanceData(yahooData, pair) {
+        // Hide loading, show content
+        this.hideElement('yahooDataLoading');
+        this.showElement('yahooDataContent');
+
+        // Update summary table
+        document.getElementById('yahooCurrentRate').textContent = formatCurrency(yahooData.currentPrice);
+        document.getElementById('yahooDataRange').textContent = `${yahooData.data.length} days`;
+        document.getElementById('yahooMinRate').textContent = formatCurrency(yahooData.minRate);
+        document.getElementById('yahooMaxRate').textContent = formatCurrency(yahooData.maxRate);
+        document.getElementById('yahooDataPoints').textContent = yahooData.dataPoints;
+
+        // Validate data against CSV data
+        this.validateDataAgainstYahoo(yahooData, pair);
+      }
+
+      validateDataAgainstYahoo(yahooData, pair) {
+        const validationResults = document.getElementById('yahooValidationResults');
+        let validationHTML = '';
+
+        // Compare current rates
+        const csvCurrentRate = pair.currentRate;
+        const yahooCurrentRate = yahooData.currentPrice;
+        const rateDifference = Math.abs(csvCurrentRate - yahooCurrentRate);
+        const rateDifferencePercent = (rateDifference / csvCurrentRate) * 100;
+
+        if (rateDifferencePercent < 1) {
+          validationHTML += `
+            <div class="alert alert-success">
+              <small>
+                <i class="fas fa-check-circle me-1"></i>
+                Current rates match well (difference: ${formatCurrency(rateDifference)} / ${rateDifferencePercent.toFixed(2)}%)
+              </small>
+            </div>
+          `;
+        } else if (rateDifferencePercent < 5) {
+          validationHTML += `
+            <div class="alert alert-warning">
+              <small>
+                <i class="fas fa-exclamation-triangle me-1"></i>
+                Current rates differ by ${formatCurrency(rateDifference)} (${rateDifferencePercent.toFixed(2)}%)
+              </small>
+            </div>
+          `;
+        } else {
+          validationHTML += `
+            <div class="alert alert-danger">
+              <small>
+                <i class="fas fa-times-circle me-1"></i>
+                Large rate difference: ${formatCurrency(rateDifference)} (${rateDifferencePercent.toFixed(2)}%)
+              </small>
+            </div>
+          `;
+        }
+
+        // Add min/max range info
+        validationHTML += `
+          <div class="alert alert-info">
+            <small>
+              <i class="fas fa-info-circle me-1"></i>
+              Yahoo Finance range: ${formatCurrency(yahooData.minRate)} - ${formatCurrency(yahooData.maxRate)}
+            </small>
+          </div>
+        `;
+
+        validationResults.innerHTML = validationHTML;
+      }
+
+      addYahooFinanceToChart(yahooData) {
+        if (!this.chart || !yahooData.data || yahooData.data.length === 0) return;
+
+        // Convert Yahoo Finance data to chart format
+        const yahooChartData = yahooData.data.map(point => ({
+          x: point.date.getTime(),
+          y: point.close
+        }));
+
+        // Add Yahoo Finance data as a new dataset
+        this.chart.data.datasets.push({
+          label: 'Yahoo Finance Daily',
+          data: yahooChartData,
+          borderColor: '#28a745',
+          backgroundColor: 'rgba(40, 167, 69, 0.1)',
+          borderWidth: 1,
+          pointRadius: 0,
+          fill: false,
+          tension: 0.1
+        });
+
+        // Add min/max range lines
+        if (yahooData.minRate && yahooData.maxRate) {
+          const minLineData = yahooChartData.map(point => ({
+            x: point.x,
+            y: yahooData.minRate
+          }));
+
+          const maxLineData = yahooChartData.map(point => ({
+            x: point.x,
+            y: yahooData.maxRate
+          }));
+
+          this.chart.data.datasets.push({
+            label: 'Yahoo Min Rate',
+            data: minLineData,
+            borderColor: '#dc3545',
+            backgroundColor: 'rgba(220, 53, 69, 0.1)',
+            borderWidth: 1,
+            borderDash: [3, 3],
+            pointRadius: 0,
+            fill: false
+          });
+
+          this.chart.data.datasets.push({
+            label: 'Yahoo Max Rate',
+            data: maxLineData,
+            borderColor: '#ffc107',
+            backgroundColor: 'rgba(255, 193, 7, 0.1)',
+            borderWidth: 1,
+            borderDash: [3, 3],
+            pointRadius: 0,
+            fill: false
+          });
+        }
+
+        this.chart.update();
+      }
+
+      showYahooFinanceError(message) {
+        this.hideElement('yahooDataLoading');
+        this.hideElement('yahooDataContent');
+        this.showElement('yahooDataError');
+        
+        const errorElement = document.getElementById('yahooDataError');
+        if (errorElement) {
+          errorElement.innerHTML = `
+            <small>
+              <i class="fas fa-exclamation-triangle me-1"></i>
+              ${message}
+            </small>
+          `;
+        }
       }
 
       showLoading() {
@@ -679,4 +1043,3 @@
     </script>
   </body>
 </html>
-# Test comment
