@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.9";
+const VERSION = "1.0.10";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -1161,27 +1161,9 @@ class GRQFXValidator {
   }
 
   addYahooFinanceToChart(yahooData, comprehensiveData = null) {
-    if (!this.chart || !yahooData.data || yahooData.data.length === 0) return;
+    if (!this.chart) return;
 
-    // Convert Yahoo Finance data to chart format
-    const yahooChartData = yahooData.data.map(point => ({
-      x: point.date.getTime(),
-      y: point.close
-    }));
-
-    // Add Yahoo Finance data as a new dataset
-    this.chart.data.datasets.push({
-      label: 'Yahoo Finance Daily',
-      data: yahooChartData,
-      borderColor: '#28a745',
-      backgroundColor: 'rgba(40, 167, 69, 0.1)',
-      borderWidth: 1,
-      pointRadius: 0,
-      fill: false,
-      tension: 0.1
-    });
-
-    // Add historical range lines if comprehensive data is available
+    // Only add historical range lines, not daily data
     if (comprehensiveData) {
       this.addHistoricalRangeLines(comprehensiveData);
     }
