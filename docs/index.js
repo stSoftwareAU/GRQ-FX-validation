@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.4";
+const VERSION = "1.0.5";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -237,43 +237,85 @@ class YahooFinanceAPI {
     return null;
   }
 
-  // Fetch comprehensive FX data for multiple time periods
+  // Fetch comprehensive FX data for multiple time periods with true historical ranges
   async fetchComprehensiveFXData(fxPair) {
     const now = new Date();
-    const periods = [
-      { name: '1Y', years: 1, startDate: new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()) },
-      { name: '5Y', years: 5, startDate: new Date(now.getFullYear() - 5, now.getMonth(), now.getDate()) },
-      { name: '10Y', years: 10, startDate: new Date(now.getFullYear() - 10, now.getMonth(), now.getDate()) }
-    ];
-
-    const results = {};
     
-    for (const period of periods) {
-      try {
-        console.log(`Fetching ${fxPair} ${period.name} data...`);
-        
-        // Use optimized data fetching for longer periods to reduce data size
-        let data;
-        if (period.years >= 5) {
-          data = await this.fetchOptimizedFXData(fxPair, period.startDate, now);
-        } else {
-          data = await this.fetchFXData(fxPair, period.startDate, now);
-        }
-        
-        if (data) {
-          const processedData = await this.processFXData(data, fxPair);
-          if (processedData) {
-            results[period.name] = processedData;
-          }
-        }
-        // Add delay between requests to avoid rate limiting
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      } catch (error) {
-        console.warn(`Failed to fetch ${period.name} data for ${fxPair}:`, error);
-      }
+    // Calculate periods for true historical ranges
+    const oneYearAgo = new Date(now.getFullYear() - 1, now.getMonth(), now.getDate());
+    const fiveYearsAgo = new Date(now.getFullYear() - 5, now.getMonth(), now.getDate());
+    const tenYearsAgo = new Date(now.getFullYear() - 10, now.getMonth(), now.getDate());
+    
+    // Get maximum available historical data (up to 10 years or maximum available)
+    const maxHistoricalData = await this.fetchOptimizedFXData(fxPair, tenYearsAgo, now);
+    
+    if (!maxHistoricalData) {
+      console.warn(`No historical data available for ${fxPair}`);
+      return null;
     }
-
+    
+    // Process the full historical dataset
+    const processedHistoricalData = await this.processFXData(maxHistoricalData, fxPair);
+    
+    if (!processedHistoricalData || !processedHistoricalData.prices || processedHistoricalData.prices.length === 0) {
+      console.warn(`No processed historical data available for ${fxPair}`);
+      return null;
+    }
+    
+    // Calculate ranges for different periods from the full dataset
+    const results = {
+      '1Y': this.calculatePeriodRange(processedHistoricalData, oneYearAgo, now),
+      '5Y': this.calculatePeriodRange(processedHistoricalData, fiveYearsAgo, now),
+      '10Y': this.calculatePeriodRange(processedHistoricalData, tenYearsAgo, now),
+      'MAX': processedHistoricalData // Full dataset for reference
+    };
+    
+    console.log(`Calculated ranges for ${fxPair}:`, results);
     return results;
+  }
+
+  // Calculate min/max range for a specific time period from historical data
+  calculatePeriodRange(historicalData, startDate, endDate) {
+    if (!historicalData.prices || historicalData.prices.length === 0) {
+      return null;
+    }
+    
+    const startTimestamp = startDate.getTime();
+    const endTimestamp = endDate.getTime();
+    
+    // Filter prices within the specified period
+    const periodPrices = historicalData.prices.filter(price => {
+      return price.timestamp >= startTimestamp && price.timestamp <= endTimestamp;
+    });
+    
+    if (periodPrices.length === 0) {
+      return null;
+    }
+    
+    // Calculate min/max for this period
+    const prices = periodPrices.map(p => p.close);
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    
+    // Find the actual dates for min/max
+    const minPrice = periodPrices.find(p => p.close === min);
+    const maxPrice = periodPrices.find(p => p.close === max);
+    
+    return {
+      fxPair: historicalData.fxPair,
+      description: historicalData.description,
+      yahooUrl: historicalData.yahooUrl,
+      min: min,
+      max: max,
+      minDate: minPrice ? new Date(minPrice.timestamp) : null,
+      maxDate: maxPrice ? new Date(maxPrice.timestamp) : null,
+      dataPoints: periodPrices.length,
+      period: {
+        start: startDate,
+        end: endDate,
+        days: Math.ceil((endTimestamp - startTimestamp) / (1000 * 60 * 60 * 24))
+      }
+    };
   }
 
   // Process Yahoo Finance data for FX pairs
@@ -868,7 +910,7 @@ class GRQFXValidator {
         this.displayYahooFinanceData(currentData, pair, comprehensiveData);
         
         // Add Yahoo Finance data to chart if available
-        this.addYahooFinanceToChart(currentData);
+        this.addYahooFinanceToChart(currentData, comprehensiveData);
       } else {
         this.showYahooFinanceError('No valid data received from Yahoo Finance');
       }
@@ -909,7 +951,7 @@ class GRQFXValidator {
     }
 
     // Validate data against CSV data
-    this.validateDataAgainstYahoo(yahooData, pair);
+    this.validateDataAgainstYahoo(yahooData, pair, comprehensiveData);
   }
 
   updateHistoricalRanges(comprehensiveData) {
@@ -921,16 +963,24 @@ class GRQFXValidator {
       
       if (comprehensiveData[period]) {
         const data = comprehensiveData[period];
-        const minRate = formatCurrency(data.minRate);
-        const maxRate = formatCurrency(data.maxRate);
-        element.textContent = `${minRate} - ${maxRate}`;
+        const minRate = formatCurrency(data.min);
+        const maxRate = formatCurrency(data.max);
+        
+        // Format dates for min/max
+        const minDate = data.minDate ? data.minDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A';
+        const maxDate = data.maxDate ? data.maxDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'N/A';
+        
+        element.innerHTML = `
+          <div><strong>Range:</strong> ${minRate} - ${maxRate}</div>
+          <div><small>Min: ${minDate} | Max: ${maxDate}</small></div>
+        `;
       } else {
         element.textContent = 'N/A';
       }
     });
   }
 
-  validateDataAgainstYahoo(yahooData, pair) {
+  validateDataAgainstYahoo(yahooData, pair, comprehensiveData = null) {
     const validationResults = document.getElementById('yahooValidationResults');
     let validationHTML = '';
 
@@ -967,6 +1017,11 @@ class GRQFXValidator {
           </small>
         </div>
       `;
+    }
+
+    // Validate historical ranges if comprehensive data is available
+    if (comprehensiveData) {
+      validationHTML += this.validateHistoricalRanges(pair, comprehensiveData);
     }
 
     // Add comprehensive validation info
@@ -1016,7 +1071,77 @@ class GRQFXValidator {
     validationResults.innerHTML = validationHTML;
   }
 
-  addYahooFinanceToChart(yahooData) {
+  validateHistoricalRanges(pair, comprehensiveData) {
+    let validationHTML = '<div class="mt-3"><h6>Historical Range Validation:</h6>';
+    
+    // Get your data's min/max from the chart data
+    const chartData = window.chartData;
+    if (!chartData || !chartData.datasets || chartData.datasets.length === 0) {
+      return '<div class="alert alert-warning"><small>No chart data available for range validation</small></div>';
+    }
+    
+    // Find the actuals dataset (your CSV data)
+    const actualsDataset = chartData.datasets.find(dataset => dataset.label === 'Actuals');
+    if (!actualsDataset || !actualsDataset.data || actualsDataset.data.length === 0) {
+      return '<div class="alert alert-warning"><small>No actuals data available for range validation</small></div>';
+    }
+    
+    // Calculate your data's min/max
+    const yourPrices = actualsDataset.data.map(point => point.y).filter(price => price !== null && !isNaN(price));
+    if (yourPrices.length === 0) {
+      return '<div class="alert alert-warning"><small>No valid price data in actuals for range validation</small></div>';
+    }
+    
+    const yourMin = Math.min(...yourPrices);
+    const yourMax = Math.max(...yourPrices);
+    
+    validationHTML += `
+      <div class="alert alert-info">
+        <small>
+          <strong>Your Data Range:</strong> ${formatCurrency(yourMin)} - ${formatCurrency(yourMax)}
+        </small>
+      </div>
+    `;
+    
+    // Compare with Yahoo Finance ranges
+    const periods = ['1Y', '5Y', '10Y'];
+    periods.forEach(period => {
+      if (comprehensiveData[period]) {
+        const yahooData = comprehensiveData[period];
+        const yahooMin = yahooData.min;
+        const yahooMax = yahooData.max;
+        
+        // Check if your data is within Yahoo's range
+        const yourMinInRange = yourMin >= yahooMin && yourMin <= yahooMax;
+        const yourMaxInRange = yourMax >= yahooMin && yourMax <= yahooMax;
+        
+        let alertClass = 'alert-success';
+        let icon = 'fas fa-check-circle';
+        let message = 'Range matches Yahoo Finance';
+        
+        if (!yourMinInRange || !yourMaxInRange) {
+          alertClass = 'alert-danger';
+          icon = 'fas fa-exclamation-triangle';
+          message = 'ERROR: Your data range is outside Yahoo Finance range!';
+        }
+        
+        validationHTML += `
+          <div class="alert ${alertClass}">
+            <small>
+              <i class="${icon} me-1"></i>
+              <strong>${period} Range:</strong> ${message}<br>
+              <small>Yahoo: ${formatCurrency(yahooMin)} - ${formatCurrency(yahooMax)}</small>
+            </small>
+          </div>
+        `;
+      }
+    });
+    
+    validationHTML += '</div>';
+    return validationHTML;
+  }
+
+  addYahooFinanceToChart(yahooData, comprehensiveData = null) {
     if (!this.chart || !yahooData.data || yahooData.data.length === 0) return;
 
     // Convert Yahoo Finance data to chart format
@@ -1036,6 +1161,11 @@ class GRQFXValidator {
       fill: false,
       tension: 0.1
     });
+
+    // Add historical range lines if comprehensive data is available
+    if (comprehensiveData) {
+      this.addHistoricalRangeLines(comprehensiveData);
+    }
 
     // Add min/max range lines
     if (yahooData.minRate && yahooData.maxRate) {
@@ -1073,6 +1203,64 @@ class GRQFXValidator {
     }
 
     this.chart.update();
+  }
+
+  addHistoricalRangeLines(comprehensiveData) {
+    if (!this.chart) return;
+
+    const periods = [
+      { name: '1Y', color: '#dc3545', dash: [3, 3] },
+      { name: '5Y', color: '#fd7e14', dash: [5, 5] },
+      { name: '10Y', color: '#6f42c1', dash: [7, 7] }
+    ];
+
+    periods.forEach(period => {
+      if (comprehensiveData[period.name]) {
+        const data = comprehensiveData[period.name];
+        
+        // Get chart time range
+        const chartData = this.chart.data.datasets[0]?.data || [];
+        if (chartData.length === 0) return;
+        
+        const minX = Math.min(...chartData.map(point => point.x));
+        const maxX = Math.max(...chartData.map(point => point.x));
+        
+        // Create horizontal lines for min and max
+        const minLineData = [
+          { x: minX, y: data.min },
+          { x: maxX, y: data.min }
+        ];
+        
+        const maxLineData = [
+          { x: minX, y: data.max },
+          { x: maxX, y: data.max }
+        ];
+        
+        // Add min line
+        this.chart.data.datasets.push({
+          label: `Yahoo ${period.name} Min`,
+          data: minLineData,
+          borderColor: period.color,
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: period.dash,
+          pointRadius: 0,
+          fill: false
+        });
+        
+        // Add max line
+        this.chart.data.datasets.push({
+          label: `Yahoo ${period.name} Max`,
+          data: maxLineData,
+          borderColor: period.color,
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: period.dash,
+          pointRadius: 0,
+          fill: false
+        });
+      }
+    });
   }
 
   showYahooFinanceError(message) {
