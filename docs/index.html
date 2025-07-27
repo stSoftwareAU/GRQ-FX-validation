@@ -11,7 +11,9 @@
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <!-- Chart.js Financial Plugin for Candlestick -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.1.1/dist/chartjs-chart-financial.min.js"></script>
 
     <!-- Custom styles -->
     <link rel="stylesheet" href="styles.css">
@@ -95,12 +97,13 @@
                   </div>
                   <div class="card-body">
                     <div class="row">
-                    <div class="col-md-4">
+                                        <div class="col-md-4">
                       <h6>Historical Data:</h6>
                       <ul class="list-unstyled">
-                        <li><span style="color: #6c757d;">●</span> Historical rates (12 months before prediction)</li>
+                        <li><span style="color: #28a745;">■</span> Bullish weekly candles (close ≥ open)</li>
+                        <li><span style="color: #dc3545;">■</span> Bearish weekly candles (close < open)</li>
                       </ul>
-                          </div>
+                    </div>
                     <div class="col-md-4">
                       <h6>Prediction Elements:</h6>
                       <ul class="list-unstyled">
@@ -119,16 +122,16 @@
                       </ul>
                     </div>
                     </div>
-                    <div class="row mt-3">
-                      <div class="col-12">
-                        <div class="alert alert-info mb-0">
-                          <small>
-                            <i class="fas fa-info-circle me-1"></i>
-                          Actual rates will appear on this chart as they become available over time.
-                          </small>
-                      </div>
-                    </div>
-                    </div>
+                                 <div class="row mt-3">
+               <div class="col-12">
+                 <div class="alert alert-info mb-0">
+                   <small>
+                     <i class="fas fa-info-circle me-1"></i>
+                     Historical data shows weekly OHLC candlesticks. Actual rates will appear on this chart as they become available over time.
+                   </small>
+                 </div>
+               </div>
+             </div>
                   </div>
                 </div>
               </div>
@@ -166,23 +169,38 @@
       return `${sign}${value.toFixed(2)}%`;
     }
 
-    function generateHistoricalData(predictionDate, currentRate, days = 365) {
+    function generateWeeklyCandlestickData(predictionDate, currentRate, weeks = 52) {
       const data = [];
       const predictionDateObj = new Date(predictionDate);
       
-      // Generate 12 months of historical data (365 days before prediction date)
-      for (let i = days; i >= 0; i--) {
-        const date = new Date(predictionDateObj);
-        date.setDate(date.getDate() - i);
+      // Generate weekly candlestick data (52 weeks before prediction date)
+      for (let week = weeks; week >= 0; week--) {
+        const weekStart = new Date(predictionDateObj);
+        weekStart.setDate(weekStart.getDate() - (week * 7));
         
-        // Simulate some historical variation around the current rate
-        const variation = (Math.random() - 0.5) * 0.02; // ±1% variation
-        const rate = currentRate * (1 + variation);
+        // Generate OHLC for this week
+        const baseRate = currentRate * (1 + (Math.random() - 0.5) * 0.1); // Base rate with some variation
+        const weeklyVolatility = 0.02; // 2% weekly volatility
+        
+        // Generate 5 daily rates for the week (Mon-Fri)
+        const dailyRates = [];
+        for (let day = 0; day < 5; day++) {
+          const dayRate = baseRate * (1 + (Math.random() - 0.5) * weeklyVolatility);
+          dailyRates.push(dayRate);
+        }
+        
+        // Calculate OHLC
+        const open = dailyRates[0];
+        const high = Math.max(...dailyRates);
+        const low = Math.min(...dailyRates);
+        const close = dailyRates[4];
         
         data.push({
-          x: date.getTime(),
-          y: rate,
-          type: 'historical'
+          x: weekStart.getTime(),
+          o: open,
+          h: high,
+          l: low,
+          c: close
         });
       }
       
@@ -430,8 +448,8 @@
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Generate chart data - only historical and predictions, no actual rates
-        const historicalData = generateHistoricalData(this.predictionData.date, pair.currentRate);
+        // Generate weekly candlestick data
+        const candlestickData = generateWeeklyCandlestickData(this.predictionData.date, pair.currentRate);
 
         // Create prediction line data (smooth curve through prediction points)
         const predictionLineData = [];
@@ -455,17 +473,21 @@
 
         const datasets = [
           {
-            label: 'Historical Rates',
-            data: historicalData,
+            label: 'Historical Weekly Candlesticks',
+            data: candlestickData,
+            type: 'candlestick',
             borderColor: '#6c757d',
-            backgroundColor: 'rgba(108, 117, 125, 0.1)',
-            borderWidth: 2,
-            pointRadius: 0,
-            fill: false
+            backgroundColor: function(context) {
+              const point = context.raw;
+              return point.c >= point.o ? '#28a745' : '#dc3545'; // Green for bullish, red for bearish
+            },
+            borderWidth: 1,
+            pointRadius: 0
           },
           {
             label: 'Predicted Path',
             data: predictionLineData,
+            type: 'line',
             borderColor: '#667eea',
             backgroundColor: 'rgba(102, 126, 234, 0.1)',
             borderWidth: 3,
@@ -483,6 +505,7 @@
             x: predictionDate.getTime(),
             y: pair.currentRate
           }],
+          type: 'line',
           borderColor: '#dc3545',
           backgroundColor: '#dc3545',
           borderWidth: 0,
@@ -505,6 +528,7 @@
               x: date.getTime(),
               y: prediction.predictedRate
             }],
+            type: 'line',
             borderColor: predictionColors[index],
             backgroundColor: predictionColors[index],
             borderWidth: 0,
@@ -516,7 +540,7 @@
 
         if (typeof Chart !== 'undefined') {
           this.chart = new Chart(ctx, {
-            type: 'line',
+            type: 'candlestick',
             data: { datasets },
             options: {
               responsive: true,
@@ -544,7 +568,17 @@
                       });
                     },
                     label: function(context) {
-                      return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
+                      if (context.dataset.type === 'candlestick') {
+                        const point = context.raw;
+                        return [
+                          `Open: ${formatCurrency(point.o)}`,
+                          `High: ${formatCurrency(point.h)}`,
+                          `Low: ${formatCurrency(point.l)}`,
+                          `Close: ${formatCurrency(point.c)}`
+                        ];
+                      } else {
+                        return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
+                      }
                     }
                   }
                 }
@@ -553,14 +587,14 @@
                 x: {
                   type: 'time',
                   time: {
-                    unit: 'month',
+                    unit: 'week',
                     displayFormats: {
-                      month: 'MMM yyyy'
+                      week: 'MMM dd, yyyy'
                     }
                   },
                   title: {
                     display: true,
-                    text: 'Date',
+                    text: 'Week Starting',
                   },
                 },
                 y: {
