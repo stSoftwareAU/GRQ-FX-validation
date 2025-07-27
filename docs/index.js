@@ -1041,7 +1041,7 @@ class GRQFXValidator {
 
     // Validate historical ranges if comprehensive data is available
     if (comprehensiveData) {
-      validationHTML += this.validateHistoricalRanges(pair, comprehensiveData);
+      validationHTML += this.validateHistoricalRanges(comprehensiveData);
     }
 
     // Add comprehensive validation info
@@ -1091,7 +1091,7 @@ class GRQFXValidator {
     validationResults.innerHTML = validationHTML;
   }
 
-  validateHistoricalRanges(pair, comprehensiveData) {
+  validateHistoricalRanges(comprehensiveData) {
     let validationHTML = '<div class="mt-3"><h6>Historical Range Validation:</h6>';
     
     // Get your data's min/max from the chart data
