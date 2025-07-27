@@ -16,7 +16,8 @@ This project uses an automated version incrementing system similar to the one in
 ## Files Involved
 
 - `scripts/pre-commit` - Git hook that increments version
-- `docs/index.html` - Contains VERSION constant and display
+- `docs/index.js` - Contains VERSION constant and all JavaScript functionality
+- `docs/index.html` - HTML structure with version display
 - `setup-hooks.sh` - Script to install git hooks
 
 ## Usage
@@ -27,9 +28,9 @@ This project uses an automated version incrementing system similar to the one in
 ```
 
 ### Manual Version Update
-If you need to manually update the version, edit the VERSION constant in `docs/index.html`:
+If you need to manually update the version, edit the VERSION constant in `docs/index.js`:
 ```javascript
-const VERSION="1.0.1";
+const VERSION = "1.0.1";
 ```
 
 ### Automatic Version Increment
