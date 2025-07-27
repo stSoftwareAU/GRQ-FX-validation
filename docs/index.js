@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.10";
+const VERSION = "1.0.11";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -292,14 +292,16 @@ class YahooFinanceAPI {
       return null;
     }
     
-    // Calculate min/max for this period
-    const prices = periodPrices.map(p => p.close);
-    const min = Math.min(...prices);
-    const max = Math.max(...prices);
+    // Calculate min/max for this period using high/low prices
+    const lows = periodPrices.map(p => p.low).filter(low => low !== null && low !== undefined);
+    const highs = periodPrices.map(p => p.high).filter(high => high !== null && high !== undefined);
+    
+    const min = lows.length > 0 ? Math.min(...lows) : null;
+    const max = highs.length > 0 ? Math.max(...highs) : null;
     
     // Find the actual dates for min/max
-    const minPrice = periodPrices.find(p => p.close === min);
-    const maxPrice = periodPrices.find(p => p.close === max);
+    const minPrice = periodPrices.find(p => p.low === min);
+    const maxPrice = periodPrices.find(p => p.high === max);
     
     return {
       fxPair: historicalData.fxPair,
