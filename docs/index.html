@@ -99,13 +99,27 @@
                     <div class="spinner-border text-primary" role="status">
                       <span class="visually-hidden">Loading Yahoo Finance data...</span>
                     </div>
-                    <p class="mt-2">Fetching Yahoo Finance data for validation...</p>
+                    <p class="mt-2">Fetching comprehensive Yahoo Finance data for validation...</p>
                   </div>
                   
                   <div id="yahooDataContent" style="display: none;">
+                    <!-- FX Pair Information -->
+                    <div class="row mb-3">
+                      <div class="col-12">
+                        <div class="alert alert-info">
+                          <h6 id="yahooFXPairDescription" class="mb-1">-</h6>
+                          <small>
+                            <a id="yahooFinanceLink" href="#" target="_blank" class="text-decoration-none">
+                              <i class="fas fa-external-link-alt me-1"></i>View on Yahoo Finance
+                            </a>
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+
                     <div class="row">
                       <div class="col-md-6">
-                        <h6>Yahoo Finance Summary:</h6>
+                        <h6>Current Data Summary:</h6>
                         <div class="table-responsive">
                           <table class="table table-sm">
                             <tbody>
@@ -114,32 +128,56 @@
                                 <td id="yahooCurrentRate">-</td>
                               </tr>
                               <tr>
-                                <td><strong>Data Range:</strong></td>
-                                <td id="yahooDataRange">-</td>
+                                <td><strong>Average Rate:</strong></td>
+                                <td id="yahooAvgRate">-</td>
                               </tr>
                               <tr>
-                                <td><strong>Min Rate:</strong></td>
-                                <td id="yahooMinRate">-</td>
-                              </tr>
-                              <tr>
-                                <td><strong>Max Rate:</strong></td>
-                                <td id="yahooMaxRate">-</td>
+                                <td><strong>Volatility:</strong></td>
+                                <td id="yahooVolatility">-</td>
                               </tr>
                               <tr>
                                 <td><strong>Data Points:</strong></td>
                                 <td id="yahooDataPoints">-</td>
+                              </tr>
+                              <tr>
+                                <td><strong>Date Range:</strong></td>
+                                <td id="yahooDateRange">-</td>
                               </tr>
                             </tbody>
                           </table>
                         </div>
                       </div>
                       <div class="col-md-6">
+                        <h6>Historical Ranges:</h6>
+                        <div class="table-responsive">
+                          <table class="table table-sm">
+                            <tbody>
+                              <tr>
+                                <td><strong>1 Year:</strong></td>
+                                <td id="yahoo1YRange">-</td>
+                              </tr>
+                              <tr>
+                                <td><strong>5 Year:</strong></td>
+                                <td id="yahoo5YRange">-</td>
+                              </tr>
+                              <tr>
+                                <td><strong>10 Year:</strong></td>
+                                <td id="yahoo10YRange">-</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="row mt-3">
+                      <div class="col-12">
                         <h6>Data Validation:</h6>
                         <div id="yahooValidationResults">
                           <div class="alert alert-info">
                             <small>
                               <i class="fas fa-info-circle me-1"></i>
-                              Yahoo Finance data will be used to validate your CSV data and show min/max ranges.
+                              Yahoo Finance data will be used to validate your CSV data and show comprehensive historical ranges.
                             </small>
                           </div>
                         </div>

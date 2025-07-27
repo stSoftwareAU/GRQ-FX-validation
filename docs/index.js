@@ -20,12 +20,127 @@ class YahooFinanceAPI {
       'https://corsproxy.io/?',
       'https://thingproxy.freeboard.io/fetch/'
     ];
+    
+    // FX pair descriptions
+    this.fxPairDescriptions = {
+      'AUDUSD': 'Australian Dollar → US Dollar',
+      'USDAUD': 'US Dollar → Australian Dollar',
+      'EURUSD': 'Euro → US Dollar',
+      'USDEUR': 'US Dollar → Euro',
+      'GBPUSD': 'British Pound → US Dollar',
+      'USDGBP': 'US Dollar → British Pound',
+      'USDJPY': 'US Dollar → Japanese Yen',
+      'JPYUSD': 'Japanese Yen → US Dollar',
+      'USDCAD': 'US Dollar → Canadian Dollar',
+      'CADUSD': 'Canadian Dollar → US Dollar',
+      'USDCHF': 'US Dollar → Swiss Franc',
+      'CHFUSD': 'Swiss Franc → US Dollar',
+      'USDCNY': 'US Dollar → Chinese Yuan',
+      'CNYUSD': 'Chinese Yuan → US Dollar',
+      'USDMXN': 'US Dollar → Mexican Peso',
+      'MXNUSD': 'Mexican Peso → US Dollar',
+      'USDBRL': 'US Dollar → Brazilian Real',
+      'BRLUSD': 'Brazilian Real → US Dollar',
+      'USDINR': 'US Dollar → Indian Rupee',
+      'INRUSD': 'Indian Rupee → US Dollar',
+      'USDKRW': 'US Dollar → South Korean Won',
+      'KRWUSD': 'South Korean Won → US Dollar',
+      'USDSGD': 'US Dollar → Singapore Dollar',
+      'SGDUSD': 'Singapore Dollar → US Dollar',
+      'USDHKD': 'US Dollar → Hong Kong Dollar',
+      'HKDUSD': 'Hong Kong Dollar → US Dollar',
+      'USDNZD': 'US Dollar → New Zealand Dollar',
+      'NZDUSD': 'New Zealand Dollar → US Dollar',
+      'USDSEK': 'US Dollar → Swedish Krona',
+      'SEKUSD': 'Swedish Krona → US Dollar',
+      'USDNOK': 'US Dollar → Norwegian Krone',
+      'NOKUSD': 'Norwegian Krone → US Dollar',
+      'USDDKK': 'US Dollar → Danish Krone',
+      'DKKUSD': 'Danish Krone → US Dollar',
+      'USDPLN': 'US Dollar → Polish Zloty',
+      'PLNUSD': 'Polish Zloty → US Dollar',
+      'USDCZK': 'US Dollar → Czech Koruna',
+      'CZKUSD': 'Czech Koruna → US Dollar',
+      'USDHUF': 'US Dollar → Hungarian Forint',
+      'HUFUSD': 'Hungarian Forint → US Dollar',
+      'USDRUB': 'US Dollar → Russian Ruble',
+      'RUBUSD': 'Russian Ruble → US Dollar',
+      'USDTRY': 'US Dollar → Turkish Lira',
+      'TRYUSD': 'Turkish Lira → US Dollar',
+      'USDZAR': 'US Dollar → South African Rand',
+      'ZARUSD': 'South African Rand → US Dollar',
+      'USDSAR': 'US Dollar → Saudi Riyal',
+      'SARUSD': 'Saudi Riyal → US Dollar',
+      'USDAED': 'US Dollar → UAE Dirham',
+      'AEDUSD': 'UAE Dirham → US Dollar',
+      'USDEGP': 'US Dollar → Egyptian Pound',
+      'EGPUSD': 'Egyptian Pound → US Dollar',
+      'USDTHB': 'US Dollar → Thai Baht',
+      'THBUSD': 'Thai Baht → US Dollar',
+      'USDPHP': 'US Dollar → Philippine Peso',
+      'PHPUSD': 'Philippine Peso → US Dollar',
+      'USDIDR': 'US Dollar → Indonesian Rupiah',
+      'IDRUSD': 'Indonesian Rupiah → US Dollar',
+      'USDMYR': 'US Dollar → Malaysian Ringgit',
+      'MYRUSD': 'Malaysian Ringgit → US Dollar',
+      'USDTWD': 'US Dollar → Taiwan Dollar',
+      'TWDUSD': 'Taiwan Dollar → US Dollar',
+      'USDVND': 'US Dollar → Vietnamese Dong',
+      'VNDUSD': 'Vietnamese Dong → US Dollar',
+      'USDCLP': 'US Dollar → Chilean Peso',
+      'CLPUSD': 'Chilean Peso → US Dollar',
+      'USDCOP': 'US Dollar → Colombian Peso',
+      'COPUSD': 'Colombian Peso → US Dollar',
+      'USDPEN': 'US Dollar → Peruvian Sol',
+      'PENUSD': 'Peruvian Sol → US Dollar',
+      'USDARS': 'US Dollar → Argentine Peso',
+      'ARSUSD': 'Argentine Peso → US Dollar',
+      'USDUYU': 'US Dollar → Uruguayan Peso',
+      'UYUUSD': 'Uruguayan Peso → US Dollar',
+      'USDPYG': 'US Dollar → Paraguayan Guarani',
+      'PYGUSD': 'Paraguayan Guarani → US Dollar',
+      'USDBOB': 'US Dollar → Bolivian Boliviano',
+      'BOBUSD': 'Bolivian Boliviano → US Dollar',
+      'USDKYD': 'US Dollar → Cayman Islands Dollar',
+      'KYDUSD': 'Cayman Islands Dollar → US Dollar',
+      'USDKZT': 'US Dollar → Kazakhstani Tenge',
+      'KZTUSD': 'Kazakhstani Tenge → US Dollar',
+      'USDCAD': 'US Dollar → Canadian Dollar',
+      'CADUSD': 'Canadian Dollar → US Dollar',
+      'AUDCAD': 'Australian Dollar → Canadian Dollar',
+      'CADAUD': 'Canadian Dollar → Australian Dollar',
+      'AUDCNY': 'Australian Dollar → Chinese Yuan',
+      'CNYAUD': 'Chinese Yuan → Australian Dollar',
+      'AUDEUR': 'Australian Dollar → Euro',
+      'EURAUD': 'Euro → Australian Dollar',
+      'AUDGBP': 'Australian Dollar → British Pound',
+      'GBPAUD': 'British Pound → Australian Dollar',
+      'AUDJPY': 'Australian Dollar → Japanese Yen',
+      'JPYAUD': 'Japanese Yen → Australian Dollar',
+      'EURCNY': 'Euro → Chinese Yuan',
+      'CNYEUR': 'Chinese Yuan → Euro',
+      'EURJPY': 'Euro → Japanese Yen',
+      'JPYEUR': 'Japanese Yen → Euro',
+      'GBPCNY': 'British Pound → Chinese Yuan',
+      'CNYGBP': 'Chinese Yuan → British Pound'
+    };
   }
 
   // Convert FX pair to Yahoo Finance symbol format
   convertFXPairToSymbol(fxPair) {
     // Yahoo Finance uses format like "USDAUD=X" for FX pairs
     return `${fxPair}=X`;
+  }
+
+  // Get FX pair description
+  getFXPairDescription(fxPair) {
+    return this.fxPairDescriptions[fxPair] || `${fxPair} Exchange Rate`;
+  }
+
+  // Get Yahoo Finance URL for FX pair
+  getYahooFinanceURL(fxPair) {
+    const symbol = this.convertFXPairToSymbol(fxPair);
+    return `https://finance.yahoo.com/quote/${symbol}`;
   }
 
   // Fetch FX data from Yahoo Finance with multiple proxy fallbacks
@@ -71,6 +186,37 @@ class YahooFinanceAPI {
     return null;
   }
 
+  // Fetch comprehensive FX data for multiple time periods
+  async fetchComprehensiveFXData(fxPair) {
+    const now = new Date();
+    const periods = [
+      { name: '1Y', years: 1, startDate: new Date(now.getFullYear() - 1, now.getMonth(), now.getDate()) },
+      { name: '5Y', years: 5, startDate: new Date(now.getFullYear() - 5, now.getMonth(), now.getDate()) },
+      { name: '10Y', years: 10, startDate: new Date(now.getFullYear() - 10, now.getMonth(), now.getDate()) }
+    ];
+
+    const results = {};
+    
+    for (const period of periods) {
+      try {
+        console.log(`Fetching ${fxPair} ${period.name} data...`);
+        const data = await this.fetchFXData(fxPair, period.startDate, now);
+        if (data) {
+          const processedData = this.processFXData(data, fxPair);
+          if (processedData) {
+            results[period.name] = processedData;
+          }
+        }
+        // Add delay between requests to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (error) {
+        console.warn(`Failed to fetch ${period.name} data for ${fxPair}:`, error);
+      }
+    }
+
+    return results;
+  }
+
   // Process Yahoo Finance data for FX pairs
   processFXData(yahooData, fxPair) {
     if (!yahooData.chart || !yahooData.chart.result || !yahooData.chart.result[0]) {
@@ -84,6 +230,7 @@ class YahooFinanceAPI {
     const closes = quotes.close;
     const highs = quotes.high;
     const lows = quotes.low;
+    const volumes = quotes.volume;
 
     const data = [];
     for (let i = 0; i < timestamps.length; i++) {
@@ -93,7 +240,8 @@ class YahooFinanceAPI {
           date: date,
           close: closes[i],
           high: highs[i] || closes[i],
-          low: lows[i] || closes[i]
+          low: lows[i] || closes[i],
+          volume: volumes ? volumes[i] : null
         });
       }
     }
@@ -103,15 +251,46 @@ class YahooFinanceAPI {
     const minRate = validData.length > 0 ? Math.min(...validData.map(d => d.low)) : null;
     const maxRate = validData.length > 0 ? Math.max(...validData.map(d => d.high)) : null;
 
+    // Calculate additional statistics
+    const validCloses = data.filter(d => d.close !== null && d.close !== undefined);
+    const avgRate = validCloses.length > 0 ? validCloses.reduce((sum, d) => sum + d.close, 0) / validCloses.length : null;
+    const volatility = validCloses.length > 1 ? this.calculateVolatility(validCloses.map(d => d.close)) : null;
+
     return {
       fxPair: fxPair,
+      description: this.getFXPairDescription(fxPair),
+      yahooUrl: this.getYahooFinanceURL(fxPair),
       data: data,
       initialPrice: data.length > 0 ? data[0].close : null,
       currentPrice: data.length > 0 ? data[data.length - 1].close : null,
       minRate: minRate,
       maxRate: maxRate,
-      dataPoints: data.length
+      avgRate: avgRate,
+      volatility: volatility,
+      dataPoints: data.length,
+      dateRange: {
+        start: data.length > 0 ? data[0].date : null,
+        end: data.length > 0 ? data[data.length - 1].date : null
+      }
     };
+  }
+
+  // Calculate volatility (standard deviation of returns)
+  calculateVolatility(prices) {
+    if (prices.length < 2) return null;
+    
+    const returns = [];
+    for (let i = 1; i < prices.length; i++) {
+      const return_ = (prices[i] - prices[i-1]) / prices[i-1];
+      returns.push(return_);
+    }
+    
+    const meanReturn = returns.reduce((sum, r) => sum + r, 0) / returns.length;
+    const squaredDiffs = returns.map(r => Math.pow(r - meanReturn, 2));
+    const variance = squaredDiffs.reduce((sum, d) => sum + d, 0) / returns.length;
+    const volatility = Math.sqrt(variance);
+    
+    return volatility * 100; // Return as percentage
   }
 }
 
@@ -610,27 +789,18 @@ class GRQFXValidator {
     this.hideElement('yahooDataError');
 
     try {
-      // Calculate date range (1 year from prediction date)
-      const predictionDate = new Date(this.predictionData.date);
-      const startDate = new Date(predictionDate);
-      startDate.setFullYear(startDate.getFullYear() - 1);
-      const endDate = new Date();
-
-      // Fetch Yahoo Finance data
-      const yahooData = await yahooAPI.fetchFXData(pair.pair, startDate, endDate);
+      // Fetch comprehensive Yahoo Finance data for multiple time periods
+      const comprehensiveData = await yahooAPI.fetchComprehensiveFXData(pair.pair);
       
-      if (yahooData) {
-        const processedData = yahooAPI.processFXData(yahooData, pair.pair);
-        if (processedData) {
-          this.displayYahooFinanceData(processedData, pair);
-          
-          // Add Yahoo Finance data to chart if available
-          this.addYahooFinanceToChart(processedData);
-        } else {
-          this.showYahooFinanceError('No valid data received from Yahoo Finance');
-        }
+      if (comprehensiveData && Object.keys(comprehensiveData).length > 0) {
+        // Use 1Y data for current display and chart
+        const currentData = comprehensiveData['1Y'] || Object.values(comprehensiveData)[0];
+        this.displayYahooFinanceData(currentData, pair, comprehensiveData);
+        
+        // Add Yahoo Finance data to chart if available
+        this.addYahooFinanceToChart(currentData);
       } else {
-        this.showYahooFinanceError('Failed to fetch data from Yahoo Finance');
+        this.showYahooFinanceError('No valid data received from Yahoo Finance');
       }
     } catch (error) {
       console.error('Error loading Yahoo Finance data:', error);
@@ -638,20 +808,56 @@ class GRQFXValidator {
     }
   }
 
-  displayYahooFinanceData(yahooData, pair) {
+  displayYahooFinanceData(yahooData, pair, comprehensiveData = null) {
     // Hide loading, show content
     this.hideElement('yahooDataLoading');
     this.showElement('yahooDataContent');
 
-    // Update summary table
+    // Update FX pair description and link
+    document.getElementById('yahooFXPairDescription').textContent = yahooData.description;
+    const yahooLink = document.getElementById('yahooFinanceLink');
+    yahooLink.href = yahooData.yahooUrl;
+
+    // Update current data summary
     document.getElementById('yahooCurrentRate').textContent = formatCurrency(yahooData.currentPrice);
-    document.getElementById('yahooDataRange').textContent = `${yahooData.data.length} days`;
-    document.getElementById('yahooMinRate').textContent = formatCurrency(yahooData.minRate);
-    document.getElementById('yahooMaxRate').textContent = formatCurrency(yahooData.maxRate);
+    document.getElementById('yahooAvgRate').textContent = formatCurrency(yahooData.avgRate);
+    document.getElementById('yahooVolatility').textContent = yahooData.volatility ? `${yahooData.volatility.toFixed(2)}%` : 'N/A';
     document.getElementById('yahooDataPoints').textContent = yahooData.dataPoints;
+    
+    // Update date range
+    if (yahooData.dateRange.start && yahooData.dateRange.end) {
+      const startDate = yahooData.dateRange.start.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      const endDate = yahooData.dateRange.end.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+      document.getElementById('yahooDateRange').textContent = `${startDate} - ${endDate}`;
+    } else {
+      document.getElementById('yahooDateRange').textContent = 'N/A';
+    }
+
+    // Update historical ranges
+    if (comprehensiveData) {
+      this.updateHistoricalRanges(comprehensiveData);
+    }
 
     // Validate data against CSV data
     this.validateDataAgainstYahoo(yahooData, pair);
+  }
+
+  updateHistoricalRanges(comprehensiveData) {
+    const periods = ['1Y', '5Y', '10Y'];
+    
+    periods.forEach(period => {
+      const elementId = `yahoo${period}Range`;
+      const element = document.getElementById(elementId);
+      
+      if (comprehensiveData[period]) {
+        const data = comprehensiveData[period];
+        const minRate = formatCurrency(data.minRate);
+        const maxRate = formatCurrency(data.maxRate);
+        element.textContent = `${minRate} - ${maxRate}`;
+      } else {
+        element.textContent = 'N/A';
+      }
+    });
   }
 
   validateDataAgainstYahoo(yahooData, pair) {
@@ -693,15 +899,49 @@ class GRQFXValidator {
       `;
     }
 
-    // Add min/max range info
+    // Add comprehensive validation info
     validationHTML += `
       <div class="alert alert-info">
         <small>
           <i class="fas fa-info-circle me-1"></i>
-          Yahoo Finance range: ${formatCurrency(yahooData.minRate)} - ${formatCurrency(yahooData.maxRate)}
+          <strong>Yahoo Finance Statistics:</strong><br>
+          • 1Y Range: ${formatCurrency(yahooData.minRate)} - ${formatCurrency(yahooData.maxRate)}<br>
+          • Average Rate: ${formatCurrency(yahooData.avgRate)}<br>
+          • Volatility: ${yahooData.volatility ? `${yahooData.volatility.toFixed(2)}%` : 'N/A'}<br>
+          • Data Points: ${yahooData.dataPoints} days
         </small>
       </div>
     `;
+
+    // Add data quality assessment
+    if (yahooData.dataPoints >= 250) {
+      validationHTML += `
+        <div class="alert alert-success">
+          <small>
+            <i class="fas fa-check-circle me-1"></i>
+            High-quality data: ${yahooData.dataPoints} trading days available
+          </small>
+        </div>
+      `;
+    } else if (yahooData.dataPoints >= 100) {
+      validationHTML += `
+        <div class="alert alert-warning">
+          <small>
+            <i class="fas fa-exclamation-triangle me-1"></i>
+            Moderate data quality: ${yahooData.dataPoints} trading days available
+          </small>
+        </div>
+      `;
+    } else {
+      validationHTML += `
+        <div class="alert alert-danger">
+          <small>
+            <i class="fas fa-times-circle me-1"></i>
+            Limited data quality: Only ${yahooData.dataPoints} trading days available
+          </small>
+        </div>
+      `;
+    }
 
     validationResults.innerHTML = validationHTML;
   }
@@ -818,5 +1058,4 @@ class GRQFXValidator {
 let fxValidator;
 document.addEventListener('DOMContentLoaded', () => {
   fxValidator = new GRQFXValidator();
-}); // Test comment
-// Test comment
+}); 
