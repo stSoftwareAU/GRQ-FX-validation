@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.3";
+const VERSION = "1.0.4";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -819,3 +819,4 @@ let fxValidator;
 document.addEventListener('DOMContentLoaded', () => {
   fxValidator = new GRQFXValidator();
 }); // Test comment
+// Test comment
