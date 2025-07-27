@@ -319,7 +319,7 @@ class YahooFinanceAPI {
   }
 
   // Process Yahoo Finance data for FX pairs
-  async processFXData(yahooData, fxPair) {
+  processFXData(yahooData, fxPair) {
     if (!yahooData.chart || !yahooData.chart.result || !yahooData.chart.result[0]) {
       console.warn(`No data available for ${fxPair}`);
       return null;
