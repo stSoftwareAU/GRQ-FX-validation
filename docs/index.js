@@ -1312,6 +1312,7 @@ class GRQFXValidator {
 }
 
 // Initialize the FX validator when the page loads
+// fxValidator is used in HTML onclick handlers
 let fxValidator;
 document.addEventListener('DOMContentLoaded', () => {
   fxValidator = new GRQFXValidator();
