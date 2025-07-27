@@ -22,13 +22,28 @@ class YahooFinanceAPI {
     ];
   }
 
-  // Convert FX pair to Yahoo Finance symbol format
+  // Convert FX pair to Yahoo Finance symbol format - completely dynamic
   convertFXPairToSymbol(fxPair) {
-    // Yahoo Finance uses format like "USDAUD=X" for FX pairs
-    return `${fxPair}=X`;
+    // Handle various FX pair formats dynamically
+    let symbol = fxPair;
+    
+    // If it already has =X suffix, use as is
+    if (fxPair.includes('=X')) {
+      return fxPair;
+    }
+    
+    // If it has a / separator, convert to Yahoo format
+    if (fxPair.includes('/')) {
+      symbol = fxPair.replace('/', '') + '=X';
+    } else {
+      // Assume it's a 6-character pair (e.g., AUDUSD) and add =X
+      symbol = fxPair + '=X';
+    }
+    
+    return symbol;
   }
 
-  // Get FX pair description dynamically from Yahoo Finance
+  // Get FX pair description dynamically from Yahoo Finance - completely dynamic
   async getFXPairDescription(fxPair) {
     try {
       const symbol = this.convertFXPairToSymbol(fxPair);
@@ -46,17 +61,23 @@ class YahooFinanceAPI {
             const data = await response.json();
             if (data.chart && data.chart.result && data.chart.result[0]) {
               const result = data.chart.result[0];
-              if (result.meta && result.meta.symbol) {
-                // Extract currency names from symbol (e.g., "USDAUD=X" -> "USD/AUD")
-                const symbolName = result.meta.symbol.replace('=X', '');
-                const base = symbolName.substring(0, 3);
-                const quote = symbolName.substring(3, 6);
+              
+              // Try to get description from Yahoo Finance meta data
+              if (result.meta) {
+                // Use Yahoo Finance's own description if available
+                if (result.meta.shortName) {
+                  return result.meta.shortName;
+                }
                 
-                // Get currency names from Yahoo Finance meta data if available
-                const baseName = result.meta.baseCurrencyName || base;
-                const quoteName = result.meta.quoteCurrencyName || quote;
+                // Use long name if available
+                if (result.meta.longName) {
+                  return result.meta.longName;
+                }
                 
-                return `${baseName} → ${quoteName}`;
+                // Use symbol name as fallback
+                if (result.meta.symbol) {
+                  return result.meta.symbol.replace('=X', '') + ' Exchange Rate';
+                }
               }
             }
           }
@@ -72,14 +93,51 @@ class YahooFinanceAPI {
     }
     
     // Fallback to simple format if Yahoo Finance data is not available
-    const symbol = this.convertFXPairToSymbol(fxPair);
-    return `${symbol.replace('=X', '')} Exchange Rate`;
+    return `${fxPair} Exchange Rate`;
   }
 
   // Get Yahoo Finance URL for FX pair
   getYahooFinanceURL(fxPair) {
     const symbol = this.convertFXPairToSymbol(fxPair);
     return `https://finance.yahoo.com/quote/${symbol}`;
+  }
+
+  // Validate if FX pair exists on Yahoo Finance
+  async validateFXPair(fxPair) {
+    try {
+      const symbol = this.convertFXPairToSymbol(fxPair);
+      const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
+      
+      for (let i = 0; i < this.proxies.length; i++) {
+        try {
+          const proxyUrl = this.proxies[i] + encodeURIComponent(yahooUrl);
+          const response = await Promise.race([
+            fetch(proxyUrl, { method: 'GET' }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 5000))
+          ]);
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.chart && data.chart.result && data.chart.result[0]) {
+              const result = data.chart.result[0];
+              // Check if we have valid data
+              if (result.meta && result.meta.symbol && result.timestamp && result.timestamp.length > 0) {
+                return true;
+              }
+            }
+          }
+        } catch (error) {
+          console.warn(`Failed to validate ${fxPair} with proxy ${i + 1}:`, error);
+          if (i === this.proxies.length - 1) {
+            break;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to validate FX pair:', error);
+    }
+    
+    return false;
   }
 
   // Fetch FX data from Yahoo Finance with multiple proxy fallbacks
@@ -793,6 +851,14 @@ class GRQFXValidator {
     this.hideElement('yahooDataError');
 
     try {
+      // First validate if the FX pair exists on Yahoo Finance
+      const isValid = await yahooAPI.validateFXPair(pair.pair);
+      
+      if (!isValid) {
+        this.showYahooFinanceError(`FX pair ${pair.pair} is not available on Yahoo Finance`);
+        return;
+      }
+
       // Fetch comprehensive Yahoo Finance data for multiple time periods
       const comprehensiveData = await yahooAPI.fetchComprehensiveFXData(pair.pair);
       
