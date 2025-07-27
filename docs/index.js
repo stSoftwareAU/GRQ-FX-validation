@@ -20,110 +20,6 @@ class YahooFinanceAPI {
       'https://corsproxy.io/?',
       'https://thingproxy.freeboard.io/fetch/'
     ];
-    
-    // FX pair descriptions
-    this.fxPairDescriptions = {
-      'AUDUSD': 'Australian Dollar → US Dollar',
-      'USDAUD': 'US Dollar → Australian Dollar',
-      'EURUSD': 'Euro → US Dollar',
-      'USDEUR': 'US Dollar → Euro',
-      'GBPUSD': 'British Pound → US Dollar',
-      'USDGBP': 'US Dollar → British Pound',
-      'USDJPY': 'US Dollar → Japanese Yen',
-      'JPYUSD': 'Japanese Yen → US Dollar',
-      'USDCAD': 'US Dollar → Canadian Dollar',
-      'CADUSD': 'Canadian Dollar → US Dollar',
-      'USDCHF': 'US Dollar → Swiss Franc',
-      'CHFUSD': 'Swiss Franc → US Dollar',
-      'USDCNY': 'US Dollar → Chinese Yuan',
-      'CNYUSD': 'Chinese Yuan → US Dollar',
-      'USDMXN': 'US Dollar → Mexican Peso',
-      'MXNUSD': 'Mexican Peso → US Dollar',
-      'USDBRL': 'US Dollar → Brazilian Real',
-      'BRLUSD': 'Brazilian Real → US Dollar',
-      'USDINR': 'US Dollar → Indian Rupee',
-      'INRUSD': 'Indian Rupee → US Dollar',
-      'USDKRW': 'US Dollar → South Korean Won',
-      'KRWUSD': 'South Korean Won → US Dollar',
-      'USDSGD': 'US Dollar → Singapore Dollar',
-      'SGDUSD': 'Singapore Dollar → US Dollar',
-      'USDHKD': 'US Dollar → Hong Kong Dollar',
-      'HKDUSD': 'Hong Kong Dollar → US Dollar',
-      'USDNZD': 'US Dollar → New Zealand Dollar',
-      'NZDUSD': 'New Zealand Dollar → US Dollar',
-      'USDSEK': 'US Dollar → Swedish Krona',
-      'SEKUSD': 'Swedish Krona → US Dollar',
-      'USDNOK': 'US Dollar → Norwegian Krone',
-      'NOKUSD': 'Norwegian Krone → US Dollar',
-      'USDDKK': 'US Dollar → Danish Krone',
-      'DKKUSD': 'Danish Krone → US Dollar',
-      'USDPLN': 'US Dollar → Polish Zloty',
-      'PLNUSD': 'Polish Zloty → US Dollar',
-      'USDCZK': 'US Dollar → Czech Koruna',
-      'CZKUSD': 'Czech Koruna → US Dollar',
-      'USDHUF': 'US Dollar → Hungarian Forint',
-      'HUFUSD': 'Hungarian Forint → US Dollar',
-      'USDRUB': 'US Dollar → Russian Ruble',
-      'RUBUSD': 'Russian Ruble → US Dollar',
-      'USDTRY': 'US Dollar → Turkish Lira',
-      'TRYUSD': 'Turkish Lira → US Dollar',
-      'USDZAR': 'US Dollar → South African Rand',
-      'ZARUSD': 'South African Rand → US Dollar',
-      'USDSAR': 'US Dollar → Saudi Riyal',
-      'SARUSD': 'Saudi Riyal → US Dollar',
-      'USDAED': 'US Dollar → UAE Dirham',
-      'AEDUSD': 'UAE Dirham → US Dollar',
-      'USDEGP': 'US Dollar → Egyptian Pound',
-      'EGPUSD': 'Egyptian Pound → US Dollar',
-      'USDTHB': 'US Dollar → Thai Baht',
-      'THBUSD': 'Thai Baht → US Dollar',
-      'USDPHP': 'US Dollar → Philippine Peso',
-      'PHPUSD': 'Philippine Peso → US Dollar',
-      'USDIDR': 'US Dollar → Indonesian Rupiah',
-      'IDRUSD': 'Indonesian Rupiah → US Dollar',
-      'USDMYR': 'US Dollar → Malaysian Ringgit',
-      'MYRUSD': 'Malaysian Ringgit → US Dollar',
-      'USDTWD': 'US Dollar → Taiwan Dollar',
-      'TWDUSD': 'Taiwan Dollar → US Dollar',
-      'USDVND': 'US Dollar → Vietnamese Dong',
-      'VNDUSD': 'Vietnamese Dong → US Dollar',
-      'USDCLP': 'US Dollar → Chilean Peso',
-      'CLPUSD': 'Chilean Peso → US Dollar',
-      'USDCOP': 'US Dollar → Colombian Peso',
-      'COPUSD': 'Colombian Peso → US Dollar',
-      'USDPEN': 'US Dollar → Peruvian Sol',
-      'PENUSD': 'Peruvian Sol → US Dollar',
-      'USDARS': 'US Dollar → Argentine Peso',
-      'ARSUSD': 'Argentine Peso → US Dollar',
-      'USDUYU': 'US Dollar → Uruguayan Peso',
-      'UYUUSD': 'Uruguayan Peso → US Dollar',
-      'USDPYG': 'US Dollar → Paraguayan Guarani',
-      'PYGUSD': 'Paraguayan Guarani → US Dollar',
-      'USDBOB': 'US Dollar → Bolivian Boliviano',
-      'BOBUSD': 'Bolivian Boliviano → US Dollar',
-      'USDKYD': 'US Dollar → Cayman Islands Dollar',
-      'KYDUSD': 'Cayman Islands Dollar → US Dollar',
-      'USDKZT': 'US Dollar → Kazakhstani Tenge',
-      'KZTUSD': 'Kazakhstani Tenge → US Dollar',
-      'USDCAD': 'US Dollar → Canadian Dollar',
-      'CADUSD': 'Canadian Dollar → US Dollar',
-      'AUDCAD': 'Australian Dollar → Canadian Dollar',
-      'CADAUD': 'Canadian Dollar → Australian Dollar',
-      'AUDCNY': 'Australian Dollar → Chinese Yuan',
-      'CNYAUD': 'Chinese Yuan → Australian Dollar',
-      'AUDEUR': 'Australian Dollar → Euro',
-      'EURAUD': 'Euro → Australian Dollar',
-      'AUDGBP': 'Australian Dollar → British Pound',
-      'GBPAUD': 'British Pound → Australian Dollar',
-      'AUDJPY': 'Australian Dollar → Japanese Yen',
-      'JPYAUD': 'Japanese Yen → Australian Dollar',
-      'EURCNY': 'Euro → Chinese Yuan',
-      'CNYEUR': 'Chinese Yuan → Euro',
-      'EURJPY': 'Euro → Japanese Yen',
-      'JPYEUR': 'Japanese Yen → Euro',
-      'GBPCNY': 'British Pound → Chinese Yuan',
-      'CNYGBP': 'Chinese Yuan → British Pound'
-    };
   }
 
   // Convert FX pair to Yahoo Finance symbol format
@@ -132,9 +28,52 @@ class YahooFinanceAPI {
     return `${fxPair}=X`;
   }
 
-  // Get FX pair description
-  getFXPairDescription(fxPair) {
-    return this.fxPairDescriptions[fxPair] || `${fxPair} Exchange Rate`;
+  // Get FX pair description dynamically from Yahoo Finance
+  async getFXPairDescription(fxPair) {
+    try {
+      const symbol = this.convertFXPairToSymbol(fxPair);
+      const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
+      
+      for (let i = 0; i < this.proxies.length; i++) {
+        try {
+          const proxyUrl = this.proxies[i] + encodeURIComponent(yahooUrl);
+          const response = await Promise.race([
+            fetch(proxyUrl, { method: 'GET' }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), 5000))
+          ]);
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.chart && data.chart.result && data.chart.result[0]) {
+              const result = data.chart.result[0];
+              if (result.meta && result.meta.symbol) {
+                // Extract currency names from symbol (e.g., "USDAUD=X" -> "USD/AUD")
+                const symbolName = result.meta.symbol.replace('=X', '');
+                const base = symbolName.substring(0, 3);
+                const quote = symbolName.substring(3, 6);
+                
+                // Get currency names from Yahoo Finance meta data if available
+                const baseName = result.meta.baseCurrencyName || base;
+                const quoteName = result.meta.quoteCurrencyName || quote;
+                
+                return `${baseName} → ${quoteName}`;
+              }
+            }
+          }
+        } catch (error) {
+          console.warn(`Failed to get description with proxy ${i + 1}:`, error);
+          if (i === this.proxies.length - 1) {
+            break;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to get FX pair description:', error);
+    }
+    
+    // Fallback to simple format if Yahoo Finance data is not available
+    const symbol = this.convertFXPairToSymbol(fxPair);
+    return `${symbol.replace('=X', '')} Exchange Rate`;
   }
 
   // Get Yahoo Finance URL for FX pair
@@ -144,14 +83,14 @@ class YahooFinanceAPI {
   }
 
   // Fetch FX data from Yahoo Finance with multiple proxy fallbacks
-  async fetchFXData(fxPair, startDate, endDate) {
+  async fetchFXData(fxPair, startDate, endDate, interval = '1d') {
     const symbol = this.convertFXPairToSymbol(fxPair);
     const startTimestamp = Math.floor(startDate.getTime() / 1000);
     const endTimestamp = Math.floor(endDate.getTime() / 1000);
     
-    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${startTimestamp}&period2=${endTimestamp}&interval=1d`;
+    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${startTimestamp}&period2=${endTimestamp}&interval=${interval}`;
     
-    console.log(`Fetching ${fxPair} data from Yahoo Finance...`);
+    console.log(`Fetching ${fxPair} data from Yahoo Finance (${interval} interval)...`);
     
     for (let i = 0; i < this.proxies.length; i++) {
       try {
@@ -186,6 +125,60 @@ class YahooFinanceAPI {
     return null;
   }
 
+  // Fetch optimized FX data for min/max calculations using weekly or monthly intervals
+  async fetchOptimizedFXData(fxPair, startDate, endDate) {
+    const symbol = this.convertFXPairToSymbol(fxPair);
+    const startTimestamp = Math.floor(startDate.getTime() / 1000);
+    const endTimestamp = Math.floor(endDate.getTime() / 1000);
+    
+    // Calculate time span in days
+    const daysDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+    
+    // Choose optimal interval based on time span
+    let interval = '1d';
+    if (daysDiff > 365 * 5) { // More than 5 years
+      interval = '1mo'; // Monthly data
+    } else if (daysDiff > 365) { // More than 1 year
+      interval = '1wk'; // Weekly data
+    }
+    
+    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?period1=${startTimestamp}&period2=${endTimestamp}&interval=${interval}`;
+    
+    console.log(`Fetching ${fxPair} optimized data from Yahoo Finance (${interval} interval for ${daysDiff} days)...`);
+    
+    for (let i = 0; i < this.proxies.length; i++) {
+      try {
+        console.log(`Attempting ${fxPair} optimized fetch with proxy ${i + 1}/${this.proxies.length}...`);
+        const proxyUrl = this.proxies[i] + encodeURIComponent(yahooUrl);
+        
+        const response = await Promise.race([
+          fetch(proxyUrl, { method: 'GET' }),
+          new Promise((_, reject) => setTimeout(() => reject(new Error(`${fxPair} request timeout`)), 8000))
+        ]);
+        
+        if (!response.ok) {
+          throw new Error(`${fxPair} API request failed: ${response.status} ${response.statusText}`);
+        }
+        
+        const responseText = await response.text();
+        if (responseText.includes('Too Many Requests') || responseText.includes('rate limit')) {
+          throw new Error('Yahoo Finance rate limit exceeded');
+        }
+        
+        const data = JSON.parse(responseText);
+        console.log(`${fxPair} optimized data (proxy ${i + 1}):`, data);
+        return data;
+      } catch (error) {
+        console.warn(`${fxPair} optimized fetch failed with proxy ${i + 1}:`, error);
+        if (i === this.proxies.length - 1) {
+          console.warn(`${fxPair} optimized fetch failed with all proxies`);
+          return null;
+        }
+      }
+    }
+    return null;
+  }
+
   // Fetch comprehensive FX data for multiple time periods
   async fetchComprehensiveFXData(fxPair) {
     const now = new Date();
@@ -200,9 +193,17 @@ class YahooFinanceAPI {
     for (const period of periods) {
       try {
         console.log(`Fetching ${fxPair} ${period.name} data...`);
-        const data = await this.fetchFXData(fxPair, period.startDate, now);
+        
+        // Use optimized data fetching for longer periods to reduce data size
+        let data;
+        if (period.years >= 5) {
+          data = await this.fetchOptimizedFXData(fxPair, period.startDate, now);
+        } else {
+          data = await this.fetchFXData(fxPair, period.startDate, now);
+        }
+        
         if (data) {
-          const processedData = this.processFXData(data, fxPair);
+          const processedData = await this.processFXData(data, fxPair);
           if (processedData) {
             results[period.name] = processedData;
           }
@@ -218,7 +219,7 @@ class YahooFinanceAPI {
   }
 
   // Process Yahoo Finance data for FX pairs
-  processFXData(yahooData, fxPair) {
+  async processFXData(yahooData, fxPair) {
     if (!yahooData.chart || !yahooData.chart.result || !yahooData.chart.result[0]) {
       console.warn(`No data available for ${fxPair}`);
       return null;
@@ -256,9 +257,12 @@ class YahooFinanceAPI {
     const avgRate = validCloses.length > 0 ? validCloses.reduce((sum, d) => sum + d.close, 0) / validCloses.length : null;
     const volatility = validCloses.length > 1 ? this.calculateVolatility(validCloses.map(d => d.close)) : null;
 
+    // Get dynamic description
+    const description = await this.getFXPairDescription(fxPair);
+
     return {
       fxPair: fxPair,
-      description: this.getFXPairDescription(fxPair),
+      description: description,
       yahooUrl: this.getYahooFinanceURL(fxPair),
       data: data,
       initialPrice: data.length > 0 ? data[0].close : null,
