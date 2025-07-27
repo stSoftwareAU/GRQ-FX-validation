@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.5";
+const VERSION = "1.0.6";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -365,6 +365,12 @@ class YahooFinanceAPI {
       description: description,
       yahooUrl: this.getYahooFinanceURL(fxPair),
       data: data,
+      prices: data.map(d => ({
+        timestamp: d.date.getTime(),
+        close: d.close,
+        high: d.high,
+        low: d.low
+      })),
       initialPrice: data.length > 0 ? data[0].close : null,
       currentPrice: data.length > 0 ? data[data.length - 1].close : null,
       minRate: minRate,
