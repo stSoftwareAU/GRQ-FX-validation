@@ -41,6 +41,13 @@ The Yahoo Finance integration has been significantly enhanced to provide compreh
 - **5 Year**: Last 5 years of weekly data (optimized for performance)
 - **10 Year**: Last 10 years of monthly data (optimized for performance)
 
+### **Historical Range Validation**
+- **True Historical Ranges**: Calculated from maximum available historical data
+- **Date-Specific Min/Max**: Shows exact dates when historical highs and lows occurred
+- **Range Comparison**: Validates your data ranges against Yahoo Finance ranges
+- **Error Detection**: Highlights when your data is outside Yahoo Finance historical ranges
+- **Visual Indicators**: Color-coded alerts for range validation results
+
 ## Data Validation Features
 
 ### **Rate Comparison**
@@ -55,6 +62,14 @@ The Yahoo Finance integration has been significantly enhanced to provide compreh
 - **High Quality**: ≥ 250 trading days
 - **Moderate Quality**: 100-249 trading days
 - **Limited Quality**: < 100 trading days
+
+### **Historical Range Validation**
+- **Range Comparison**: Compares your data min/max with Yahoo Finance historical ranges
+- **Error Detection**: 
+  - ✅ **Valid**: Your data range is within Yahoo Finance range
+  - ❌ **Error**: Your data range is outside Yahoo Finance range (highlighted in red)
+- **Period-Specific Validation**: Validates against 1Y, 5Y, and 10Y historical ranges
+- **Date Information**: Shows exact dates when Yahoo Finance min/max occurred
 
 ## FX Pair Coverage
 
@@ -98,6 +113,8 @@ https://query1.finance.yahoo.com/v8/finance/chart/{SYMBOL}=X?interval={INTERVAL}
 - **Dynamic format handling**: Automatically handles any FX pair format Yahoo Finance supports
 - **FX pair validation**: Validates FX pairs exist before attempting to fetch data
 - **Dynamic descriptions**: Fetches FX pair descriptions directly from Yahoo Finance
+- **Historical range calculation**: Calculates true min/max ranges from maximum available data
+- **Range validation**: Compares your data ranges against Yahoo Finance historical ranges
 - **Error handling**: Comprehensive error handling and fallback mechanisms
 - **Data validation**: Ensures data quality and completeness
 
@@ -115,7 +132,16 @@ https://query1.finance.yahoo.com/v8/finance/chart/{SYMBOL}=X?interval={INTERVAL}
    - FX pair description
    - Direct link to Yahoo Finance
    - Current and historical statistics
-   - Data validation results
+   - True historical ranges (12m, 5y, 10y)
+   - Range validation results
+   - Error detection for data discrepancies
+
+### **Historical Range Validation**
+1. **Range Display**: View 12-month, 5-year, and 10-year historical min/max ranges
+2. **Date Information**: See exact dates when historical highs and lows occurred
+3. **Validation Results**: Compare your data ranges against Yahoo Finance ranges
+4. **Error Detection**: Identify when your data is outside Yahoo Finance historical ranges
+5. **Chart Visualization**: View historical ranges as horizontal lines on charts
 
 ### **Data Validation**
 The system automatically:
