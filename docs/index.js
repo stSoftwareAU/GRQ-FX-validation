@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.6";
+const VERSION = "1.0.7";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -911,12 +911,12 @@ class GRQFXValidator {
       const comprehensiveData = await yahooAPI.fetchComprehensiveFXData(pair.pair);
       
       if (comprehensiveData && Object.keys(comprehensiveData).length > 0) {
-        // Use 1Y data for current display and chart
-        const currentData = comprehensiveData['1Y'] || Object.values(comprehensiveData)[0];
-        this.displayYahooFinanceData(currentData, pair, comprehensiveData);
+        // Use MAX data (full processed data) for display and chart
+        const fullData = comprehensiveData['MAX'];
+        this.displayYahooFinanceData(fullData, pair, comprehensiveData);
         
         // Add Yahoo Finance data to chart if available
-        this.addYahooFinanceToChart(currentData, comprehensiveData);
+        this.addYahooFinanceToChart(fullData, comprehensiveData);
       } else {
         this.showYahooFinanceError('No valid data received from Yahoo Finance');
       }
