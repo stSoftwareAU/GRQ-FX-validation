@@ -4,10 +4,11 @@ The Yahoo Finance integration has been significantly enhanced to provide compreh
 
 ## New Features
 
-### 1. **Dynamic FX Pair Descriptions**
-- **Dynamic fetching**: FX pair descriptions are fetched directly from Yahoo Finance
-- **No hardcoded data**: All descriptions are retrieved dynamically from the API
-- **Automatic updates**: Descriptions update automatically as Yahoo Finance data changes
+### 1. **Completely Dynamic FX Pair Support**
+- **No hardcoded assumptions**: System works with ANY FX pair format Yahoo Finance supports
+- **Dynamic format handling**: Supports various FX pair formats (AUDUSD, USD/AUD, AUDUSD=X, etc.)
+- **Automatic validation**: Validates FX pairs exist on Yahoo Finance before fetching data
+- **Dynamic descriptions**: FX pair descriptions fetched directly from Yahoo Finance
 - **Yahoo Finance links**: Direct links to view each pair on Yahoo Finance
 
 ### 2. **Comprehensive Historical Ranges**
@@ -57,20 +58,26 @@ The Yahoo Finance integration has been significantly enhanced to provide compreh
 
 ## FX Pair Coverage
 
-The system dynamically supports any FX pair available on Yahoo Finance:
+The system is **completely dynamic** and supports ANY FX pair available on Yahoo Finance:
 
-### **Dynamic Support**
-- **No hardcoded pairs**: Supports any FX pair that Yahoo Finance provides
-- **Automatic discovery**: New FX pairs are automatically supported
-- **Real-time validation**: Only shows pairs that have valid data
-- **Flexible naming**: Supports standard FX pair formats (e.g., AUDUSD, EURUSD, etc.)
+### **Universal Support**
+- **No hardcoded pairs**: Works with any FX pair Yahoo Finance provides
+- **No format restrictions**: Supports any FX pair format (AUDUSD, USD/AUD, AUDUSD=X, etc.)
+- **Automatic validation**: Validates each FX pair exists before attempting to fetch data
+- **Future-proof**: Automatically adapts to new FX pairs as they become available
+- **Error handling**: Gracefully handles invalid or unavailable FX pairs
 
-### **Common FX Pairs**
-The system works with major, minor, and exotic FX pairs including:
-- **Major pairs**: USD, EUR, GBP, JPY, AUD, CAD, CHF, CNY
-- **Cross pairs**: Any combination of major currencies
-- **Emerging markets**: MXN, BRL, INR, KRW, SGD, HKD, and many more
-- **Commodity currencies**: AUD, CAD, NZD, NOK, RUB
+### **Supported Formats**
+The system dynamically handles various FX pair formats:
+- **Standard pairs**: AUDUSD, EURUSD, GBPUSD, etc.
+- **Separated pairs**: USD/AUD, EUR/USD, GBP/USD, etc.
+- **Yahoo format**: AUDUSD=X, EURUSD=X, etc.
+- **Any other format**: As long as Yahoo Finance supports it
+
+### **Dynamic Discovery**
+- **No maintenance required**: New FX pairs are automatically supported
+- **Real-time validation**: Only processes FX pairs that have valid data
+- **Flexible naming**: Works with any naming convention Yahoo Finance uses
 
 ## Technical Implementation
 
@@ -88,6 +95,8 @@ https://query1.finance.yahoo.com/v8/finance/chart/{SYMBOL}=X?interval={INTERVAL}
 - **Multi-proxy fallback**: Uses 3 different CORS proxies for reliability
 - **Rate limiting protection**: Delays between requests to avoid limits
 - **Optimized intervals**: Uses weekly/monthly data for longer periods to reduce data size
+- **Dynamic format handling**: Automatically handles any FX pair format Yahoo Finance supports
+- **FX pair validation**: Validates FX pairs exist before attempting to fetch data
 - **Dynamic descriptions**: Fetches FX pair descriptions directly from Yahoo Finance
 - **Error handling**: Comprehensive error handling and fallback mechanisms
 - **Data validation**: Ensures data quality and completeness
