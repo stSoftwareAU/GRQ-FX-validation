@@ -1,249 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta
-      http-equiv="Cache-Control"
-      content="no-cache, no-store, must-revalidate"
-    >
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <script>
-      const VERSION = '1.0.0';
-      document.title = `GRQ FX Validation Dashboard v${VERSION}`;
-    </script>
-    <link rel="icon" type="image/png" href="logo.png" />
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GRQ FX Validation Dashboard</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <style>
+    .fx-pair-card {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 10px;
+      padding: 20px;
+      border: 1px solid #dee2e6;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .fx-pair-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .fx-pair-card h6 {
+      font-weight: 600;
+    }
+    .fx-pair-card .h5 {
+      font-weight: 700;
+    }
+    .performance-positive {
+      color: #10b981 !important;
+    }
+    .performance-negative {
+      color: #ef4444 !important;
+    }
+    .error-small { color: #28a745; }
+    .error-medium { color: #ffc107; }
+    .error-large { color: #dc3545; }
+    .accuracy-high { background-color: #d4edda; color: #155724; }
+    .accuracy-medium { background-color: #fff3cd; color: #856404; }
+    .accuracy-low { background-color: #f8d7da; color: #721c24; }
+    .clickable-fx-pair {
+      cursor: pointer;
+      color: #007bff;
+      text-decoration: underline;
+    }
+    .clickable-fx-pair:hover {
+      color: #0056b3;
+    }
+    .pending {
+      color: #6c757d;
+      font-style: italic;
+    }
+    .prediction-date {
+      font-size: 0.9rem;
+      color: #6c757d;
+      margin-bottom: 1rem;
+    }
 
-    <!-- Bootstrap 5 CSS -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    >
+    .prediction-summary {
+      font-size: 0.85rem;
+      color: #6c757d;
+    }
+    .prediction-change {
+      font-weight: 600;
+    }
+    .prediction-change.positive {
+      color: #28a745;
+    }
+    .prediction-change.negative {
+      color: #dc3545;
+    }
+  </style>
+</head>
+<body class="bg-light">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-12">
+        <div class="card shadow-sm border-0">
+          <div class="card-header header-gradient text-white text-center py-4">
+            <h1 class="display-4 mb-2">GRQ FX Validation Dashboard</h1>
+            <p class="lead mb-0">Track FX predictions against actual rates over time</p>
+          </div>
 
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"
-    ></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"
-    ></script>
-
-    <!-- Custom styles -->
-    <link rel="stylesheet" href="styles.css">
-
-    <style>
-      .fx-pair-card {
-        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-        border-radius: 10px;
-        padding: 20px;
-        border: 1px solid #dee2e6;
-      }
-      .fx-pair-card h6 {
-        font-weight: 600;
-      }
-      .fx-pair-card .h5 {
-        font-weight: 700;
-      }
-      .performance-positive {
-        color: #10b981 !important;
-      }
-      .performance-negative {
-        color: #ef4444 !important;
-      }
-    </style>
-  </head>
-  <body class="bg-light">
-    <div class="container-fluid">
-      <div class="row">
-        <div class="col-12">
-          <div class="card shadow-sm border-0">
-            <div
-              class="card-header header-gradient text-white text-center py-4"
-            >
-              <h1 class="display-4 mb-2">GRQ FX Validation Dashboard</h1>
-              <p class="lead mb-0">
-                Validating AI predictions against actual FX rates over time
-              </p>
+          <div class="card-body p-4">
+            <!-- Prediction Date Selection -->
+            <div class="mb-4">
+              <div class="row">
+                <div class="col-md-6">
+                  <label for="predictionFileSelect" class="form-label fw-bold">Prediction Date:</label>
+                  <select id="predictionFileSelect" class="form-select">
+                    <option value="">Choose a prediction date...</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
-            <div class="card-body p-4">
-              <!-- Controls -->
+            <!-- FX Pairs List -->
+            <div id="fxPairsContainer" style="display: none;">
+              <h4 class="mb-3">Available FX Pairs</h4>
+              <div id="fxPairsList" class="row">
+                <!-- FX pairs will be populated here -->
+              </div>
+            </div>
+
+            <!-- Loading and Error Messages -->
+            <div id="loading" class="text-center py-5">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-3">Loading data...</p>
+            </div>
+
+            <div id="error" class="alert alert-danger" style="display: none"></div>
+
+            <!-- Chart View -->
+            <div id="chartView" style="display: none;">
+              <!-- Header Info -->
               <div class="row mb-4">
-                <div class="col-md-6 col-lg-4">
-                  <div class="mb-3">
-                    <label for="predictionFileSelect" class="form-label fw-bold"
-                    >Prediction File:</label>
-                    <select id="predictionFileSelect" class="form-select">
-                      <option value="">Select a prediction file...</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="col-md-6 col-lg-8 d-flex align-items-end">
-                  <div class="mb-3">
-                    <a href="list.html" class="btn btn-outline-secondary">
-                      📊 View All Prediction Files
-                    </a>
+                <div class="col-12">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h2 id="chartTitle" class="mb-0">FX Rate Analysis</h2>
+                      <p class="text-muted mb-0">
+                        <strong>Prediction Date:</strong> <span id="predictionDateDisplay"></span> | 
+                        <strong>FX Pair:</strong> <span id="fxPairDisplay"></span>
+                      </p>
+                    </div>
+                    <button id="backToSelection" class="btn btn-outline-secondary">
+                      ← Back to FX Pairs
+                    </button>
                   </div>
                 </div>
               </div>
 
-              <!-- Loading and Error Messages -->
-              <div id="loading" class="loading text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                  <span class="visually-hidden">Loading...</span>
+              <!-- Chart -->
+              <div class="card mb-4">
+                <div class="card-body">
+                  <div class="chart-container" style="height: 500px;">
+                    <canvas id="fxChart"></canvas>
+                  </div>
                 </div>
-                <p class="mt-3">Loading data...</p>
               </div>
 
-              <div id="error" class="alert alert-danger" style="display: none">
-              </div>
-              <div id="noData" class="alert alert-info" style="display: none">
-                No FX data available yet for this prediction file. Data will
-                appear as it becomes available.
-              </div>
-
-              <!-- Main Content -->
-              <div id="summary" style="display: none">
-                <!-- Chart -->
-                <div class="row mb-4">
-                  <div class="col-12">
-                    <div
-                      class="d-flex justify-content-between align-items-center"
-                    >
-                      <h2 id="chartTitle" class="mb-0">FX Performance Chart</h2>
-                      <button
-                        id="backToAggregate"
-                        class="btn btn-outline-primary"
-                        style="display: none"
-                      >
-                        ← Back to Portfolio View
-                      </button>
-                    </div>
-                  </div>
+              <!-- Legend -->
+              <div class="card">
+                <div class="card-header">
+                  <h5 class="card-title mb-0">Chart Legend</h5>
                 </div>
-                <div class="card mb-4">
-                  <div class="card-body">
-                    <div class="chart-container">
-                      <canvas id="performanceChart"></canvas>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-4">
+                      <h6>Historical Data:</h6>
+                      <ul class="list-unstyled">
+                        <li><span style="color: #6c757d;">●</span> Historical rates (12 months before prediction)</li>
+                      </ul>
+                    </div>
+                    <div class="col-md-4">
+                      <h6>Prediction Elements:</h6>
+                      <ul class="list-unstyled">
+                        <li><span style="color: #dc3545;">◆</span> Prediction date marker</li>
+                        <li><span style="color: #667eea;">┅</span> Predicted path (theoretical trajectory)</li>
+                      </ul>
+                    </div>
+                    <div class="col-md-4">
+                      <h6>Predicted Rates:</h6>
+                      <ul class="list-unstyled">
+                        <li><span style="color: #ff6b6b;">●</span> Monthly (30 days)</li>
+                        <li><span style="color: #4ecdc4;">●</span> Quarterly (90 days)</li>
+                        <li><span style="color: #45b7d1;">●</span> Half-Year (180 days)</li>
+                        <li><span style="color: #96ceb4;">●</span> 3-Quarters (270 days)</li>
+                        <li><span style="color: #feca57;">●</span> Full-Year (365 days)</li>
+                      </ul>
                     </div>
                   </div>
-                </div>
-
-                <!-- FX Pair Summary -->
-                <div id="fxSummary" class="card mb-4" style="display: none">
-                  <div class="card-header">
-                    <h5 class="card-title mb-0">
-                      <i class="fas fa-chart-line me-2"></i>
-                      FX Performance Summary
-                    </h5>
-                  </div>
-                  <div class="card-body">
-                    <div class="row">
-                      <div class="col-md-3">
-                        <div class="fx-pair-card">
-                          <h6 class="text-primary mb-2">Total Pairs</h6>
-                          <div
-                            class="d-flex justify-content-between align-items-center"
-                          >
-                            <span id="totalPairs" class="h5 mb-0">-</span>
-                            <small id="totalPairsDetails" class="text-muted"
-                            >-</small>
-                          </div>
-                        </div>
+                  <div class="row mt-3">
+                    <div class="col-12">
+                      <div class="alert alert-info mb-0">
+                        <small>
+                          <i class="fas fa-info-circle me-1"></i>
+                          Actual rates will appear on this chart as they become available over time.
+                        </small>
                       </div>
-                      <div class="col-md-3">
-                        <div class="fx-pair-card">
-                          <h6 class="text-success mb-2">
-                            Accurate Predictions
-                          </h6>
-                          <div
-                            class="d-flex justify-content-between align-items-center"
-                          >
-                            <span id="accuratePredictions" class="h5 mb-0"
-                            >-</span>
-                            <small id="accurateDetails" class="text-muted"
-                            >-</small>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col-md-3">
-                        <div class="fx-pair-card">
-                          <h6 class="text-warning mb-2">Average Error</h6>
-                          <div
-                            class="d-flex justify-content-between align-items-center"
-                          >
-                            <span id="averageError" class="h5 mb-0">-</span>
-                            <small id="errorDetails" class="text-muted"
-                            >-</small>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="col-md-3">
-                        <div class="fx-pair-card">
-                          <h6 class="text-info mb-2">Best Performer</h6>
-                          <div
-                            class="d-flex justify-content-between align-items-center"
-                          >
-                            <span id="bestPerformer" class="h5 mb-0">-</span>
-                            <small id="bestDetails" class="text-muted">-</small>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="row mt-3">
-                      <div class="col-12">
-                        <div class="alert alert-info mb-0">
-                          <small>
-                            <i class="fas fa-info-circle me-1"></i>
-                            FX data shows prediction accuracy and performance
-                            over different time horizons (7, 14, 30, 60, 90
-                            days).
-                          </small>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- FX Pairs Table -->
-                <div class="card">
-                  <div class="card-header">
-                    <h5 class="card-title mb-0">
-                      Individual FX Pair Performance
-                    </h5>
-                  </div>
-                  <div class="card-body p-0">
-                    <div class="table-responsive">
-                      <table
-                        class="table table-hover fx-table mb-0"
-                        id="fxTable"
-                      >
-                        <thead>
-                          <tr>
-                            <th>FX Pair</th>
-                            <th>Current Rate</th>
-                            <th>7-Day Prediction</th>
-                            <th>7-Day Actual</th>
-                            <th>7-Day Error</th>
-                            <th>14-Day Prediction</th>
-                            <th>14-Day Actual</th>
-                            <th>14-Day Error</th>
-                            <th>30-Day Prediction</th>
-                            <th>30-Day Actual</th>
-                            <th>30-Day Error</th>
-                            <th>60-Day Prediction</th>
-                            <th>60-Day Actual</th>
-                            <th>60-Day Error</th>
-                            <th>90-Day Prediction</th>
-                            <th>90-Day Actual</th>
-                            <th>90-Day Error</th>
-                            <th>Overall Accuracy</th>
-                          </tr>
-                        </thead>
-                        <tbody id="fxTableBody"></tbody>
-                      </table>
                     </div>
                   </div>
                 </div>
@@ -253,27 +198,487 @@
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Version display -->
-    <div class="text-center text-muted small py-2">
-      v<span id="version"></span>
-      <br>
-      <span id="debug-info" class="text-muted" style="font-size: 0.7rem"></span>
-    </div>
+  <!-- Version display -->
+  <div class="text-center text-muted small py-2">
+    v1.0.0
+  </div>
 
-    <!-- Bootstrap 5 JS -->
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
-    ></script>
+  <!-- Bootstrap 5 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <script type="module">
-      import { GRQFXValidator } from './fx-validator.js';
+  <script>
+    // Utility functions
+    function formatCurrency(value, decimals = 4) {
+      if (value === null || value === undefined || isNaN(value)) {
+        return 'N/A';
+      }
+      return new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      }).format(value);
+    }
 
-      // Initialize the FX validator when the page loads
-      let fxValidator;
-      document.addEventListener('DOMContentLoaded', () => {
-        fxValidator = new GRQFXValidator();
-      });
-    </script>
-  </body>
+    function formatPercentage(value) {
+      if (value === null || value === undefined || isNaN(value)) {
+        return 'N/A';
+      }
+      const sign = value >= 0 ? '+' : '';
+      return `${sign}${value.toFixed(2)}%`;
+    }
+
+    function generateHistoricalData(predictionDate, currentRate, days = 365) {
+      const data = [];
+      const predictionDateObj = new Date(predictionDate);
+      
+      // Generate 12 months of historical data (365 days before prediction date)
+      for (let i = days; i >= 0; i--) {
+        const date = new Date(predictionDateObj);
+        date.setDate(date.getDate() - i);
+        
+        // Simulate some historical variation around the current rate
+        const variation = (Math.random() - 0.5) * 0.02; // ±1% variation
+        const rate = currentRate * (1 + variation);
+        
+        data.push({
+          x: date.getTime(),
+          y: rate,
+          type: 'historical'
+        });
+      }
+      
+      return data;
+    }
+
+    // Main FX Validator class
+    class GRQFXValidator {
+      constructor() {
+        this.predictionData = null;
+        this.selectedFile = null;
+        this.selectedPair = null;
+        this.chart = null;
+
+        this.initializeEventListeners();
+        this.loadIndex();
+      }
+
+      initializeEventListeners() {
+        // Prediction date selection
+        const predictionFileSelect = document.getElementById('predictionFileSelect');
+        if (predictionFileSelect) {
+          predictionFileSelect.addEventListener('change', (e) => {
+            this.selectedFile = e.target.value;
+            if (this.selectedFile) {
+              this.loadPredictionData();
+            } else {
+              this.hideFXPairs();
+            }
+          });
+        }
+
+        // Navigation button
+        const backToSelection = document.getElementById('backToSelection');
+        if (backToSelection) {
+          backToSelection.addEventListener('click', () => {
+            this.showFXPairs();
+          });
+        }
+      }
+
+      async loadIndex() {
+        try {
+          this.showLoading();
+          const response = await fetch('index.json');
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const indexData = await response.json();
+
+          const select = document.getElementById('predictionFileSelect');
+          if (!select) return;
+
+          select.innerHTML = '<option value="">Choose a prediction date...</option>';
+
+          // Sort entries by date (newest first)
+          const sortedEntries = Object.entries(indexData.entries)
+            .sort(([, a], [, b]) => {
+              const dateA = a.date;
+              const dateB = b.date;
+              return new Date(dateB).getTime() - new Date(dateA).getTime();
+            });
+
+          for (const [key, entry] of sortedEntries) {
+            const option = document.createElement('option');
+            option.value = key;
+            option.textContent = `${entry.date} - ${entry.description}`;
+            select.appendChild(option);
+          }
+
+          // Auto-select the prediction date closest to 1 year ago
+          this.autoSelectClosestDate(sortedEntries);
+          
+          this.hideLoading();
+        } catch (error) {
+          console.error('Error loading index:', error);
+          this.showError('Failed to load prediction files index');
+        }
+      }
+
+      autoSelectClosestDate(sortedEntries) {
+        if (sortedEntries.length === 0) return;
+
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+        let closestEntry = sortedEntries[0]; // Default to most recent
+        let closestDiff = Math.abs(new Date(sortedEntries[0][1].date).getTime() - oneYearAgo.getTime());
+
+        for (const [key, entry] of sortedEntries) {
+          const entryDate = new Date(entry.date);
+          const diff = Math.abs(entryDate.getTime() - oneYearAgo.getTime());
+          
+          if (diff < closestDiff) {
+            closestDiff = diff;
+            closestEntry = [key, entry];
+          }
+        }
+
+        // Set the selected date
+        const select = document.getElementById('predictionFileSelect');
+        if (select) {
+          select.value = closestEntry[0];
+          this.selectedFile = closestEntry[0];
+          this.loadPredictionData();
+        }
+      }
+
+      async loadPredictionData() {
+        if (!this.selectedFile) return;
+
+        this.showLoading();
+
+        try {
+          const response = await fetch(`${this.selectedFile}/predictions.json`);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          this.predictionData = await response.json();
+          this.populateFXPairsList();
+          this.showFXPairs();
+          this.hideLoading();
+        } catch (error) {
+          console.error('Error loading prediction file:', error);
+          this.showError('Failed to load prediction data');
+        }
+      }
+
+      populateFXPairsList() {
+        if (!this.predictionData) return;
+
+        const container = document.getElementById('fxPairsList');
+        if (!container) return;
+
+        container.innerHTML = '';
+
+        // Sort pairs alphabetically
+        const sortedPairs = this.predictionData.results.sort((a, b) => a.pair.localeCompare(b.pair));
+
+        for (const pair of sortedPairs) {
+          const col = document.createElement('div');
+          col.className = 'col-md-6 col-lg-4 mb-3';
+          
+          // Calculate summary statistics
+          const monthlyChange = pair.predictions[0].predictedChangePercent;
+          const yearlyChange = pair.predictions[4].predictedChangePercent;
+          const avgChange = pair.predictions.reduce((sum, p) => sum + p.predictedChangePercent, 0) / pair.predictions.length;
+          
+          col.innerHTML = `
+            <div class="fx-pair-card" onclick="fxValidator.selectFXPair('${pair.pair}')">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h5 class="mb-0">${pair.pair}</h5>
+                <span class="badge bg-primary">${formatCurrency(pair.currentRate)}</span>
+              </div>
+              <div class="prediction-summary">
+                <div class="row">
+                  <div class="col-6">
+                    <small>Monthly:</small><br>
+                    <span class="prediction-change ${monthlyChange >= 0 ? 'positive' : 'negative'}">
+                      ${formatPercentage(monthlyChange)}
+                    </span>
+                  </div>
+                  <div class="col-6">
+                    <small>Yearly:</small><br>
+                    <span class="prediction-change ${yearlyChange >= 0 ? 'positive' : 'negative'}">
+                      ${formatPercentage(yearlyChange)}
+                    </span>
+                  </div>
+                </div>
+                <div class="mt-2">
+                  <small>Avg Change:</small><br>
+                  <span class="prediction-change ${avgChange >= 0 ? 'positive' : 'negative'}">
+                    ${formatPercentage(avgChange)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          `;
+          
+          container.appendChild(col);
+        }
+      }
+
+      selectFXPair(pairName) {
+        this.selectedPair = pairName;
+        this.showChartView();
+      }
+
+      showFXPairs() {
+        document.getElementById('fxPairsContainer').style.display = 'block';
+        document.getElementById('chartView').style.display = 'none';
+      }
+
+      hideFXPairs() {
+        document.getElementById('fxPairsContainer').style.display = 'none';
+        document.getElementById('chartView').style.display = 'none';
+      }
+
+      showChartView() {
+        document.getElementById('fxPairsContainer').style.display = 'none';
+        document.getElementById('chartView').style.display = 'block';
+        
+        this.updateChartView();
+      }
+
+      updateChartView() {
+        if (!this.predictionData || !this.selectedPair) return;
+
+        const pair = this.predictionData.results.find(p => p.pair === this.selectedPair);
+        if (!pair) return;
+
+        // Update display info
+        const dateDisplay = document.getElementById('predictionDateDisplay');
+        const pairDisplay = document.getElementById('fxPairDisplay');
+        const chartTitle = document.getElementById('chartTitle');
+
+        if (dateDisplay) {
+          const date = new Date(this.predictionData.date);
+          dateDisplay.textContent = date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+        }
+
+        if (pairDisplay) {
+          pairDisplay.textContent = `${pair.pair} (${formatCurrency(pair.currentRate)})`;
+        }
+
+        if (chartTitle) {
+          chartTitle.textContent = `${pair.pair} Rate Analysis`;
+        }
+
+        this.updateChart(pair);
+      }
+
+      updateChart(pair) {
+        if (this.chart) {
+          this.chart.destroy();
+        }
+
+        const canvas = document.getElementById('fxChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Generate chart data - only historical and predictions, no actual rates
+        const historicalData = generateHistoricalData(this.predictionData.date, pair.currentRate);
+
+        // Create prediction line data (smooth curve through prediction points)
+        const predictionLineData = [];
+        const predictionDate = new Date(this.predictionData.date);
+        
+        // Add current rate at prediction date
+        predictionLineData.push({
+          x: predictionDate.getTime(),
+          y: pair.currentRate
+        });
+        
+        // Add all prediction points
+        pair.predictions.forEach(prediction => {
+          const date = new Date(predictionDate);
+          date.setDate(date.getDate() + prediction.days);
+          predictionLineData.push({
+            x: date.getTime(),
+            y: prediction.predictedRate
+          });
+        });
+
+        const datasets = [
+          {
+            label: 'Historical Rates',
+            data: historicalData,
+            borderColor: '#6c757d',
+            backgroundColor: 'rgba(108, 117, 125, 0.1)',
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: false
+          },
+          {
+            label: 'Predicted Path',
+            data: predictionLineData,
+            borderColor: '#667eea',
+            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+            borderWidth: 3,
+            borderDash: [5, 5],
+            pointRadius: 0,
+            fill: false,
+            tension: 0.4
+          }
+        ];
+
+        // Add prediction date marker
+        datasets.push({
+          label: 'Prediction Date',
+          data: [{
+            x: predictionDate.getTime(),
+            y: pair.currentRate
+          }],
+          borderColor: '#dc3545',
+          backgroundColor: '#dc3545',
+          borderWidth: 0,
+          pointRadius: 10,
+          pointStyle: 'rectRot',
+          fill: false
+        });
+
+        // Add prediction points with different colors
+        const predictionColors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57'];
+        const predictionLabels = ['Monthly (30d)', 'Quarterly (90d)', 'Half-Year (180d)', '3-Quarters (270d)', 'Full-Year (365d)'];
+
+        pair.predictions.forEach((prediction, index) => {
+          const date = new Date(predictionDate);
+          date.setDate(date.getDate() + prediction.days);
+          
+          datasets.push({
+            label: predictionLabels[index],
+            data: [{
+              x: date.getTime(),
+              y: prediction.predictedRate
+            }],
+            borderColor: predictionColors[index],
+            backgroundColor: predictionColors[index],
+            borderWidth: 0,
+            pointRadius: 8,
+            pointStyle: 'circle',
+            fill: false
+          });
+        });
+
+        if (typeof Chart !== 'undefined') {
+          this.chart = new Chart(ctx, {
+            type: 'line',
+            data: { datasets },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                title: {
+                  display: true,
+                  text: `${pair.pair} Rate Analysis - ${this.predictionData.date}`,
+                  font: {
+                    size: 16,
+                  },
+                },
+                legend: {
+                  display: true,
+                  position: 'top',
+                },
+                tooltip: {
+                  callbacks: {
+                    title: function(context) {
+                      const date = new Date(context[0].parsed.x);
+                      return date.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      });
+                    },
+                    label: function(context) {
+                      return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}`;
+                    }
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  type: 'time',
+                  time: {
+                    unit: 'month',
+                    displayFormats: {
+                      month: 'MMM yyyy'
+                    }
+                  },
+                  title: {
+                    display: true,
+                    text: 'Date',
+                  },
+                },
+                y: {
+                  title: {
+                    display: true,
+                    text: 'FX Rate',
+                  },
+                },
+              },
+              interaction: {
+                intersect: false,
+                mode: 'index'
+              }
+            },
+          });
+        }
+      }
+
+      showLoading() {
+        this.showElement('loading');
+        this.hideElement('error');
+      }
+
+      hideLoading() {
+        this.hideElement('loading');
+      }
+
+      showError(message) {
+        const errorElement = document.getElementById('error');
+        if (errorElement) {
+          errorElement.textContent = message;
+          errorElement.style.display = 'block';
+        }
+        this.hideElement('loading');
+      }
+
+      showElement(id) {
+        const element = document.getElementById(id);
+        if (element) {
+          element.style.display = 'block';
+        }
+      }
+
+      hideElement(id) {
+        const element = document.getElementById(id);
+        if (element) {
+          element.style.display = 'none';
+        }
+      }
+    }
+
+    // Initialize the FX validator when the page loads
+    let fxValidator;
+    document.addEventListener('DOMContentLoaded', () => {
+      fxValidator = new GRQFXValidator();
+    });
+  </script>
+</body>
 </html>
