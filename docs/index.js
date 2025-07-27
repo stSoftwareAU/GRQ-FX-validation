@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.11";
+const VERSION = "1.0.12";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -321,7 +321,7 @@ class YahooFinanceAPI {
   }
 
   // Process Yahoo Finance data for FX pairs
-  processFXData(yahooData, fxPair) {
+  async processFXData(yahooData, fxPair) {
     if (!yahooData.chart || !yahooData.chart.result || !yahooData.chart.result[0]) {
       console.warn(`No data available for ${fxPair}`);
       return null;
@@ -359,8 +359,8 @@ class YahooFinanceAPI {
     const avgRate = validCloses.length > 0 ? validCloses.reduce((sum, d) => sum + d.close, 0) / validCloses.length : null;
     const volatility = validCloses.length > 1 ? this.calculateVolatility(validCloses.map(d => d.close)) : null;
 
-    // Use a simple description since we already have the data
-    const description = `${fxPair} Exchange Rate`;
+    // Get proper currency description from Yahoo Finance
+    const description = await this.getFXPairDescription(fxPair);
 
     return {
       fxPair: fxPair,
