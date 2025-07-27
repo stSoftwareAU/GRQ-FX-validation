@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.7";
+const VERSION = "1.0.8";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -486,7 +486,7 @@ async function loadHistoricalData(predictionDate, fxPair) {
     }
   }
   
-  // Sort by date and return last 52 weeks
+  // Sort by date and return last 52 weeks (12 months)
   weeklyData.sort((a, b) => a.x - b.x);
   return weeklyData.slice(-52);
 }
@@ -834,7 +834,7 @@ class GRQFXValidator {
           plugins: {
             title: {
               display: true,
-              text: `${pair.pair} Rate Analysis - ${this.predictionData.date}`,
+              text: `${pair.pair} Rate Analysis - 24 Month Period (12M Historical + 12M Predicted)`,
               font: {
                 size: 16,
               },
@@ -863,15 +863,29 @@ class GRQFXValidator {
             x: {
               type: 'time',
               time: {
-                unit: 'week',
+                unit: 'month',
                 displayFormats: {
-                  week: 'MMM dd, yyyy'
+                  month: 'MMM yyyy'
                 }
               },
               title: {
                 display: true,
-                text: 'Week Starting',
+                text: 'Date',
               },
+              min: (() => {
+                // Show 12 months before prediction date
+                const predictionDate = new Date(this.predictionData.date);
+                const twelveMonthsAgo = new Date(predictionDate);
+                twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+                return twelveMonthsAgo.getTime();
+              })(),
+              max: (() => {
+                // Show 12 months after prediction date
+                const predictionDate = new Date(this.predictionData.date);
+                const twelveMonthsLater = new Date(predictionDate);
+                twelveMonthsLater.setMonth(twelveMonthsLater.getMonth() + 12);
+                return twelveMonthsLater.getTime();
+              })(),
             },
             y: {
               title: {
