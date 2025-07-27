@@ -1060,22 +1060,25 @@ class GRQFXValidator {
       </div>
     `;
 
-    // Add data quality assessment
-    if (yahooData.dataPoints >= 250) {
+    // Add data quality assessment based on time coverage
+    const daysCovered = yahooData.dateRange.start && yahooData.dateRange.end ? 
+      Math.ceil((yahooData.dateRange.end - yahooData.dateRange.start) / (1000 * 60 * 60 * 24)) : 0;
+    
+    if (daysCovered >= 365) {
       validationHTML += `
         <div class="alert alert-success">
           <small>
             <i class="fas fa-check-circle me-1"></i>
-            High-quality data: ${yahooData.dataPoints} trading days available
+            High-quality data: ${daysCovered} days of coverage (${Math.round(daysCovered/365)} years)
           </small>
         </div>
       `;
-    } else if (yahooData.dataPoints >= 100) {
+    } else if (daysCovered >= 180) {
       validationHTML += `
         <div class="alert alert-warning">
           <small>
             <i class="fas fa-exclamation-triangle me-1"></i>
-            Moderate data quality: ${yahooData.dataPoints} trading days available
+            Moderate data quality: ${daysCovered} days of coverage (${Math.round(daysCovered/30)} months)
           </small>
         </div>
       `;
@@ -1084,7 +1087,7 @@ class GRQFXValidator {
         <div class="alert alert-danger">
           <small>
             <i class="fas fa-times-circle me-1"></i>
-            Limited data quality: Only ${yahooData.dataPoints} trading days available
+            Limited data quality: Only ${daysCovered} days of coverage
           </small>
         </div>
       `;
