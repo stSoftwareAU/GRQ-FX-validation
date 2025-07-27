@@ -1075,21 +1075,20 @@ class GRQFXValidator {
     let validationHTML = '<div class="mt-3"><h6>Historical Range Validation:</h6>';
     
     // Get your data's min/max from the chart data
-    const chartData = window.chartData;
-    if (!chartData || !chartData.datasets || chartData.datasets.length === 0) {
+    if (!this.chart || !this.chart.data || !this.chart.data.datasets || this.chart.data.datasets.length === 0) {
       return '<div class="alert alert-warning"><small>No chart data available for range validation</small></div>';
     }
     
-    // Find the actuals dataset (your CSV data)
-    const actualsDataset = chartData.datasets.find(dataset => dataset.label === 'Actuals');
-    if (!actualsDataset || !actualsDataset.data || actualsDataset.data.length === 0) {
-      return '<div class="alert alert-warning"><small>No actuals data available for range validation</small></div>';
+    // Find the historical weekly averages dataset (your CSV data)
+    const historicalDataset = this.chart.data.datasets.find(dataset => dataset.label === 'Historical Weekly Averages');
+    if (!historicalDataset || !historicalDataset.data || historicalDataset.data.length === 0) {
+      return '<div class="alert alert-warning"><small>No historical data available for range validation</small></div>';
     }
     
     // Calculate your data's min/max
-    const yourPrices = actualsDataset.data.map(point => point.y).filter(price => price !== null && !isNaN(price));
+    const yourPrices = historicalDataset.data.map(point => point.y).filter(price => price !== null && !isNaN(price));
     if (yourPrices.length === 0) {
-      return '<div class="alert alert-warning"><small>No valid price data in actuals for range validation</small></div>';
+      return '<div class="alert alert-warning"><small>No valid price data in historical data for range validation</small></div>';
     }
     
     const yourMin = Math.min(...yourPrices);
