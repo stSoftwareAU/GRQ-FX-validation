@@ -303,7 +303,7 @@ class YahooFinanceAPI {
     
     return {
       fxPair: historicalData.fxPair,
-      description: historicalData.description,
+      description: `${historicalData.fxPair} Exchange Rate`,
       yahooUrl: historicalData.yahooUrl,
       min: min,
       max: max,
@@ -357,8 +357,8 @@ class YahooFinanceAPI {
     const avgRate = validCloses.length > 0 ? validCloses.reduce((sum, d) => sum + d.close, 0) / validCloses.length : null;
     const volatility = validCloses.length > 1 ? this.calculateVolatility(validCloses.map(d => d.close)) : null;
 
-    // Get dynamic description
-    const description = await this.getFXPairDescription(fxPair);
+    // Use a simple description since we already have the data
+    const description = `${fxPair} Exchange Rate`;
 
     return {
       fxPair: fxPair,
@@ -1319,6 +1319,7 @@ class GRQFXValidator {
 
 // Initialize the FX validator when the page loads
 // fxValidator is used in HTML onclick handlers
+// deno-lint-ignore no-unused-vars
 let fxValidator;
 document.addEventListener('DOMContentLoaded', () => {
   fxValidator = new GRQFXValidator();
