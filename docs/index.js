@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.18";
+const VERSION = "1.0.19";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -831,7 +831,7 @@ class GRQFXValidator {
     let actualData = [];
     try {
       actualData = await loadActualData(this.predictionData.date, pair.pair);
-    } catch (error) {
+    } catch (_error) {
       console.log(`No actual data available for ${pair.pair} prediction period yet`);
     }
 
