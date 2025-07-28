@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.23";
+const VERSION = "1.0.24";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -1309,9 +1309,32 @@ class GRQFXValidator {
           })
           : "N/A";
 
+        // Add range logic validation
+        let rangeLogicHTML = "";
+        
+        if (period === "1Y" && comprehensiveData["5Y"]) {
+          const fiveYear = comprehensiveData["5Y"];
+          const oneYearInFiveYear = data.min >= fiveYear.min && data.max <= fiveYear.max;
+          
+          if (oneYearInFiveYear) {
+            rangeLogicHTML = '<small class="text-success"><i class="fas fa-check-circle me-1"></i>Within 5Y range ✓</small>';
+          } else {
+            rangeLogicHTML = '<small class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Outside 5Y range</small>';
+          }
+        } else if (period === "5Y" && comprehensiveData["10Y"]) {
+          const tenYear = comprehensiveData["10Y"];
+          const fiveYearInTenYear = data.min >= tenYear.min && data.max <= tenYear.max;
+          
+          if (fiveYearInTenYear) {
+            rangeLogicHTML = '<small class="text-success"><i class="fas fa-check-circle me-1"></i>Within 10Y range ✓</small>';
+          } else {
+            rangeLogicHTML = '<small class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Outside 10Y range</small>';
+          }
+        }
+
         element.innerHTML = `
           <div><strong>Range:</strong> ${minRate} - ${maxRate}</div>
-          <div><small>Min: ${minDate} | Max: ${maxDate}</small></div>
+          <div><small>Min: ${minDate} | Max: ${maxDate}</small> ${rangeLogicHTML}</div>
         `;
       } else {
         element.textContent = "N/A";
@@ -1701,88 +1724,10 @@ class GRQFXValidator {
     this.chart.update();
   }
 
-  validateRangeLogic(comprehensiveData) {
-    const validationResults = document.getElementById("yahooValidationResults");
-    let validationHTML = '<div class="mt-3"><h6>Range Logic Validation:</h6>';
 
-    // Check if 1Y is within 5Y range
-    if (comprehensiveData["1Y"] && comprehensiveData["5Y"]) {
-      const oneYear = comprehensiveData["1Y"];
-      const fiveYear = comprehensiveData["5Y"];
-
-      const oneYearInFiveYear = oneYear.min >= fiveYear.min &&
-        oneYear.max <= fiveYear.max;
-
-      if (!oneYearInFiveYear) {
-        validationHTML += `
-          <div class="alert alert-danger">
-            <small>
-              <i class="fas fa-exclamation-triangle me-1"></i>
-              <strong>ERROR:</strong> 1Y range (${
-          formatCurrency(oneYear.min)
-        } - ${formatCurrency(oneYear.max)}) is outside 5Y range (${
-          formatCurrency(fiveYear.min)
-        } - ${formatCurrency(fiveYear.max)})
-            </small>
-          </div>
-        `;
-      } else {
-        validationHTML += `
-          <div class="alert alert-success">
-            <small>
-              <i class="fas fa-check-circle me-1"></i>
-              1Y range is within 5Y range ✓
-            </small>
-          </div>
-        `;
-      }
-    }
-
-    // Check if 5Y is within 10Y range
-    if (comprehensiveData["5Y"] && comprehensiveData["10Y"]) {
-      const fiveYear = comprehensiveData["5Y"];
-      const tenYear = comprehensiveData["10Y"];
-
-      const fiveYearInTenYear = fiveYear.min >= tenYear.min &&
-        fiveYear.max <= tenYear.max;
-
-      if (!fiveYearInTenYear) {
-        validationHTML += `
-          <div class="alert alert-danger">
-            <small>
-              <i class="fas fa-exclamation-triangle me-1"></i>
-              <strong>ERROR:</strong> 5Y range (${
-          formatCurrency(fiveYear.min)
-        } - ${formatCurrency(fiveYear.max)}) is outside 10Y range (${
-          formatCurrency(tenYear.min)
-        } - ${formatCurrency(tenYear.max)})
-            </small>
-          </div>
-        `;
-      } else {
-        validationHTML += `
-          <div class="alert alert-success">
-            <small>
-              <i class="fas fa-check-circle me-1"></i>
-              5Y range is within 10Y range ✓
-            </small>
-          </div>
-        `;
-      }
-    }
-
-    validationHTML += "</div>";
-
-    // Append to existing validation results
-    const existingHTML = validationResults.innerHTML;
-    validationResults.innerHTML = existingHTML + validationHTML;
-  }
 
   addHistoricalRangeLines(comprehensiveData) {
     if (!this.chart) return;
-
-    // Validate range logic: 1Y should be within 5Y, 5Y within 10Y
-    this.validateRangeLogic(comprehensiveData);
 
     const periods = [
       { name: "1Y", color: "#dc3545", dash: [3, 3] },
