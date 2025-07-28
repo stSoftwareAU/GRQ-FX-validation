@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.17";
+const VERSION = "1.0.18";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -428,7 +428,7 @@ function formatPercentage(value) {
   return `${sign}${value.toFixed(2)}%`;
 }
 
-async function loadHistoricalData(predictionDate, fxPair) {
+async function loadHistoricalData(_predictionDate, fxPair) {
   // Load the CSV file for this FX pair from centralized location
   const response = await fetch(`data/${fxPair}.csv`);
   if (!response.ok) {
