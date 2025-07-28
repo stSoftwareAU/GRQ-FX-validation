@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.13";
+const VERSION = "1.0.14";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -1047,18 +1047,33 @@ class GRQFXValidator {
     }
 
     // Add comprehensive validation info
-    validationHTML += `
-      <div class="alert alert-info">
-        <small>
-          <i class="fas fa-info-circle me-1"></i>
-          <strong>Yahoo Finance Statistics:</strong><br>
-          • 1Y Range: ${formatCurrency(yahooData.minRate)} - ${formatCurrency(yahooData.maxRate)}<br>
-          • Average Rate: ${formatCurrency(yahooData.avgRate)}<br>
-          • Volatility: ${yahooData.volatility ? `${yahooData.volatility.toFixed(2)}%` : 'N/A'}<br>
-          • Data Points: ${yahooData.dataPoints} days
-        </small>
-      </div>
-    `;
+    if (comprehensiveData && comprehensiveData['1Y']) {
+      const oneYearData = comprehensiveData['1Y'];
+      validationHTML += `
+        <div class="alert alert-info">
+          <small>
+            <i class="fas fa-info-circle me-1"></i>
+            <strong>Yahoo Finance Statistics:</strong><br>
+            • 1Y Range: ${formatCurrency(oneYearData.min)} - ${formatCurrency(oneYearData.max)}<br>
+            • Average Rate: ${formatCurrency(yahooData.avgRate)}<br>
+            • Volatility: ${yahooData.volatility ? `${yahooData.volatility.toFixed(2)}%` : 'N/A'}<br>
+            • Data Coverage: ${daysCovered} days (${Math.round(daysCovered/365)} years)
+          </small>
+        </div>
+      `;
+    } else {
+      validationHTML += `
+        <div class="alert alert-info">
+          <small>
+            <i class="fas fa-info-circle me-1"></i>
+            <strong>Yahoo Finance Statistics:</strong><br>
+            • Average Rate: ${formatCurrency(yahooData.avgRate)}<br>
+            • Volatility: ${yahooData.volatility ? `${yahooData.volatility.toFixed(2)}%` : 'N/A'}<br>
+            • Data Coverage: ${daysCovered} days (${Math.round(daysCovered/365)} years)
+          </small>
+        </div>
+      `;
+    }
 
     // Add data quality assessment based on time coverage
     const daysCovered = yahooData.dateRange.start && yahooData.dateRange.end ? 
