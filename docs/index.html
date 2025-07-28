@@ -199,15 +199,21 @@
                   <div class="card-header">
                   <h5 class="card-title mb-0">Chart Legend</h5>
                   </div>
-                  <div class="card-body">
-                    <div class="row">
-                      <div class="col-md-3">
-                        <h6>Historical Data:</h6>
-                        <ul class="list-unstyled">
-                          <li><span style="color: #6c757d;">●</span> Weekly average rates (52 weeks)</li>
-                          <li><span style="color: #28a745;">●</span> Yahoo Finance daily rates</li>
-                        </ul>
-                      </div>
+                                     <div class="card-body">
+                     <div class="row">
+                       <div class="col-md-3">
+                          <h6>Historical Data:</h6>
+                          <ul class="list-unstyled">
+                            <li><span style="color: #6c757d;">●</span> Weekly average rates (52 weeks)</li>
+                            <li><span style="color: #28a745;">●</span> Yahoo Finance daily rates</li>
+                          </ul>
+                          <div id="dataConsistencyStatus" class="mt-2" style="display: none;">
+                            <small>
+                              <span id="consistencyIcon" class="me-1">✅</span>
+                              <span id="consistencyText">Data consistency check passed</span>
+                            </small>
+                          </div>
+                        </div>
                       <div class="col-md-3">
                         <h6>Prediction Elements:</h6>
                         <ul class="list-unstyled">

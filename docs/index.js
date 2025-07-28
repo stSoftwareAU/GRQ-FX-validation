@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.20";
+const VERSION = "1.0.21";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -1015,6 +1015,38 @@ class GRQFXValidator {
     this.loadYahooFinanceData(pair);
   }
 
+  async loadFullCSVData(fxPair) {
+    // Load the complete CSV file from docs/data directory
+    const response = await fetch(`data/${fxPair}.csv`);
+    if (!response.ok) {
+      throw new Error(`Failed to load ${fxPair}.csv from data directory`);
+    }
+    
+    const csvText = await response.text();
+    const lines = csvText.split('\n').filter(line => line.trim());
+    
+    // Skip header line
+    const dataLines = lines.slice(1);
+    
+    // Parse CSV data
+    const csvData = [];
+    for (const line of dataLines) {
+      const [dateStr, rateStr] = line.split(',');
+      if (dateStr && rateStr) {
+        const date = new Date(dateStr);
+        const rate = parseFloat(rateStr);
+        if (!isNaN(rate)) {
+          csvData.push({ date, rate });
+        }
+      }
+    }
+    
+    // Sort by date
+    csvData.sort((a, b) => a.date.getTime() - b.date.getTime());
+    
+    return csvData;
+  }
+
   async loadYahooFinanceData(pair) {
     // Show loading state
     this.showElement('yahooDataLoading');
@@ -1036,7 +1068,7 @@ class GRQFXValidator {
       if (comprehensiveData && Object.keys(comprehensiveData).length > 0) {
         // Use MAX data (full processed data) for display and chart
         const fullData = comprehensiveData['MAX'];
-        this.displayYahooFinanceData(fullData, pair, comprehensiveData);
+        await this.displayYahooFinanceData(fullData, pair, comprehensiveData);
         
         // Add Yahoo Finance data to chart if available
         this.addYahooFinanceToChart(comprehensiveData);
@@ -1049,7 +1081,7 @@ class GRQFXValidator {
     }
   }
 
-  displayYahooFinanceData(yahooData, pair, comprehensiveData = null) {
+  async displayYahooFinanceData(yahooData, pair, comprehensiveData = null) {
     // Hide loading, show content
     this.hideElement('yahooDataLoading');
     this.showElement('yahooDataContent');
@@ -1080,7 +1112,7 @@ class GRQFXValidator {
     }
 
     // Validate data against CSV data
-    this.validateDataAgainstYahoo(yahooData, pair, comprehensiveData);
+    await this.validateDataAgainstYahoo(yahooData, pair, comprehensiveData);
   }
 
   updateHistoricalRanges(comprehensiveData) {
@@ -1109,7 +1141,7 @@ class GRQFXValidator {
     });
   }
 
-  validateDataAgainstYahoo(yahooData, pair, comprehensiveData = null) {
+  async validateDataAgainstYahoo(yahooData, pair, comprehensiveData = null) {
     const validationResults = document.getElementById('yahooValidationResults');
     let validationHTML = '';
 
@@ -1150,7 +1182,7 @@ class GRQFXValidator {
 
     // Validate historical ranges if comprehensive data is available
     if (comprehensiveData) {
-      validationHTML += this.validateHistoricalRanges(comprehensiveData);
+      validationHTML += await this.validateHistoricalRanges(comprehensiveData);
     }
 
     // Calculate data coverage first
@@ -1220,73 +1252,210 @@ class GRQFXValidator {
     validationResults.innerHTML = validationHTML;
   }
 
-  validateHistoricalRanges(comprehensiveData) {
+  async validateHistoricalRanges(comprehensiveData) {
     let validationHTML = '<div class="mt-3"><h6>Historical Range Validation:</h6>';
     
-    // Get your data's min/max from the chart data
-    if (!this.chart || !this.chart.data || !this.chart.data.datasets || this.chart.data.datasets.length === 0) {
-      return '<div class="alert alert-warning"><small>No chart data available for range validation</small></div>';
+    // Load full 10-year CSV data for comprehensive validation
+    let csvData = null;
+    try {
+      csvData = await this.loadFullCSVData(this.selectedPair);
+    } catch (error) {
+      console.error('Error loading full CSV data for validation:', error);
+      validationHTML += `
+        <div class="alert alert-warning">
+          <small>
+            <i class="fas fa-exclamation-triangle me-1"></i>
+            Could not load full CSV data for validation: ${error.message}
+          </small>
+        </div>
+      `;
+      validationHTML += '</div>';
+      return validationHTML;
     }
     
-    // Find the historical weekly averages dataset (your CSV data)
-    const historicalDataset = this.chart.data.datasets.find(dataset => dataset.label === 'Historical Weekly Averages');
-    if (!historicalDataset || !historicalDataset.data || historicalDataset.data.length === 0) {
-      return '<div class="alert alert-warning"><small>No historical data available for range validation</small></div>';
+    if (!csvData || csvData.length === 0) {
+      validationHTML += `
+        <div class="alert alert-warning">
+          <small>
+            <i class="fas fa-exclamation-triangle me-1"></i>
+            No CSV data available for validation
+          </small>
+        </div>
+      `;
+      validationHTML += '</div>';
+      return validationHTML;
     }
     
-    // Calculate your data's min/max
-    const yourPrices = historicalDataset.data.map(point => point.y).filter(price => price !== null && !isNaN(price));
-    if (yourPrices.length === 0) {
-      return '<div class="alert alert-warning"><small>No valid price data in historical data for range validation</small></div>';
+    // Calculate your CSV data's 10-year min/max
+    const csvPrices = csvData.map(point => point.rate).filter(price => price !== null && !isNaN(price));
+    if (csvPrices.length === 0) {
+      validationHTML += `
+        <div class="alert alert-warning">
+          <small>
+            <i class="fas fa-exclamation-triangle me-1"></i>
+            No valid price data in CSV for validation
+          </small>
+        </div>
+      `;
+      validationHTML += '</div>';
+      return validationHTML;
     }
     
-    const yourMin = Math.min(...yourPrices);
-    const yourMax = Math.max(...yourPrices);
+    const csvMin = Math.min(...csvPrices);
+    const csvMax = Math.max(...csvPrices);
+    const csvDataPoints = csvPrices.length;
+    const csvDateRange = `${csvData[0].date} to ${csvData[csvData.length - 1].date}`;
     
     validationHTML += `
       <div class="alert alert-info">
         <small>
-          <strong>Your Data Range:</strong> ${formatCurrency(yourMin)} - ${formatCurrency(yourMax)}
+          <strong>Your CSV Data (${csvDataPoints} points):</strong><br>
+          • Range: ${formatCurrency(csvMin)} - ${formatCurrency(csvMax)}<br>
+          • Period: ${csvDateRange}
         </small>
       </div>
     `;
     
-    // Compare with Yahoo Finance ranges
-    const periods = ['1Y', '5Y', '10Y'];
+    // Compare with Yahoo Finance 10-year range
+    if (comprehensiveData && comprehensiveData['10Y']) {
+      const yahoo10Y = comprehensiveData['10Y'];
+      const yahooMin = yahoo10Y.min;
+      const yahooMax = yahoo10Y.max;
+      
+      // Calculate tolerance (0.5% of the range)
+      const range = yahooMax - yahooMin;
+      const tolerance = range * 0.005; // 0.5% tolerance
+      
+      // Check if your data is within Yahoo's range with tolerance
+      const csvMinInRange = csvMin >= (yahooMin - tolerance) && csvMin <= (yahooMax + tolerance);
+      const csvMaxInRange = csvMax >= (yahooMin - tolerance) && csvMax <= (yahooMax + tolerance);
+      
+      let alertClass = 'alert-success';
+      let icon = 'fas fa-check-circle';
+      let message = '✅ Data consistency check passed';
+      let details = 'Your CSV data range is consistent with Yahoo Finance 10-year range';
+      
+      if (!csvMinInRange || !csvMaxInRange) {
+        alertClass = 'alert-danger';
+        icon = 'fas fa-exclamation-triangle';
+        message = '🚨 DATA FEED BUG DETECTED!';
+        details = 'Your CSV data range is inconsistent with Yahoo Finance 10-year range. This may indicate a data feed issue.';
+      }
+      
+      validationHTML += `
+        <div class="alert ${alertClass}">
+          <small>
+            <i class="${icon} me-1"></i>
+            <strong>10-Year Range Validation:</strong> ${message}<br>
+            <small>${details}</small><br>
+            <small>Yahoo Finance: ${formatCurrency(yahooMin)} - ${formatCurrency(yahooMax)}</small><br>
+            <small>Your CSV: ${formatCurrency(csvMin)} - ${formatCurrency(csvMax)}</small>
+          </small>
+        </div>
+      `;
+      
+      // Add detailed comparison
+      const csvMinDiff = Math.abs(csvMin - yahooMin);
+      const csvMaxDiff = Math.abs(csvMax - yahooMax);
+      const csvMinDiffPercent = (csvMinDiff / yahooMin) * 100;
+      const csvMaxDiffPercent = (csvMaxDiff / yahooMax) * 100;
+      
+      validationHTML += `
+        <div class="alert alert-secondary">
+          <small>
+            <strong>Detailed Comparison:</strong><br>
+            • Min difference: ${formatCurrency(csvMinDiff)} (${csvMinDiffPercent.toFixed(2)}%)<br>
+            • Max difference: ${formatCurrency(csvMaxDiff)} (${csvMaxDiffPercent.toFixed(2)}%)<br>
+            • Tolerance: ${formatCurrency(tolerance)} (0.5% of Yahoo range)
+          </small>
+        </div>
+      `;
+      
+    } else {
+      validationHTML += `
+        <div class="alert alert-warning">
+          <small>
+            <i class="fas fa-exclamation-triangle me-1"></i>
+            Yahoo Finance 10-year data not available for comparison
+          </small>
+        </div>
+      `;
+    }
+    
+    // Also validate against 5-year and 1-year if available
+    const periods = ['5Y', '1Y'];
     periods.forEach(period => {
-      if (comprehensiveData[period]) {
+      if (comprehensiveData && comprehensiveData[period]) {
         const yahooData = comprehensiveData[period];
         const yahooMin = yahooData.min;
         const yahooMax = yahooData.max;
         
-        // Check if your data is within Yahoo's range
-        const yourMinInRange = yourMin >= yahooMin && yourMin <= yahooMax;
-        const yourMaxInRange = yourMax >= yahooMin && yourMax <= yahooMax;
+        // Check if your data overlaps with Yahoo's range
+        const hasOverlap = !(csvMax < yahooMin || csvMin > yahooMax);
         
-        let alertClass = 'alert-success';
-        let icon = 'fas fa-check-circle';
-        let message = 'Range matches Yahoo Finance';
-        
-        if (!yourMinInRange || !yourMaxInRange) {
-          alertClass = 'alert-danger';
-          icon = 'fas fa-exclamation-triangle';
-          message = 'ERROR: Your data range is outside Yahoo Finance range!';
+        if (hasOverlap) {
+          validationHTML += `
+            <div class="alert alert-success">
+              <small>
+                <i class="fas fa-check-circle me-1"></i>
+                <strong>${period} Range:</strong> Data ranges overlap with Yahoo Finance<br>
+                <small>Yahoo: ${formatCurrency(yahooMin)} - ${formatCurrency(yahooMax)}</small>
+              </small>
+            </div>
+          `;
+        } else {
+          validationHTML += `
+            <div class="alert alert-warning">
+              <small>
+                <i class="fas fa-exclamation-triangle me-1"></i>
+                <strong>${period} Range:</strong> No overlap with Yahoo Finance range<br>
+                <small>Yahoo: ${formatCurrency(yahooMin)} - ${formatCurrency(yahooMax)}</small>
+              </small>
+            </div>
+          `;
         }
-        
-        validationHTML += `
-          <div class="alert ${alertClass}">
-            <small>
-              <i class="${icon} me-1"></i>
-              <strong>${period} Range:</strong> ${message}<br>
-              <small>Yahoo: ${formatCurrency(yahooMin)} - ${formatCurrency(yahooMax)}</small>
-            </small>
-          </div>
-        `;
       }
     });
     
     validationHTML += '</div>';
+    
+    // Update the consistency status indicator
+    this.updateConsistencyStatus(comprehensiveData && comprehensiveData['10Y'], csvMin, csvMax, comprehensiveData ? comprehensiveData['10Y'] : null);
+    
     return validationHTML;
+  }
+
+  updateConsistencyStatus(hasYahooData, csvMin, csvMax, yahoo10Y) {
+    const statusElement = document.getElementById('dataConsistencyStatus');
+    const iconElement = document.getElementById('consistencyIcon');
+    const textElement = document.getElementById('consistencyText');
+    
+    if (!statusElement || !iconElement || !textElement) return;
+    
+    if (!hasYahooData) {
+      statusElement.style.display = 'none';
+      return;
+    }
+    
+    // Calculate tolerance (0.5% of the range)
+    const range = yahoo10Y.max - yahoo10Y.min;
+    const tolerance = range * 0.005; // 0.5% tolerance
+    
+    // Check if your data is within Yahoo's range with tolerance
+    const csvMinInRange = csvMin >= (yahoo10Y.min - tolerance) && csvMin <= (yahoo10Y.max + tolerance);
+    const csvMaxInRange = csvMax >= (yahoo10Y.min - tolerance) && csvMax <= (yahoo10Y.max + tolerance);
+    
+    if (csvMinInRange && csvMaxInRange) {
+      // Data is consistent
+      iconElement.textContent = '✅';
+      textElement.textContent = 'Data consistency check passed';
+      statusElement.style.display = 'block';
+    } else {
+      // Data is inconsistent - potential data feed bug
+      iconElement.textContent = '🚨';
+      textElement.textContent = 'DATA FEED BUG DETECTED!';
+      statusElement.style.display = 'block';
+    }
   }
 
   addYahooFinanceToChart(comprehensiveData = null) {
