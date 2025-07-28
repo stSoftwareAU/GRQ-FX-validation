@@ -428,7 +428,7 @@ function formatPercentage(value) {
   return `${sign}${value.toFixed(2)}%`;
 }
 
-async function loadHistoricalData(_predictionDate, fxPair) {
+async function loadHistoricalData(predictionDate, fxPair) {
   // Load the CSV file for this FX pair from centralized location
   const response = await fetch(`data/${fxPair}.csv`);
   if (!response.ok) {
@@ -454,13 +454,22 @@ async function loadHistoricalData(_predictionDate, fxPair) {
     }
   }
   
+  // Filter data to 12 months before prediction date
+  const predictionDateObj = new Date(predictionDate);
+  const twelveMonthsBefore = new Date(predictionDateObj);
+  twelveMonthsBefore.setMonth(twelveMonthsBefore.getMonth() - 12);
+  
+  const filteredData = dailyData.filter(point => 
+    point.date >= twelveMonthsBefore && point.date <= predictionDateObj
+  );
+  
   // Calculate weekly averages
   const weeklyData = [];
   
   // Group data by weeks (Monday to Sunday)
   const weeklyGroups = {};
   
-  for (const point of dailyData) {
+  for (const point of filteredData) {
     // Get the Monday of the week containing this date
     const dayOfWeek = point.date.getDay();
     const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday = 0, Monday = 1
@@ -488,9 +497,9 @@ async function loadHistoricalData(_predictionDate, fxPair) {
     }
   }
   
-  // Sort by date and return last 52 weeks (12 months)
+  // Sort by date and return all filtered data (up to 52 weeks)
   weeklyData.sort((a, b) => a.x - b.x);
-  return weeklyData.slice(-52);
+  return weeklyData;
 }
 
 // Main FX Validator class
