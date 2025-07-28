@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.14";
+const VERSION = "1.0.15";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -1046,6 +1046,10 @@ class GRQFXValidator {
       validationHTML += this.validateHistoricalRanges(comprehensiveData);
     }
 
+    // Calculate data coverage first
+    const daysCovered = yahooData.dateRange.start && yahooData.dateRange.end ? 
+      Math.ceil((yahooData.dateRange.end - yahooData.dateRange.start) / (1000 * 60 * 60 * 24)) : 0;
+
     // Add comprehensive validation info
     if (comprehensiveData && comprehensiveData['1Y']) {
       const oneYearData = comprehensiveData['1Y'];
@@ -1076,8 +1080,6 @@ class GRQFXValidator {
     }
 
     // Add data quality assessment based on time coverage
-    const daysCovered = yahooData.dateRange.start && yahooData.dateRange.end ? 
-      Math.ceil((yahooData.dateRange.end - yahooData.dateRange.start) / (1000 * 60 * 60 * 24)) : 0;
     
     if (daysCovered >= 365) {
       validationHTML += `
