@@ -868,7 +868,20 @@ class GRQFXValidator {
       }
     ];
 
-    // Add actual data if available, otherwise add predictions
+    // Always show the original predictions
+    datasets.push({
+      label: 'Original Predictions',
+      data: predictionLineData,
+      borderColor: '#667eea',
+      backgroundColor: 'rgba(102, 126, 234, 0.1)',
+      borderWidth: 3,
+      borderDash: [5, 5],
+      pointRadius: 0,
+      fill: false,
+      tension: 0.4
+    });
+
+    // Add actual data if available (for comparison)
     if (actualData.length > 0) {
       datasets.push({
         label: 'Actual Results',
@@ -879,37 +892,6 @@ class GRQFXValidator {
         pointRadius: 0,
         fill: false,
         tension: 0.1
-      });
-      
-      // Add remaining predictions (future dates)
-      const latestActualDate = Math.max(...actualData.map(d => d.x));
-      const futurePredictions = predictionLineData.filter(p => p.x > latestActualDate);
-      
-      if (futurePredictions.length > 0) {
-        datasets.push({
-          label: 'Future Predictions',
-          data: futurePredictions,
-          borderColor: '#667eea',
-          backgroundColor: 'rgba(102, 126, 234, 0.1)',
-          borderWidth: 3,
-          borderDash: [5, 5],
-          pointRadius: 0,
-          fill: false,
-          tension: 0.4
-        });
-      }
-    } else {
-      // No actual data yet, show all predictions
-      datasets.push({
-        label: 'Predicted Path',
-        data: predictionLineData,
-        borderColor: '#667eea',
-        backgroundColor: 'rgba(102, 126, 234, 0.1)',
-        borderWidth: 3,
-        borderDash: [5, 5],
-        pointRadius: 0,
-        fill: false,
-        tension: 0.4
       });
     }
 
