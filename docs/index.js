@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.15";
+const VERSION = "1.0.16";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -429,8 +429,8 @@ function formatPercentage(value) {
 }
 
 async function loadHistoricalData(predictionDate, fxPair) {
-  // Load the CSV file for this FX pair
-  const response = await fetch(`${predictionDate}/${fxPair}.csv`);
+  // Load the CSV file for this FX pair from centralized location
+  const response = await fetch(`data/${fxPair}.csv`);
   if (!response.ok) {
     throw new Error(`Failed to load ${fxPair}.csv`);
   }
@@ -1319,6 +1319,38 @@ class GRQFXValidator {
         });
       }
     });
+
+    // Add average rate line if we have 1Y data
+    if (comprehensiveData['1Y']) {
+      const oneYearData = comprehensiveData['1Y'];
+      const avgRate = oneYearData.avgRate || comprehensiveData['MAX']?.avgRate;
+      
+      if (avgRate) {
+        // Get chart time range
+        const chartData = this.chart.data.datasets[0]?.data || [];
+        if (chartData.length > 0) {
+          const minX = Math.min(...chartData.map(point => point.x));
+          const maxX = Math.max(...chartData.map(point => point.x));
+          
+          // Create horizontal line for average rate
+          const avgLineData = [
+            { x: minX, y: avgRate },
+            { x: maxX, y: avgRate }
+          ];
+          
+          this.chart.data.datasets.push({
+            label: 'Yahoo Average Rate',
+            data: avgLineData,
+            borderColor: '#20c997',
+            backgroundColor: 'transparent',
+            borderWidth: 2,
+            borderDash: [2, 2],
+            pointRadius: 0,
+            fill: false
+          });
+        }
+      }
+    }
   }
 
   showYahooFinanceError(message) {
