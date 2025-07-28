@@ -502,6 +502,80 @@ async function loadHistoricalData(predictionDate, fxPair) {
   return weeklyData;
 }
 
+async function loadActualData(predictionDate, fxPair) {
+  // Load the CSV file for this FX pair from centralized location
+  const response = await fetch(`data/${fxPair}.csv`);
+  if (!response.ok) {
+    throw new Error(`Failed to load ${fxPair}.csv`);
+  }
+  
+  const csvText = await response.text();
+  const lines = csvText.split('\n').filter(line => line.trim());
+  
+  // Skip header line
+  const dataLines = lines.slice(1);
+  
+  // Parse CSV data
+  const dailyData = [];
+  for (const line of dataLines) {
+    const [dateStr, rateStr] = line.split(',');
+    if (dateStr && rateStr) {
+      const date = new Date(dateStr);
+      const rate = parseFloat(rateStr);
+      if (!isNaN(rate)) {
+        dailyData.push({ date, rate });
+      }
+    }
+  }
+  
+  // Filter data to 12 months after prediction date (actual results)
+  const predictionDateObj = new Date(predictionDate);
+  const twelveMonthsAfter = new Date(predictionDateObj);
+  twelveMonthsAfter.setMonth(twelveMonthsAfter.getMonth() + 12);
+  
+  const filteredData = dailyData.filter(point => 
+    point.date > predictionDateObj && point.date <= twelveMonthsAfter
+  );
+  
+  // Calculate weekly averages
+  const weeklyData = [];
+  
+  // Group data by weeks (Monday to Sunday)
+  const weeklyGroups = {};
+  
+  for (const point of filteredData) {
+    // Get the Monday of the week containing this date
+    const dayOfWeek = point.date.getDay();
+    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday = 0, Monday = 1
+    const monday = new Date(point.date);
+    monday.setDate(monday.getDate() - daysToMonday);
+    
+    const weekKey = monday.toISOString().split('T')[0];
+    
+    if (!weeklyGroups[weekKey]) {
+      weeklyGroups[weekKey] = [];
+    }
+    weeklyGroups[weekKey].push(point.rate);
+  }
+  
+  // Calculate weekly averages and create chart data
+  for (const [weekKey, rates] of Object.entries(weeklyGroups)) {
+    if (rates.length > 0) {
+      const averageRate = rates.reduce((sum, rate) => sum + rate, 0) / rates.length;
+      const weekDate = new Date(weekKey);
+      
+      weeklyData.push({
+        x: weekDate.getTime(),
+        y: averageRate
+      });
+    }
+  }
+  
+  // Sort by date and return all filtered data
+  weeklyData.sort((a, b) => a.x - b.x);
+  return weeklyData;
+}
+
 // Main FX Validator class
 class GRQFXValidator {
   constructor() {
@@ -753,6 +827,14 @@ class GRQFXValidator {
       return;
     }
 
+    // Load actual data for prediction period (if available)
+    let actualData = [];
+    try {
+      actualData = await loadActualData(this.predictionData.date, pair.pair);
+    } catch (error) {
+      console.log(`No actual data available for ${pair.pair} prediction period yet`);
+    }
+
     // Create prediction line data (smooth curve through prediction points)
     const predictionLineData = [];
     const predictionDate = new Date(this.predictionData.date);
@@ -783,8 +865,42 @@ class GRQFXValidator {
         pointRadius: 0,
         fill: false,
         tension: 0.1
-      },
-      {
+      }
+    ];
+
+    // Add actual data if available, otherwise add predictions
+    if (actualData.length > 0) {
+      datasets.push({
+        label: 'Actual Results',
+        data: actualData,
+        borderColor: '#28a745',
+        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+        borderWidth: 3,
+        pointRadius: 0,
+        fill: false,
+        tension: 0.1
+      });
+      
+      // Add remaining predictions (future dates)
+      const latestActualDate = Math.max(...actualData.map(d => d.x));
+      const futurePredictions = predictionLineData.filter(p => p.x > latestActualDate);
+      
+      if (futurePredictions.length > 0) {
+        datasets.push({
+          label: 'Future Predictions',
+          data: futurePredictions,
+          borderColor: '#667eea',
+          backgroundColor: 'rgba(102, 126, 234, 0.1)',
+          borderWidth: 3,
+          borderDash: [5, 5],
+          pointRadius: 0,
+          fill: false,
+          tension: 0.4
+        });
+      }
+    } else {
+      // No actual data yet, show all predictions
+      datasets.push({
         label: 'Predicted Path',
         data: predictionLineData,
         borderColor: '#667eea',
@@ -794,8 +910,8 @@ class GRQFXValidator {
         pointRadius: 0,
         fill: false,
         tension: 0.4
-      }
-    ];
+      });
+    }
 
     // Add prediction date marker
     datasets.push({
