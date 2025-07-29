@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.26";
+const VERSION = "1.0.27";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -629,53 +629,25 @@ async function loadActualData(predictionDate, fxPair) {
     }
   }
 
-  // Filter data to 12 months after prediction date (actual results)
+  // Filter data to extend past prediction date when available (up to 12 months after)
   const predictionDateObj = new Date(predictionDate);
   const twelveMonthsAfter = new Date(predictionDateObj);
   twelveMonthsAfter.setMonth(twelveMonthsAfter.getMonth() + 12);
 
+  // Get all available data after prediction date, extending beyond 12 months if available
   const filteredData = dailyData.filter((point) =>
-    point.date > predictionDateObj && point.date <= twelveMonthsAfter
+    point.date > predictionDateObj
   );
 
-  // Calculate weekly averages
-  const weeklyData = [];
+  // Return daily data directly for better visibility of the actual line extending
+  const dailyChartData = filteredData.map((point) => ({
+    x: point.date.getTime(),
+    y: point.rate,
+  }));
 
-  // Group data by weeks (Monday to Sunday)
-  const weeklyGroups = {};
-
-  for (const point of filteredData) {
-    // Get the Monday of the week containing this date
-    const dayOfWeek = point.date.getDay();
-    const daysToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Sunday = 0, Monday = 1
-    const monday = new Date(point.date);
-    monday.setDate(monday.getDate() - daysToMonday);
-
-    const weekKey = monday.toISOString().split("T")[0];
-
-    if (!weeklyGroups[weekKey]) {
-      weeklyGroups[weekKey] = [];
-    }
-    weeklyGroups[weekKey].push(point.rate);
-  }
-
-  // Calculate weekly averages and create chart data
-  for (const [weekKey, rates] of Object.entries(weeklyGroups)) {
-    if (rates.length > 0) {
-      const averageRate = rates.reduce((sum, rate) => sum + rate, 0) /
-        rates.length;
-      const weekDate = new Date(weekKey);
-
-      weeklyData.push({
-        x: weekDate.getTime(),
-        y: averageRate,
-      });
-    }
-  }
-
-  // Sort by date and return all filtered data
-  weeklyData.sort((a, b) => a.x - b.x);
-  return weeklyData;
+  // Sort by date and return all available actual data
+  dailyChartData.sort((a, b) => a.x - b.x);
+  return dailyChartData;
 }
 
 // Main FX Validator class
@@ -1013,11 +985,11 @@ class GRQFXValidator {
     // Add actual data if available (for comparison)
     if (actualData.length > 0) {
       datasets.push({
-        label: "Actual Results",
+        label: "Actual Daily Rates",
         data: actualData,
         borderColor: "#28a745",
         backgroundColor: "rgba(40, 167, 69, 0.1)",
-        borderWidth: 3,
+        borderWidth: 2,
         pointRadius: 0,
         fill: false,
         tension: 0.1,
@@ -1084,8 +1056,24 @@ class GRQFXValidator {
           plugins: {
             title: {
               display: true,
-              text:
-                `${pair.pair} Rate Analysis - 24 Month Period (12M Historical + 12M Predicted)`,
+              text: (() => {
+                const predictionDate = new Date(this.predictionData.date);
+                const twelveMonthsLater = new Date(predictionDate);
+                twelveMonthsLater.setMonth(twelveMonthsLater.getMonth() + 12);
+                
+                let title = `${pair.pair} Rate Analysis - 12M Historical + `;
+                
+                if (actualData.length > 0) {
+                  const lastActualDate = new Date(Math.max(...actualData.map(d => d.x)));
+                  const actualMonths = Math.ceil((lastActualDate - predictionDate) / (1000 * 60 * 60 * 24 * 30));
+                  const remainingMonths = Math.max(0, 12 - actualMonths);
+                  title += `${actualMonths}M Actual + ${remainingMonths}M Predicted`;
+                } else {
+                  title += "12M Predicted";
+                }
+                
+                return title;
+              })(),
               font: {
                 size: 16,
               },
@@ -1133,7 +1121,7 @@ class GRQFXValidator {
                 return twelveMonthsAgo.getTime();
               })(),
               max: (() => {
-                // Show 12 months after prediction date
+                // Show 12 months after prediction date (keep predictions unchanged)
                 const predictionDate = new Date(this.predictionData.date);
                 const twelveMonthsLater = new Date(predictionDate);
                 twelveMonthsLater.setMonth(twelveMonthsLater.getMonth() + 12);
@@ -1735,18 +1723,25 @@ class GRQFXValidator {
       { name: "10Y", color: "#6f42c1", dash: [7, 7] },
     ];
 
+    // Calculate the full prediction period range (12 months before to 12 months after prediction date)
+    const predictionDate = new Date(this.predictionData.date);
+    const twelveMonthsBefore = new Date(predictionDate);
+    twelveMonthsBefore.setMonth(twelveMonthsBefore.getMonth() - 12);
+    const twelveMonthsAfter = new Date(predictionDate);
+    twelveMonthsAfter.setMonth(twelveMonthsAfter.getMonth() + 12);
+    
+    // Use the minimum of today's date or 12 months after prediction date
+    const today = new Date();
+    const maxDate = new Date(Math.min(today.getTime(), twelveMonthsAfter.getTime()));
+
+    const minX = twelveMonthsBefore.getTime();
+    const maxX = maxDate.getTime();
+
     periods.forEach((period) => {
       if (comprehensiveData[period.name]) {
         const data = comprehensiveData[period.name];
 
-        // Get chart time range
-        const chartData = this.chart.data.datasets[0]?.data || [];
-        if (chartData.length === 0) return;
-
-        const minX = Math.min(...chartData.map((point) => point.x));
-        const maxX = Math.max(...chartData.map((point) => point.x));
-
-        // Create horizontal lines for min and max
+        // Create horizontal lines for min and max extending to full data range
         const minLineData = [
           { x: minX, y: data.min },
           { x: maxX, y: data.min },
@@ -1789,29 +1784,22 @@ class GRQFXValidator {
       const avgRate = oneYearData.avgRate || comprehensiveData["MAX"]?.avgRate;
 
       if (avgRate) {
-        // Get chart time range
-        const chartData = this.chart.data.datasets[0]?.data || [];
-        if (chartData.length > 0) {
-          const minX = Math.min(...chartData.map((point) => point.x));
-          const maxX = Math.max(...chartData.map((point) => point.x));
+        // Create horizontal line for average rate extending to full data range
+        const avgLineData = [
+          { x: minX, y: avgRate },
+          { x: maxX, y: avgRate },
+        ];
 
-          // Create horizontal line for average rate
-          const avgLineData = [
-            { x: minX, y: avgRate },
-            { x: maxX, y: avgRate },
-          ];
-
-          this.chart.data.datasets.push({
-            label: "Yahoo Average Rate",
-            data: avgLineData,
-            borderColor: "#20c997",
-            backgroundColor: "transparent",
-            borderWidth: 2,
-            borderDash: [2, 2],
-            pointRadius: 0,
-            fill: false,
-          });
-        }
+        this.chart.data.datasets.push({
+          label: "Yahoo Average Rate",
+          data: avgLineData,
+          borderColor: "#20c997",
+          backgroundColor: "transparent",
+          borderWidth: 2,
+          borderDash: [2, 2],
+          pointRadius: 0,
+          fill: false,
+        });
       }
     }
   }
