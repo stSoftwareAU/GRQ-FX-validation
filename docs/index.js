@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.33";
+const VERSION = "1.0.36";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -794,11 +794,15 @@ class GRQFXValidator {
       const col = document.createElement("div");
       col.className = "col-md-6 col-lg-4 mb-3";
 
-      // Calculate summary statistics
-      const monthlyChange = pair.predictions[0].predictedChangePercent;
-      const yearlyChange = pair.predictions[4].predictedChangePercent;
+      // Calculate summary statistics with defensive programming
+      const monthlyChange = pair.predictions[0]?.predictedChangePercent ?? null;
+      const yearlyChange = pair.predictions[4]?.predictedChangePercent ?? null;
       const avgChange = pair.predictions.reduce((sum, p) =>
-        sum + p.predictedChangePercent, 0) / pair.predictions.length;
+        sum + (p.predictedChangePercent ?? 0), 0) / pair.predictions.length;
+
+
+
+
 
       col.innerHTML = `
         <div class="fx-pair-card" onclick="fxValidator.selectFXPair('${pair.pair}')">
@@ -813,7 +817,7 @@ class GRQFXValidator {
               <div class="col-6">
                 <small>Monthly:</small><br>
                 <span class="prediction-change ${
-        monthlyChange >= 0 ? "positive" : "negative"
+        monthlyChange !== null && monthlyChange >= 0 ? "positive" : "negative"
       }">
                   ${formatPercentage(monthlyChange)}
                 </span>
@@ -821,7 +825,7 @@ class GRQFXValidator {
               <div class="col-6">
                 <small>Yearly:</small><br>
                 <span class="prediction-change ${
-        yearlyChange >= 0 ? "positive" : "negative"
+        yearlyChange !== null && yearlyChange >= 0 ? "positive" : "negative"
       }">
                   ${formatPercentage(yearlyChange)}
                 </span>
@@ -830,7 +834,7 @@ class GRQFXValidator {
             <div class="mt-2">
               <small>Avg Change:</small><br>
               <span class="prediction-change ${
-        avgChange >= 0 ? "positive" : "negative"
+        avgChange !== null && avgChange >= 0 ? "positive" : "negative"
       }">
                 ${formatPercentage(avgChange)}
               </span>
