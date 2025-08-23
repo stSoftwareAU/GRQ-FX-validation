@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.42";
+const VERSION = "1.0.44";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -796,9 +796,13 @@ class GRQFXValidator {
 
       // Calculate summary statistics with defensive programming
       const monthlyChange = pair.predictions[0]?.predictedChangePercent ?? null;
+      const quarterlyChange = pair.predictions[1]?.predictedChangePercent ?? null;
+      const halfYearChange = pair.predictions[2]?.predictedChangePercent ?? null;
+      const threeQuarterChange = pair.predictions[3]?.predictedChangePercent ?? null;
       const yearlyChange = pair.predictions[4]?.predictedChangePercent ?? null;
-      const avgChange = pair.predictions.reduce((sum, p) =>
-        sum + (p.predictedChangePercent ?? 0), 0) / pair.predictions.length;
+
+      // Calculate best fit slope (linear regression)
+      const slope = this.calculateBestFitSlope(pair.predictions);
 
 
 
@@ -815,7 +819,7 @@ class GRQFXValidator {
           <div class="prediction-summary">
             <div class="row">
               <div class="col-6">
-                <small>Monthly:</small><br>
+                <small>Month (30d):</small><br>
                 <span class="prediction-change ${
         monthlyChange !== null && monthlyChange >= 0 ? "positive" : "negative"
       }">
@@ -823,21 +827,49 @@ class GRQFXValidator {
                 </span>
               </div>
               <div class="col-6">
-                <small>Yearly:</small><br>
+                <small>Quarter (90d):</small><br>
+                <span class="prediction-change ${
+        quarterlyChange !== null && quarterlyChange >= 0 ? "positive" : "negative"
+      }">
+                  ${formatPercentage(quarterlyChange)}
+                </span>
+              </div>
+            </div>
+            <div class="row mt-1">
+              <div class="col-6">
+                <small>Half Year (180d):</small><br>
+                <span class="prediction-change ${
+        halfYearChange !== null && halfYearChange >= 0 ? "positive" : "negative"
+      }">
+                  ${formatPercentage(halfYearChange)}
+                </span>
+              </div>
+              <div class="col-6">
+                <small>3/4 Year (270d):</small><br>
+                <span class="prediction-change ${
+        threeQuarterChange !== null && threeQuarterChange >= 0 ? "positive" : "negative"
+      }">
+                  ${formatPercentage(threeQuarterChange)}
+                </span>
+              </div>
+            </div>
+            <div class="row mt-1">
+              <div class="col-6">
+                <small>Year (365d):</small><br>
                 <span class="prediction-change ${
         yearlyChange !== null && yearlyChange >= 0 ? "positive" : "negative"
       }">
                   ${formatPercentage(yearlyChange)}
                 </span>
               </div>
-            </div>
-            <div class="mt-2">
-              <small>Avg Change:</small><br>
-              <span class="prediction-change ${
-        avgChange !== null && avgChange >= 0 ? "positive" : "negative"
+              <div class="col-6">
+                <small>Slope (per month):</small><br>
+                <span class="prediction-change ${
+        slope !== null && slope >= 0 ? "positive" : "negative"
       }">
-                ${formatPercentage(avgChange)}
-              </span>
+                  ${slope !== null ? `${slope >= 0 ? '+' : ''}${slope.toFixed(2)}%` : 'N/A'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -1854,6 +1886,37 @@ class GRQFXValidator {
     if (element) {
       element.style.display = "none";
     }
+  }
+
+  // Calculate best fit slope using linear regression
+  calculateBestFitSlope(predictions) {
+    if (!predictions || predictions.length < 2) return null;
+
+    // Filter out null values
+    const validPredictions = predictions.filter(p => 
+      p.predictedChangePercent !== null && 
+      p.predictedChangePercent !== undefined && 
+      !isNaN(p.predictedChangePercent)
+    );
+
+    if (validPredictions.length < 2) return null;
+
+    // Convert days to months (x-axis) and use predictedChangePercent (y-axis)
+    const points = validPredictions.map(p => ({
+      x: p.days / 30, // Convert days to months
+      y: p.predictedChangePercent
+    }));
+
+    // Calculate linear regression
+    const n = points.length;
+    const sumX = points.reduce((sum, p) => sum + p.x, 0);
+    const sumY = points.reduce((sum, p) => sum + p.y, 0);
+    const sumXY = points.reduce((sum, p) => sum + p.x * p.y, 0);
+    const sumXX = points.reduce((sum, p) => sum + p.x * p.x, 0);
+
+    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    
+    return slope;
   }
 }
 
