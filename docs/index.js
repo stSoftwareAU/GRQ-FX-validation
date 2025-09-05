@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.69";
+const VERSION = "1.0.70";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -730,23 +730,23 @@ class GRQFXValidator {
   autoSelectClosestDate(sortedEntries) {
     if (sortedEntries.length === 0) return;
 
-    const oneYearAgo = new Date();
-    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    // const oneYearAgo = new Date();
+    // oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
 
-    let closestEntry = sortedEntries[0]; // Default to most recent
-    let closestDiff = Math.abs(
-      new Date(sortedEntries[0][1].date).getTime() - oneYearAgo.getTime(),
-    );
+    const closestEntry = sortedEntries[0]; // Default to most recent
+    // let closestDiff = Math.abs(
+    //   new Date(sortedEntries[0][1].date).getTime() - oneYearAgo.getTime(),
+    // );
 
-    for (const [key, entry] of sortedEntries) {
-      const entryDate = new Date(entry.date);
-      const diff = Math.abs(entryDate.getTime() - oneYearAgo.getTime());
+    // for (const [key, entry] of sortedEntries) {
+    //   const entryDate = new Date(entry.date);
+    //   const diff = Math.abs(entryDate.getTime() - oneYearAgo.getTime());
 
-      if (diff < closestDiff) {
-        closestDiff = diff;
-        closestEntry = [key, entry];
-      }
-    }
+    //   if (diff < closestDiff) {
+    //     closestDiff = diff;
+    //     closestEntry = [key, entry];
+    //   }
+    // }
 
     // Set the selected date
     const select = document.getElementById("predictionFileSelect");
