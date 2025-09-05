@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.44";
+const VERSION = "1.0.46";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -1888,7 +1888,7 @@ class GRQFXValidator {
     }
   }
 
-  // Calculate best fit slope using linear regression
+  // Calculate average monthly change rate
   calculateBestFitSlope(predictions) {
     if (!predictions || predictions.length < 2) return null;
 
@@ -1901,22 +1901,16 @@ class GRQFXValidator {
 
     if (validPredictions.length < 2) return null;
 
-    // Convert days to months (x-axis) and use predictedChangePercent (y-axis)
-    const points = validPredictions.map(p => ({
-      x: p.days / 30, // Convert days to months
-      y: p.predictedChangePercent
-    }));
-
-    // Calculate linear regression
-    const n = points.length;
-    const sumX = points.reduce((sum, p) => sum + p.x, 0);
-    const sumY = points.reduce((sum, p) => sum + p.y, 0);
-    const sumXY = points.reduce((sum, p) => sum + p.x * p.y, 0);
-    const sumXX = points.reduce((sum, p) => sum + p.x * p.x, 0);
-
-    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    // Calculate the average monthly change rate
+    // This gives a more intuitive measure of the overall trend
+    const totalChange = validPredictions[validPredictions.length - 1].predictedChangePercent - validPredictions[0].predictedChangePercent;
+    const totalMonths = (validPredictions[validPredictions.length - 1].days - validPredictions[0].days) / 30;
     
-    return slope;
+    if (totalMonths === 0) return null;
+    
+    const averageMonthlyChange = totalChange / totalMonths;
+    
+    return averageMonthlyChange;
   }
 }
 
