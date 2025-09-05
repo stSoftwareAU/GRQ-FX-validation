@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.46";
+const VERSION = "1.0.66";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -984,8 +984,9 @@ class GRQFXValidator {
 
     // Add all prediction points
     pair.predictions.forEach((prediction) => {
-      const date = new Date(predictionDate);
-      date.setDate(date.getDate() + prediction.days);
+      const date = new Date(predictionDate.getTime() + (prediction.days * 24 * 60 * 60 * 1000));
+      
+      
       predictionLineData.push({
         x: date.getTime(),
         y: prediction.predictedRate,
@@ -1064,8 +1065,7 @@ class GRQFXValidator {
     ];
 
     pair.predictions.forEach((prediction, index) => {
-      const date = new Date(predictionDate);
-      date.setDate(date.getDate() + prediction.days);
+      const date = new Date(predictionDate.getTime() + (prediction.days * 24 * 60 * 60 * 1000));
 
       datasets.push({
         label: predictionLabels[index],
@@ -1073,16 +1073,21 @@ class GRQFXValidator {
           x: date.getTime(),
           y: prediction.predictedRate,
         }],
+        type: "scatter",
         borderColor: predictionColors[index],
         backgroundColor: predictionColors[index],
-        borderWidth: 0,
-        pointRadius: 8,
-        pointStyle: "circle",
+        borderWidth: 3,
+        pointRadius: 15,
+        pointHoverRadius: 20,
+        pointStyle: "star",
         fill: false,
+        tension: 0,
+        showLine: false,
       });
     });
 
     if (typeof Chart !== "undefined") {
+      
       this.chart = new Chart(ctx, {
         type: "line",
         data: { datasets },
@@ -1126,6 +1131,7 @@ class GRQFXValidator {
                     year: "numeric",
                     month: "short",
                     day: "numeric",
+                    timeZone: "UTC"
                   });
                 },
                 label: function (context) {
@@ -1144,6 +1150,7 @@ class GRQFXValidator {
                 displayFormats: {
                   month: "MMM yyyy",
                 },
+                timezone: "UTC", // Force UTC timezone
               },
               title: {
                 display: true,
@@ -1154,14 +1161,26 @@ class GRQFXValidator {
                 const predictionDate = new Date(this.predictionData.date);
                 const twelveMonthsAgo = new Date(predictionDate);
                 twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+                console.log("Chart X-axis min:", {
+                  predictionDate: predictionDate.toISOString(),
+                  twelveMonthsAgo: twelveMonthsAgo.toISOString(),
+                  timestamp: twelveMonthsAgo.getTime()
+                });
                 return twelveMonthsAgo.getTime();
               })(),
               max: (() => {
-                // Show 12 months after prediction date (keep predictions unchanged)
+                // Show 12 months after prediction date, but ensure we include the Full-Year prediction
                 const predictionDate = new Date(this.predictionData.date);
                 const twelveMonthsLater = new Date(predictionDate);
                 twelveMonthsLater.setMonth(twelveMonthsLater.getMonth() + 12);
-                return twelveMonthsLater.getTime();
+                
+                // Also check if we need to extend to include the Full-Year prediction (365 days)
+                const fullYearLater = new Date(predictionDate.getTime() + (365 * 24 * 60 * 60 * 1000));
+                
+                // Use the later of the two dates, plus a small buffer to ensure the point is not at the edge
+                const maxDate = Math.max(twelveMonthsLater.getTime(), fullYearLater.getTime()) + (7 * 24 * 60 * 60 * 1000); // Add 7 days buffer
+                
+                return maxDate;
               })(),
             },
             y: {
@@ -1173,7 +1192,7 @@ class GRQFXValidator {
           },
           interaction: {
             intersect: false,
-            mode: "index",
+            mode: "nearest",
           },
         },
       });
