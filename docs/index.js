@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.66";
+const VERSION = "1.0.69";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -1064,15 +1064,21 @@ class GRQFXValidator {
       "Full-Year (365d)",
     ];
 
+    // Collect prediction points for best fit line calculation
+    const predictionPoints = [];
+    
     pair.predictions.forEach((prediction, index) => {
       const date = new Date(predictionDate.getTime() + (prediction.days * 24 * 60 * 60 * 1000));
+      const point = {
+        x: date.getTime(),
+        y: prediction.predictedRate,
+      };
+      
+      predictionPoints.push(point);
 
       datasets.push({
         label: predictionLabels[index],
-        data: [{
-          x: date.getTime(),
-          y: prediction.predictedRate,
-        }],
+        data: [point],
         type: "scatter",
         borderColor: predictionColors[index],
         backgroundColor: predictionColors[index],
@@ -1085,6 +1091,58 @@ class GRQFXValidator {
         showLine: false,
       });
     });
+
+    // Add best fit line anchored at current rate through prediction points
+    if (predictionPoints.length > 0) {
+      // Calculate slope from current rate to prediction points
+      // Using least squares with fixed intercept (current rate)
+      const startTime = predictionDate.getTime();
+      const startRate = pair.currentRate;
+      
+      // Calculate slope that minimizes distance to prediction points
+      // when line is anchored at (startTime, startRate)
+      let numerator = 0;
+      let denominator = 0;
+      
+      predictionPoints.forEach(point => {
+        const timeDiff = point.x - startTime;
+        const rateDiff = point.y - startRate;
+        numerator += timeDiff * rateDiff;
+        denominator += timeDiff * timeDiff;
+      });
+      
+      const slope = denominator !== 0 ? numerator / denominator : 0;
+      
+      // Create best fit line from start to end of prediction range
+      const endTime = predictionPoints[predictionPoints.length - 1].x;
+      const endRate = startRate + slope * (endTime - startTime);
+      
+      const bestFitLine = [
+        {
+          x: startTime,
+          y: startRate
+        },
+        {
+          x: endTime,
+          y: endRate
+        }
+      ];
+      
+      datasets.push({
+        label: "Best Fit Trend",
+        data: bestFitLine,
+        type: "line",
+        borderColor: "#666666",
+        backgroundColor: "transparent",
+        borderWidth: 2,
+        borderDash: [5, 5], // Dashed line
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        fill: false,
+        tension: 0,
+        showLine: true,
+      });
+    }
 
     if (typeof Chart !== "undefined") {
       
