@@ -1,14 +1,19 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.77";
+const VERSION = "1.0.78";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
 
 // Set version display
 document.addEventListener("DOMContentLoaded", () => {
+  console.log('DOM loaded, setting version:', VERSION);
   const versionElement = document.getElementById("version");
+  console.log('Version element found:', versionElement);
   if (versionElement) {
     versionElement.textContent = VERSION;
+    console.log('Version set to:', versionElement.textContent);
+  } else {
+    console.error('Version element not found!');
   }
   
   // Initialize offline indicator
