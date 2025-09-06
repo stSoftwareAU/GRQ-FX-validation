@@ -625,38 +625,7 @@ input, select, textarea {
   }
 }
 
-/* PWA install button styling */
-.pwa-install-button {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  z-index: 9999;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 0.375rem;
-  font-size: 0.8rem;
-  font-weight: 600;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: all 0.2s ease;
-}
-
-.pwa-install-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-
-.pwa-install-button:active {
-  transform: translateY(0);
-}
-
-/* Hide install button when app is already installed */
-@media (display-mode: standalone) {
-  .pwa-install-button {
-    display: none !important;
-  }
-}
+/* PWA install button styling removed for iPhone compatibility */
 
 /* PWA splash screen styles */
 .pwa-splash {
