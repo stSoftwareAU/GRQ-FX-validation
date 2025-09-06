@@ -528,6 +528,12 @@
   z-index: 9999 !important;
 }
 
+/* Ensure version number is always visible */
+#version {
+  color: #6c757d !important;
+  font-weight: 500;
+}
+
 /* PWA-specific styles */
 /* Prevent zoom on input focus for iOS */
 input, select, textarea {
@@ -812,9 +818,9 @@ input, select, textarea {
     color: #ffffff !important;
   }
   
-  p, span, div, small {
+  /* p, span, div, small {
     color: #ffffff !important;
-  }
+  } */
   
   .text-muted {
     color: #adb5bd !important;
@@ -899,6 +905,12 @@ input, select, textarea {
   /* Version display */
   .text-center.text-muted.small {
     color: #adb5bd !important;
+  }
+  
+  /* Ensure version is always visible */
+  #version {
+    color: #6c757d !important;
+    font-weight: 500;
   }
   }
 }
@@ -1001,9 +1013,9 @@ body.dark-mode-forced {
     color: #ffffff !important;
   }
   
-  p, span, div, small {
+  /* p, span, div, small {
     color: #ffffff !important;
-  }
+  } */
   
   .text-muted {
     color: #adb5bd !important;
@@ -1088,6 +1100,12 @@ body.dark-mode-forced {
   /* Version display */
   .text-center.text-muted.small {
     color: #adb5bd !important;
+  }
+  
+  /* Ensure version is always visible */
+  #version {
+    color: #6c757d !important;
+    font-weight: 500;
   }
 }
 

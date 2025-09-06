@@ -1,9 +1,9 @@
 // Service Worker for GRQ FX Validation Dashboard
-// Version 1.0.3 - Force Safari cache bust
+// Version 1.0.4 - Force complete cache refresh
 
-const CACHE_NAME = 'grq-fx-v1.0.3';
-const STATIC_CACHE_NAME = 'grq-fx-static-v1.0.3';
-const DYNAMIC_CACHE_NAME = 'grq-fx-dynamic-v1.0.3';
+const CACHE_NAME = 'grq-fx-v1.0.4';
+const STATIC_CACHE_NAME = 'grq-fx-static-v1.0.4';
+const DYNAMIC_CACHE_NAME = 'grq-fx-dynamic-v1.0.4';
 
 // Files to cache immediately (static assets)
 const STATIC_ASSETS = [
