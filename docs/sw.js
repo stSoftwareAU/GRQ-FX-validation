@@ -147,7 +147,7 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch((error) => {
+        .catch((_error) => {
           console.warn('Service Worker: Network failed for data file - VALIDATION MAY BE INVALID', request.url);
           // Network failed - only use cache as last resort with strong warning
           return caches.match(request)
