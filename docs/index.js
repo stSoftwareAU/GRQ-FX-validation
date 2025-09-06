@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.73";
+const VERSION = "1.0.75";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -10,7 +10,221 @@ document.addEventListener("DOMContentLoaded", () => {
   if (versionElement) {
     versionElement.textContent = VERSION;
   }
+  
+  // Initialize offline indicator
+  initializeOfflineIndicator();
+  
+  // Initialize validation status
+  initializeValidationStatus();
+  
+  // Initialize dark mode toggle
+  initializeDarkModeToggle();
 });
+
+// Offline indicator functionality
+function initializeOfflineIndicator() {
+  // Create offline indicator element
+  const offlineIndicator = document.createElement('div');
+  offlineIndicator.id = 'offline-indicator';
+  offlineIndicator.className = 'alert alert-warning position-fixed';
+  offlineIndicator.style.cssText = 'top: 10px; left: 10px; z-index: 9999; display: none; max-width: 300px;';
+  offlineIndicator.innerHTML = `
+    <small>
+      <i class="fas fa-wifi me-1"></i>
+      <strong>Offline Mode:</strong> Using cached data. Some features may be limited.
+    </small>
+  `;
+  document.body.appendChild(offlineIndicator);
+  
+  // Monitor online/offline status
+  function updateOnlineStatus() {
+    const indicator = document.getElementById('offline-indicator');
+    if (!navigator.onLine) {
+      indicator.style.display = 'block';
+      indicator.className = 'alert alert-warning position-fixed';
+    } else {
+      indicator.style.display = 'none';
+    }
+  }
+  
+  // Listen for online/offline events
+  window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+  
+  // Check initial status
+  updateOnlineStatus();
+  
+  // Monitor fetch requests for cache indicators and validation errors
+  const originalFetch = window.fetch;
+  window.fetch = function(...args) {
+    const url = args[0];
+    const isDataFile = typeof url === 'string' && (url.includes('.csv') || url.includes('predictions.json'));
+    
+    return originalFetch.apply(this, args)
+      .then(response => {
+        // Check if response was served from cache
+        if (response.headers.get('X-Served-From-Cache') === 'true') {
+          if (isDataFile) {
+            showCacheIndicator();
+            console.warn('VALIDATION WARNING: Using cached data for', url);
+          }
+        }
+        
+        // Check for validation warnings
+        if (response.headers.get('X-Validation-Warning') === 'CACHED-DATA') {
+          showCacheIndicator();
+          console.error('VALIDATION ERROR: Cached data being used for validation!');
+        }
+        
+        return response;
+      })
+      .catch(error => {
+        // If fetch fails for data files, show validation error
+        if (isDataFile && !navigator.onLine) {
+          showValidationError('No network connection available. Cannot load prediction data for validation.');
+          console.error('VALIDATION ERROR: Cannot load data for validation:', error);
+        }
+        throw error;
+      });
+  };
+}
+
+function showCacheIndicator() {
+  const indicator = document.getElementById('offline-indicator');
+  if (indicator) {
+    indicator.style.display = 'block';
+    indicator.className = 'alert alert-danger position-fixed';
+    indicator.style.cssText = 'top: 10px; left: 10px; z-index: 9999; display: block; max-width: 450px; border: 4px solid #dc3545; box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); animation: pulse-warning 2s infinite;';
+    indicator.innerHTML = `
+      <div class="d-flex align-items-center">
+        <i class="fas fa-exclamation-triangle me-3" style="font-size: 1.5rem; color: #dc3545; animation: shake 0.5s infinite;"></i>
+        <div>
+          <strong style="color: #dc3545; font-size: 1.1rem;">🚨 VALIDATION WARNING 🚨</strong><br>
+          <strong style="color: #dc3545;">Using CACHED data - predictions may be OUTDATED!</strong><br>
+          <small class="text-muted">⚠️ Connect to internet for accurate validation ⚠️</small>
+        </div>
+      </div>
+    `;
+    
+    // Add pulsing animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes pulse-warning {
+        0% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); }
+        50% { box-shadow: 0 0 30px rgba(220, 53, 69, 0.8); }
+        100% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); }
+      }
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-2px); }
+        75% { transform: translateX(2px); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Never auto-hide for validation warnings
+    // User must manually dismiss or fix network connection
+  }
+}
+
+function showValidationError(message) {
+  // Create a more prominent error indicator
+  const errorIndicator = document.createElement('div');
+  errorIndicator.id = 'validation-error';
+  errorIndicator.className = 'alert alert-danger position-fixed';
+  errorIndicator.style.cssText = 'top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; max-width: 500px; text-align: center;';
+  errorIndicator.innerHTML = `
+    <div class="d-flex flex-column align-items-center">
+      <i class="fas fa-exclamation-circle mb-3" style="font-size: 3rem; color: #dc3545;"></i>
+      <h4 class="text-danger mb-3">Validation Unavailable</h4>
+      <p class="mb-3">${message}</p>
+      <button class="btn btn-primary" onclick="this.parentElement.parentElement.remove()">
+        <i class="fas fa-refresh me-1"></i> Retry
+      </button>
+    </div>
+  `;
+  
+  // Remove any existing error indicator
+  const existing = document.getElementById('validation-error');
+  if (existing) existing.remove();
+  
+  document.body.appendChild(errorIndicator);
+}
+
+// Validation status functionality - only show when there's a problem
+function initializeValidationStatus() {
+  const statusElement = document.getElementById('validation-status');
+  const statusText = document.getElementById('validation-status-text');
+  
+  if (!statusElement || !statusText) return;
+  
+  // Hide by default - only show when there's a problem
+  statusElement.style.display = 'none';
+  
+  // Monitor network status changes
+  window.addEventListener('online', () => {
+    // Hide status when back online - everything is fine
+    statusElement.style.display = 'none';
+  });
+  
+  window.addEventListener('offline', () => {
+    // Show big warning when offline
+    statusElement.style.display = 'block';
+    statusElement.querySelector('.alert').className = 'alert alert-danger mb-0';
+    statusText.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>OFFLINE - Validation may be inaccurate!';
+  });
+}
+
+// Dark mode toggle functionality
+function initializeDarkModeToggle() {
+  const toggleButton = document.getElementById('dark-mode-toggle');
+  const toggleIcon = document.getElementById('dark-mode-icon');
+  
+  if (!toggleButton || !toggleIcon) return;
+  
+  // Check if user has manually overridden dark mode
+  const userOverride = localStorage.getItem('dark-mode-override');
+  const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  
+  // Determine initial state
+  let isDarkMode = systemPrefersDark;
+  if (userOverride !== null) {
+    isDarkMode = userOverride === 'true';
+  }
+  
+  // Apply initial state
+  updateDarkMode(isDarkMode);
+  
+  // Toggle button click handler
+  toggleButton.addEventListener('click', () => {
+    isDarkMode = !isDarkMode;
+    updateDarkMode(isDarkMode);
+    localStorage.setItem('dark-mode-override', isDarkMode.toString());
+  });
+  
+  function updateDarkMode(darkMode) {
+    if (darkMode) {
+      document.body.classList.add('dark-mode-forced');
+      toggleIcon.className = 'fas fa-sun';
+      toggleButton.title = 'Switch to Light Mode';
+    } else {
+      document.body.classList.remove('dark-mode-forced');
+      toggleIcon.className = 'fas fa-moon';
+      toggleButton.title = 'Switch to Dark Mode';
+    }
+  }
+  
+  // Add keyboard shortcut for testing (Ctrl/Cmd + D)
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+      e.preventDefault();
+      isDarkMode = !isDarkMode;
+      updateDarkMode(isDarkMode);
+      localStorage.setItem('dark-mode-override', isDarkMode.toString());
+      console.log('Dark mode toggled via keyboard shortcut');
+    }
+  });
+}
 
 // Yahoo Finance API utilities
 class YahooFinanceAPI {

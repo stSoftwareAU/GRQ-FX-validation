@@ -1,9 +1,9 @@
 // Service Worker for GRQ FX Validation Dashboard
-// Version 1.0.0
+// Version 1.0.1 - Fixed dark mode and cache invalidation
 
-const CACHE_NAME = 'grq-fx-v1.0.0';
-const STATIC_CACHE_NAME = 'grq-fx-static-v1.0.0';
-const DYNAMIC_CACHE_NAME = 'grq-fx-dynamic-v1.0.0';
+const CACHE_NAME = 'grq-fx-v1.0.1';
+const STATIC_CACHE_NAME = 'grq-fx-static-v1.0.1';
+const DYNAMIC_CACHE_NAME = 'grq-fx-dynamic-v1.0.1';
 
 // Files to cache immediately (static assets)
 const STATIC_ASSETS = [
@@ -73,7 +73,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - network first for JS/CSS, cache first for data when offline
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -89,53 +89,108 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  event.respondWith(
-    caches.match(request)
-      .then((cachedResponse) => {
-        // Return cached version if available
-        if (cachedResponse) {
-          console.log('Service Worker: Serving from cache', request.url);
-          return cachedResponse;
-        }
-        
-        // Otherwise, fetch from network
-        console.log('Service Worker: Fetching from network', request.url);
-        return fetch(request)
-          .then((response) => {
-            // Don't cache non-successful responses
-            if (!response || response.status !== 200 || response.type !== 'basic') {
+  // Check if this is a data file (CSV or predictions)
+  const isDataFile = DYNAMIC_PATTERNS.some(pattern => pattern.test(url.pathname));
+  
+  // Check if this is a static asset (JS, CSS, HTML)
+  const isStaticAsset = url.pathname.endsWith('.js') || 
+                       url.pathname.endsWith('.css') || 
+                       url.pathname.endsWith('.html') ||
+                       url.pathname === './' ||
+                       url.pathname.endsWith('.json');
+  
+  if (isStaticAsset) {
+    // For static assets: Network first, then cache (always try to get fresh version)
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          // If network request succeeds, update cache and return fresh content
+          if (response && response.status === 200 && response.type === 'basic') {
+            const responseToCache = response.clone();
+            caches.open(STATIC_CACHE_NAME)
+              .then((cache) => {
+                console.log('Service Worker: Updating static cache', request.url);
+                cache.put(request, responseToCache);
+              });
+          }
+          return response;
+        })
+        .catch((error) => {
+          console.log('Service Worker: Network failed, serving from cache', request.url);
+          // Network failed, try cache
+          return caches.match(request)
+            .then((cachedResponse) => {
+              if (cachedResponse) {
+                return cachedResponse;
+              }
+              // If no cache and it's a navigation request, return offline page
+              if (request.destination === 'document') {
+                return caches.match('./index.html');
+              }
+              throw error;
+            });
+        })
+    );
+  } else if (isDataFile) {
+    // For data files: Network ONLY - cache is for emergency offline use only
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          // If network request succeeds, update cache and return fresh content
+          if (response && response.status === 200 && response.type === 'basic') {
+            const responseToCache = response.clone();
+            caches.open(DYNAMIC_CACHE_NAME)
+              .then((cache) => {
+                console.log('Service Worker: Updating data cache', request.url);
+                cache.put(request, responseToCache);
+              });
+          }
+          return response;
+        })
+        .catch((error) => {
+          console.warn('Service Worker: Network failed for data file - VALIDATION MAY BE INVALID', request.url);
+          // Network failed - only use cache as last resort with strong warning
+          return caches.match(request)
+            .then((cachedResponse) => {
+              if (cachedResponse) {
+                // Add strong warning headers for cached data
+                const responseClone = cachedResponse.clone();
+                responseClone.headers.set('X-Served-From-Cache', 'true');
+                responseClone.headers.set('X-Validation-Warning', 'CACHED-DATA');
+                responseClone.headers.set('X-Cache-Timestamp', new Date().toISOString());
+                return responseClone;
+              }
+              // No cache available - return error
+              throw new Error('No network connection and no cached data available. Cannot validate predictions.');
+            });
+        })
+    );
+  } else {
+    // For other files: Cache first, then network
+    event.respondWith(
+      caches.match(request)
+        .then((cachedResponse) => {
+          if (cachedResponse) {
+            console.log('Service Worker: Serving from cache', request.url);
+            return cachedResponse;
+          }
+          
+          // Not in cache, fetch from network
+          return fetch(request)
+            .then((response) => {
+              if (response && response.status === 200 && response.type === 'basic') {
+                const responseToCache = response.clone();
+                caches.open(STATIC_CACHE_NAME)
+                  .then((cache) => {
+                    console.log('Service Worker: Caching new content', request.url);
+                    cache.put(request, responseToCache);
+                  });
+              }
               return response;
-            }
-            
-            // Check if this should be cached dynamically
-            const shouldCache = DYNAMIC_PATTERNS.some(pattern => pattern.test(url.pathname));
-            
-            if (shouldCache) {
-              // Clone the response for caching
-              const responseToCache = response.clone();
-              
-              caches.open(DYNAMIC_CACHE_NAME)
-                .then((cache) => {
-                  console.log('Service Worker: Caching dynamic content', request.url);
-                  cache.put(request, responseToCache);
-                });
-            }
-            
-            return response;
-          })
-          .catch((error) => {
-            console.error('Service Worker: Fetch failed', request.url, error);
-            
-            // Return offline page for navigation requests
-            if (request.destination === 'document') {
-              return caches.match('./index.html');
-            }
-            
-            // For other requests, you might want to return a default response
-            throw error;
-          });
-      })
-  );
+            });
+        })
+    );
+  }
 });
 
 // Handle background sync (if supported)
