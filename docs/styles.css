@@ -527,3 +527,251 @@
   position: static !important;
   z-index: 9999 !important;
 }
+
+/* PWA-specific styles */
+/* Prevent zoom on input focus for iOS */
+input, select, textarea {
+  font-size: 16px !important;
+}
+
+/* PWA safe area handling for devices with notches */
+@supports (padding: max(0px)) {
+  .container-fluid {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+  
+  .card-header {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+}
+
+/* Landscape orientation optimizations */
+@media screen and (orientation: landscape) {
+  .chart-container {
+    height: 70vh !important;
+    min-height: 400px;
+  }
+  
+  /* Optimize for landscape on mobile devices */
+  @media (max-height: 500px) {
+    .header-gradient {
+      padding: 0.5rem 0 !important;
+    }
+    
+    .header-gradient h1 {
+      font-size: 1.5rem !important;
+      margin-bottom: 0.25rem !important;
+    }
+    
+    .header-gradient p {
+      font-size: 0.8rem !important;
+      margin-bottom: 0 !important;
+    }
+    
+    .card-body {
+      padding: 0.75rem !important;
+    }
+    
+    .mb-4 {
+      margin-bottom: 0.75rem !important;
+    }
+    
+    .mb-3 {
+      margin-bottom: 0.5rem !important;
+    }
+  }
+}
+
+/* Portrait orientation adjustments */
+@media screen and (orientation: portrait) {
+  .chart-container {
+    height: 50vh !important;
+    min-height: 300px;
+  }
+  
+  /* Show a message encouraging landscape mode */
+  .chart-container::before {
+    content: "💡 Tip: Rotate to landscape for better chart viewing";
+    display: block;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+    padding: 0.25rem;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+  }
+}
+
+/* PWA install button styling */
+.pwa-install-button {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 9999;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+}
+
+.pwa-install-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.pwa-install-button:active {
+  transform: translateY(0);
+}
+
+/* Hide install button when app is already installed */
+@media (display-mode: standalone) {
+  .pwa-install-button {
+    display: none !important;
+  }
+}
+
+/* PWA splash screen styles */
+.pwa-splash {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  color: white;
+}
+
+.pwa-splash .logo {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 2rem;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.pwa-splash .app-name {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.pwa-splash .app-description {
+  font-size: 1rem;
+  opacity: 0.9;
+  text-align: center;
+  max-width: 300px;
+}
+
+.pwa-splash .loading-spinner {
+  margin-top: 2rem;
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(255,255,255,0.3);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Touch-friendly interactions */
+@media (hover: none) and (pointer: coarse) {
+  .fx-pair-card {
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .form-select, .form-control {
+    min-height: 44px;
+  }
+  
+  /* Increase touch targets */
+  .clickable-value {
+    padding: 0.5rem;
+    margin: -0.5rem;
+    border-radius: 0.25rem;
+  }
+}
+
+/* Dark mode support (if user prefers dark mode) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --light-color: #212529;
+    --dark-color: #f8f9fa;
+  }
+  
+  .fx-pair-card {
+    background: linear-gradient(135deg, #343a40 0%, #495057 100%);
+    border-color: #495057;
+    color: #f8f9fa;
+  }
+  
+  .card {
+    background-color: #343a40;
+    border-color: #495057;
+    color: #f8f9fa;
+  }
+  
+  .table {
+    color: #f8f9fa;
+  }
+  
+  .table th {
+    background-color: #495057;
+    border-color: #6c757d;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .fx-pair-card {
+    border-width: 2px;
+  }
+  
+  .btn {
+    border-width: 2px;
+  }
+  
+  .form-control, .form-select {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .fx-pair-card {
+    transition: none;
+  }
+  
+  .btn {
+    transition: none;
+  }
+  
+  .loading-pulse {
+    animation: none;
+  }
+  
+  .pwa-splash .loading-spinner {
+    animation: none;
+  }
+}
