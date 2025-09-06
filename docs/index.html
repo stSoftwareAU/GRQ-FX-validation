@@ -326,17 +326,35 @@
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed') {
                   if (navigator.serviceWorker.controller) {
-                    // New content is available, auto-refresh after 2 seconds
-                    console.log('New version available, refreshing...');
-                    setTimeout(() => {
-                      window.location.reload();
-                    }, 2000);
+                    // New content is available, force immediate refresh for iOS
+                    console.log('New version available, forcing refresh...');
+                    
+                    // For iOS, force immediate update
+                    if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
+                      // Send message to service worker to force update
+                      navigator.serviceWorker.controller.postMessage({ type: 'FORCE_UPDATE' });
+                      // Force reload immediately
+                      window.location.reload(true);
+                    } else {
+                      // For other browsers, wait 2 seconds
+                      setTimeout(() => {
+                        window.location.reload();
+                      }, 2000);
+                    }
                   } else {
                     // First time installation
                     console.log('Service worker installed for the first time');
                   }
                 }
               });
+            });
+            
+            // Listen for force reload messages from service worker
+            navigator.serviceWorker.addEventListener('message', (event) => {
+              if (event.data && event.data.type === 'FORCE_RELOAD') {
+                console.log('Service worker requested force reload');
+                window.location.reload(true);
+              }
             });
           })
           .catch((registrationError) => {

@@ -1,9 +1,9 @@
 // Service Worker for GRQ FX Validation Dashboard
-// Version 1.0.1 - Fixed dark mode and cache invalidation
+// Version 1.0.3 - Force Safari cache bust
 
-const CACHE_NAME = 'grq-fx-v1.0.1';
-const STATIC_CACHE_NAME = 'grq-fx-static-v1.0.1';
-const DYNAMIC_CACHE_NAME = 'grq-fx-dynamic-v1.0.1';
+const CACHE_NAME = 'grq-fx-v1.0.3';
+const STATIC_CACHE_NAME = 'grq-fx-static-v1.0.3';
+const DYNAMIC_CACHE_NAME = 'grq-fx-dynamic-v1.0.3';
 
 // Files to cache immediately (static assets)
 const STATIC_ASSETS = [
@@ -30,7 +30,7 @@ const DYNAMIC_PATTERNS = [
 
 // Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('Service Worker: Installing...');
+  console.log('Service Worker: Installing version', CACHE_NAME);
   
   event.waitUntil(
     caches.open(STATIC_CACHE_NAME)
@@ -40,6 +40,7 @@ self.addEventListener('install', (event) => {
       })
       .then(() => {
         console.log('Service Worker: Static assets cached successfully');
+        // Force immediate activation for iOS
         return self.skipWaiting();
       })
       .catch((error) => {
@@ -261,5 +262,16 @@ self.addEventListener('message', (event) => {
   
   if (event.data && event.data.type === 'GET_VERSION') {
     event.ports[0].postMessage({ version: CACHE_NAME });
+  }
+  
+  if (event.data && event.data.type === 'FORCE_UPDATE') {
+    console.log('Service Worker: Force update requested');
+    self.skipWaiting();
+    // Notify all clients to reload
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({ type: 'FORCE_RELOAD' });
+      });
+    });
   }
 });
