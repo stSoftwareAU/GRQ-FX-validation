@@ -924,13 +924,244 @@ input, select, textarea {
   }
 }
 
-/* Manual dark mode override (when user clicks toggle) */
-body.dark-mode-forced {
-  :root {
-    --light-color: #212529;
-    --dark-color: #f8f9fa;
+/* Dark mode toggle button - ensure it's always visible */
+#dark-mode-toggle {
+  border: 2px solid rgba(255,255,255,0.8) !important;
+  background-color: rgba(255,255,255,0.1) !important;
+  color: white !important;
+  min-width: 40px;
+  min-height: 40px;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+#dark-mode-toggle:hover {
+  background-color: rgba(255,255,255,0.2) !important;
+  border-color: rgba(255,255,255,1) !important;
+}
+
+#dark-mode-toggle i {
+  font-size: 1.1rem;
+}
+
+/* Manual light mode override (when user clicks toggle) */
+body.light-mode-forced {
+  --light-color: #f8f9fa;
+  --dark-color: #343a40;
+  
+  /* Main body and background */
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
   }
   
+  /* Cards and containers */
+  .card {
+    background-color: #ffffff !important;
+    border-color: #dee2e6 !important;
+    color: #000000 !important;
+  }
+  
+  .card-header {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #000000 !important;
+  }
+  
+  .card-body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  /* FX pair cards */
+  .fx-pair-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+    border-color: #dee2e6 !important;
+    color: #000000 !important;
+  }
+  
+  .fx-pair-card:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%) !important;
+  }
+  
+  /* Tables */
+  .table {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+  }
+  
+  .table th {
+    background-color: #f8f9fa !important;
+    border-color: #dee2e6 !important;
+    color: #000000 !important;
+  }
+  
+  .table td {
+    border-color: #dee2e6 !important;
+    color: #000000 !important;
+    background-color: #ffffff !important;
+  }
+  
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: #f8f9fa !important;
+  }
+  
+  .table-striped tbody tr:nth-of-type(odd) td {
+    background-color: #f8f9fa !important;
+  }
+  
+  /* Table responsive containers */
+  .table-responsive {
+    background-color: #ffffff !important;
+  }
+  
+  /* Yahoo Finance data sections */
+  #yahooDataContent .table td {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+  }
+  
+  #yahooDataContent .table th {
+    color: #000000 !important;
+    background-color: #f8f9fa !important;
+  }
+  
+  #yahooDataContent .table {
+    background-color: #ffffff !important;
+  }
+  
+  /* Form elements */
+  .form-control, .form-select {
+    background-color: #ffffff !important;
+    border-color: #ced4da !important;
+    color: #000000 !important;
+  }
+  
+  .form-control:focus, .form-select:focus {
+    background-color: #ffffff !important;
+    border-color: #667eea !important;
+    color: #000000 !important;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+  }
+  
+  .form-label {
+    color: #000000 !important;
+  }
+  
+  /* Buttons */
+  .btn-outline-secondary {
+    border-color: #6c757d !important;
+    color: #6c757d !important;
+  }
+  
+  .btn-outline-secondary:hover {
+    background-color: #6c757d !important;
+    border-color: #6c757d !important;
+    color: #ffffff !important;
+  }
+  
+  /* Text elements */
+  h1, h2, h3, h4, h5, h6 {
+    color: #000000 !important;
+  }
+  
+  .text-muted {
+    color: #6c757d !important;
+  }
+  
+  .text-white {
+    color: #ffffff !important;
+  }
+  
+  /* Alerts */
+  .alert-info {
+    background-color: #d1ecf1 !important;
+    border-color: #bee5eb !important;
+    color: #0c5460 !important;
+  }
+  
+  .alert-success {
+    background-color: #d4edda !important;
+    border-color: #c3e6cb !important;
+    color: #155724 !important;
+  }
+  
+  .alert-warning {
+    background-color: #fff3cd !important;
+    border-color: #ffeaa7 !important;
+    color: #856404 !important;
+  }
+  
+  .alert-danger {
+    background-color: #f8d7da !important;
+    border-color: #f5c6cb !important;
+    color: #721c24 !important;
+  }
+  
+  .alert-secondary {
+    background-color: #e2e3e5 !important;
+    border-color: #d6d8db !important;
+    color: #383d41 !important;
+  }
+  
+  /* Badges */
+  .badge {
+    color: #ffffff !important;
+  }
+  
+  .badge.bg-primary {
+    background-color: #667eea !important;
+  }
+  
+  /* Prediction changes */
+  .prediction-change.positive {
+    color: #28a745 !important;
+  }
+  
+  .prediction-change.negative {
+    color: #dc3545 !important;
+  }
+  
+  /* Chart container */
+  .chart-container {
+    background-color: #ffffff !important;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    border: 1px solid #dee2e6;
+  }
+  
+  /* Chart.js specific light mode overrides */
+  .chart-container canvas {
+    background-color: #ffffff !important;
+  }
+  
+  /* Force Chart.js to use light theme */
+  .chartjs-render-monitor {
+    background-color: #ffffff !important;
+  }
+  
+  /* Loading spinner */
+  .spinner-border {
+    color: #667eea !important;
+  }
+  
+  /* Version display */
+  .text-center.text-muted.small {
+    color: #6c757d !important;
+  }
+  
+  /* Ensure version is always visible */
+  #version {
+    color: #6c757d !important;
+    font-weight: 500;
+  }
+}
+
+/* Manual dark mode override (when user clicks toggle) */
+body.dark-mode-forced {
+  --light-color: #212529;
+  --dark-color: #f8f9fa;
   /* Main body and background */
   body {
     background-color: #1a1a1a !important;

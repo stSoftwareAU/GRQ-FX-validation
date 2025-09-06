@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.82";
+const VERSION = "1.0.84";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -22,8 +22,21 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initialize validation status
   initializeValidationStatus();
   
-  // Initialize dark mode toggle
-  initializeDarkModeToggle();
+  // Initialize dark mode toggle with a small delay to ensure DOM is fully ready
+  setTimeout(() => {
+    initializeDarkModeToggle();
+  }, 100);
+  
+  // Also try to initialize it when the window loads (backup)
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const toggleButton = document.getElementById('dark-mode-toggle');
+      if (!toggleButton) {
+        console.log('Button still not found after window load, trying again...');
+        initializeDarkModeToggle();
+      }
+    }, 200);
+  });
 });
 
 // Offline indicator functionality
@@ -180,53 +193,239 @@ function initializeValidationStatus() {
   });
 }
 
-// Dark mode toggle functionality
+// Dark mode toggle functionality - Three states: Light, Auto, Dark
 function initializeDarkModeToggle() {
-  const toggleButton = document.getElementById('dark-mode-toggle');
-  const toggleIcon = document.getElementById('dark-mode-icon');
+  console.log('Initializing dark mode toggle...');
+  console.log('All buttons in DOM:', document.querySelectorAll('button'));
+  console.log('All elements with id containing "dark":', document.querySelectorAll('[id*="dark"]'));
   
-  if (!toggleButton || !toggleIcon) return;
+  let toggleButton = document.getElementById('dark-mode-toggle');
+  let toggleIcon = document.getElementById('dark-mode-icon');
   
-  // Check if user has manually overridden dark mode
-  const userOverride = localStorage.getItem('dark-mode-override');
+  console.log('Dark mode toggle elements:', { toggleButton, toggleIcon });
+  
+  // If elements not found, create them dynamically
+  if (!toggleButton || !toggleIcon) {
+    console.log('Creating dark mode toggle button dynamically...');
+    
+    // Remove any existing toggle button first to prevent duplicates
+    const existingToggle = document.getElementById('dark-mode-toggle');
+    if (existingToggle) {
+      existingToggle.remove();
+      console.log('Removed existing toggle button');
+    }
+    
+    // Debug: Show all elements with classes
+    console.log('All elements with d-flex class:', document.querySelectorAll('.d-flex'));
+    console.log('All elements with justify-content-between class:', document.querySelectorAll('.justify-content-between'));
+    console.log('All elements with align-items-center class:', document.querySelectorAll('.align-items-center'));
+    console.log('All elements with mb-2 class:', document.querySelectorAll('.mb-2'));
+    console.log('All card-header elements:', document.querySelectorAll('.card-header'));
+    
+    // Try to find the header container - look for the one with the h1 title
+    let headerContainer = null;
+    
+    // First, find all card headers
+    const cardHeaders = document.querySelectorAll('.card-header');
+    console.log('Found card headers:', cardHeaders);
+    
+    // Look for the one that contains the h1 with "GRQ FX Validation Dashboard"
+    for (let header of cardHeaders) {
+      const h1 = header.querySelector('h1');
+      if (h1 && h1.textContent.includes('GRQ FX Validation Dashboard')) {
+        console.log('Found header with GRQ FX title:', header);
+        // Now look for the flex container within this header
+        headerContainer = header.querySelector('.d-flex.justify-content-between.align-items-center.mb-2');
+        if (headerContainer) {
+          console.log('Found flex container in header:', headerContainer);
+          break;
+        }
+      }
+    }
+    
+    if (!headerContainer) {
+      console.error('No suitable header container found!');
+      console.log('Available elements with card-header class:', document.querySelectorAll('.card-header'));
+      
+      // Try to find any card header and use it
+      const anyCardHeader = document.querySelector('.card-header');
+      if (anyCardHeader) {
+        console.log('Using any available card header:', anyCardHeader);
+        headerContainer = anyCardHeader;
+      } else {
+        console.error('No card header found at all!');
+        return;
+      }
+    }
+    
+    // Create the button with slider switch design - always in header
+    toggleButton = document.createElement('button');
+    toggleButton.id = 'dark-mode-toggle';
+    toggleButton.className = 'theme-toggle-switch';
+    toggleButton.title = 'Theme Toggle (Auto/Light/Dark)';
+    
+    // Header button styles - slider switch design
+    toggleButton.style.cssText = `
+      width: 50px;
+      height: 25px;
+      border-radius: 12px;
+      border: 2px solid rgba(255,255,255,0.8);
+      background-color: rgba(255,255,255,0.1);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      margin-left: 10px;
+    `;
+    
+    // Create the icon/text indicator
+    toggleIcon = document.createElement('span');
+    toggleIcon.id = 'dark-mode-icon';
+    toggleIcon.textContent = 'A'; // Default to Auto
+    toggleIcon.style.cssText = `
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      transition: all 0.3s ease;
+    `;
+    
+    // Add icon to button
+    toggleButton.appendChild(toggleIcon);
+    
+    // Add button to header container in the correct position
+    // Try to find the flex container within the header first
+    const flexContainer = headerContainer.querySelector('.d-flex.justify-content-between.align-items-center.mb-2');
+    if (flexContainer) {
+      console.log('Flex container found:', flexContainer);
+      console.log('Flex container children:', flexContainer.children);
+      console.log('Flex container children length:', flexContainer.children.length);
+      
+      // The flex container should have: [empty div, h1, (our button should go here)]
+      // Insert the button as the third child (after the h1)
+      const children = flexContainer.children;
+      if (children.length >= 2) {
+        // Insert after the h1 (second child)
+        flexContainer.insertBefore(toggleButton, children[2] || null);
+        console.log('Added button to flex container as third child');
+      } else {
+        // Fallback - append to end
+        flexContainer.appendChild(toggleButton);
+        console.log('Added button to flex container at end');
+      }
+    } else {
+      // Fallback - add to the header directly with absolute positioning
+      headerContainer.style.position = 'relative';
+      toggleButton.style.position = 'absolute';
+      toggleButton.style.top = '10px';
+      toggleButton.style.right = '10px';
+      headerContainer.appendChild(toggleButton);
+      console.log('Added button to header with absolute positioning');
+    }
+    
+    console.log('Dark mode toggle button created and added to DOM');
+  }
+  
+  // Three states: 'light', 'auto', 'dark'
+  let userPreference = localStorage.getItem('dark-mode-preference') || 'auto';
   const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   
-  // Determine initial state
-  let isDarkMode = systemPrefersDark;
-  if (userOverride !== null) {
-    isDarkMode = userOverride === 'true';
-  }
-  
   // Apply initial state
-  updateDarkMode(isDarkMode);
+  updateDarkMode(userPreference);
   
-  // Toggle button click handler
+  // Toggle button click handler - cycles through: auto -> light -> dark -> auto
   toggleButton.addEventListener('click', () => {
-    isDarkMode = !isDarkMode;
-    updateDarkMode(isDarkMode);
-    localStorage.setItem('dark-mode-override', isDarkMode.toString());
+    console.log('Toggle button clicked, current preference:', userPreference);
+    
+    let newPreference;
+    switch (userPreference) {
+      case 'auto':
+        newPreference = 'light';
+        break;
+      case 'light':
+        newPreference = 'dark';
+        break;
+      case 'dark':
+        newPreference = 'auto';
+        break;
+      default:
+        newPreference = 'auto';
+    }
+    
+    console.log('Switching to preference:', newPreference);
+    userPreference = newPreference; // Update the variable
+    updateDarkMode(newPreference);
+    localStorage.setItem('dark-mode-preference', newPreference);
   });
   
-  function updateDarkMode(darkMode) {
-    if (darkMode) {
-      document.body.classList.add('dark-mode-forced');
-      toggleIcon.className = 'fas fa-sun';
-      toggleButton.title = 'Switch to Light Mode';
-    } else {
-      document.body.classList.remove('dark-mode-forced');
-      toggleIcon.className = 'fas fa-moon';
-      toggleButton.title = 'Switch to Dark Mode';
+  function updateDarkMode(preference) {
+    // Remove all mode classes
+    document.body.classList.remove('dark-mode-forced', 'light-mode-forced');
+    
+    switch (preference) {
+      case 'light':
+        document.body.classList.add('light-mode-forced');
+        toggleIcon.textContent = 'L';
+        toggleButton.title = 'Light Mode (Click for Dark Mode)';
+        toggleButton.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+        toggleButton.style.color = '#000';
+        break;
+      case 'dark':
+        document.body.classList.add('dark-mode-forced');
+        toggleIcon.textContent = 'D';
+        toggleButton.title = 'Dark Mode (Click for Auto Mode)';
+        toggleButton.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        toggleButton.style.color = '#fff';
+        break;
+      case 'auto':
+      default:
+        // No forced class - follows system preference
+        toggleIcon.textContent = 'A';
+        toggleButton.title = 'Auto Mode - Following System (Click for Light Mode)';
+        toggleButton.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+        toggleButton.style.color = 'white';
+        break;
     }
   }
+  
+  // Listen for system theme changes when in auto mode
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    if (userPreference === 'auto') {
+      updateDarkMode('auto');
+    }
+  });
   
   // Add keyboard shortcut for testing (Ctrl/Cmd + D)
   document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
       e.preventDefault();
-      isDarkMode = !isDarkMode;
-      updateDarkMode(isDarkMode);
-      localStorage.setItem('dark-mode-override', isDarkMode.toString());
-      console.log('Dark mode toggled via keyboard shortcut');
+      console.log('Keyboard shortcut triggered, current preference:', userPreference);
+      
+      let newPreference;
+      switch (userPreference) {
+        case 'auto':
+          newPreference = 'light';
+          break;
+        case 'light':
+          newPreference = 'dark';
+          break;
+        case 'dark':
+          newPreference = 'auto';
+          break;
+        default:
+          newPreference = 'auto';
+      }
+      
+      console.log('Keyboard shortcut switching to preference:', newPreference);
+      userPreference = newPreference; // Update the variable
+      updateDarkMode(newPreference);
+      localStorage.setItem('dark-mode-preference', newPreference);
     }
   });
 }

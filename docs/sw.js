@@ -1,9 +1,9 @@
 // Service Worker for GRQ FX Validation Dashboard
-// Version 1.0.6 - Reduced PWA installability
+// Version 1.0.17 - Fixed theme toggle positioning in header
 
-const CACHE_NAME = 'grq-fx-v1.0.6';
-const STATIC_CACHE_NAME = 'grq-fx-static-v1.0.6';
-const DYNAMIC_CACHE_NAME = 'grq-fx-dynamic-v1.0.6';
+const CACHE_NAME = 'grq-fx-v1.0.17';
+const STATIC_CACHE_NAME = 'grq-fx-static-v1.0.17';
+const DYNAMIC_CACHE_NAME = 'grq-fx-dynamic-v1.0.17';
 
 // Files to cache immediately (static assets)
 const STATIC_ASSETS = [
