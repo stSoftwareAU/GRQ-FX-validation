@@ -528,11 +528,26 @@
   z-index: 9999 !important;
 }
 
-/* Ensure version number is always visible */
-#version {
-  color: #6c757d !important;
-  font-weight: 500;
-}
+  /* Ensure version number is always visible */
+  #version {
+    color: #6c757d !important;
+    font-weight: 500;
+  }
+  
+  /* Yahoo Finance data sections */
+  #yahooDataContent .table td {
+    color: #ffffff !important;
+    background-color: #2d2d2d !important;
+  }
+  
+  #yahooDataContent .table th {
+    color: #ffffff !important;
+    background-color: #404040 !important;
+  }
+  
+  #yahooDataContent .table {
+    background-color: #2d2d2d !important;
+  }
 
 /* PWA-specific styles */
 /* Prevent zoom on input focus for iOS */
@@ -777,10 +792,35 @@ input, select, textarea {
   .table td {
     border-color: #404040 !important;
     color: #ffffff !important;
+    background-color: #2d2d2d !important;
   }
   
   .table-striped tbody tr:nth-of-type(odd) {
     background-color: #353535 !important;
+  }
+  
+  .table-striped tbody tr:nth-of-type(odd) td {
+    background-color: #353535 !important;
+  }
+  
+  /* Table responsive containers */
+  .table-responsive {
+    background-color: #2d2d2d !important;
+  }
+  
+  /* Yahoo Finance data sections */
+  #yahooDataContent .table td {
+    color: #ffffff !important;
+    background-color: #2d2d2d !important;
+  }
+  
+  #yahooDataContent .table th {
+    color: #ffffff !important;
+    background-color: #404040 !important;
+  }
+  
+  #yahooDataContent .table {
+    background-color: #2d2d2d !important;
   }
   
   /* Form elements */
@@ -972,10 +1012,35 @@ body.dark-mode-forced {
   .table td {
     border-color: #404040 !important;
     color: #ffffff !important;
+    background-color: #2d2d2d !important;
   }
   
   .table-striped tbody tr:nth-of-type(odd) {
     background-color: #353535 !important;
+  }
+  
+  .table-striped tbody tr:nth-of-type(odd) td {
+    background-color: #353535 !important;
+  }
+  
+  /* Table responsive containers */
+  .table-responsive {
+    background-color: #2d2d2d !important;
+  }
+  
+  /* Yahoo Finance data sections */
+  #yahooDataContent .table td {
+    color: #ffffff !important;
+    background-color: #2d2d2d !important;
+  }
+  
+  #yahooDataContent .table th {
+    color: #ffffff !important;
+    background-color: #404040 !important;
+  }
+  
+  #yahooDataContent .table {
+    background-color: #2d2d2d !important;
   }
   
   /* Form elements */

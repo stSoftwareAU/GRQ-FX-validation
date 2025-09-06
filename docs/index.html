@@ -371,42 +371,8 @@
       });
     }
     
-    // Handle PWA install prompt
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', (e) => {
-      console.log('PWA install prompt triggered');
-      e.preventDefault();
-      deferredPrompt = e;
-      
-      // Show install button or notification
-      const installButton = document.createElement('button');
-      installButton.textContent = 'Install App';
-      installButton.className = 'btn btn-primary btn-sm position-fixed';
-      installButton.style.cssText = 'top: 10px; right: 10px; z-index: 9999;';
-      installButton.onclick = () => {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('User accepted the install prompt');
-          } else {
-            console.log('User dismissed the install prompt');
-          }
-          deferredPrompt = null;
-          installButton.remove();
-        });
-      };
-      document.body.appendChild(installButton);
-    });
-    
-    // Handle successful PWA installation
-    window.addEventListener('appinstalled', (evt) => {
-      console.log('PWA was installed');
-      // Remove install button if it exists
-      const installButton = document.querySelector('button[onclick*="deferredPrompt"]');
-      if (installButton) {
-        installButton.remove();
-      }
-    });
+    // PWA install prompt handling removed for iPhone compatibility
+    // Users can install via Safari's "Add to Home Screen" option
   </script>
   </body>
 </html>
