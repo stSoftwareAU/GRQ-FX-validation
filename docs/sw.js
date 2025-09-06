@@ -7,14 +7,14 @@ const DYNAMIC_CACHE_NAME = 'grq-fx-dynamic-v1.0.0';
 
 // Files to cache immediately (static assets)
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/index.js',
-  '/styles.css',
-  '/manifest.json',
-  '/logo.png',
-  '/logo2.webp',
-  '/index.json',
+  './',
+  './index.html',
+  './index.js',
+  './styles.css',
+  './manifest.json',
+  './logo.png',
+  './logo2.webp',
+  './index.json',
   // Bootstrap and Chart.js CDN resources
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js',
@@ -24,8 +24,8 @@ const STATIC_ASSETS = [
 
 // Files to cache on demand (dynamic content)
 const DYNAMIC_PATTERNS = [
-  /\/data\/.*\.csv$/,
-  /\/\d{4}-\d{2}-\d{2}\/predictions\.json$/
+  /\.\/data\/.*\.csv$/,
+  /\.\/\d{4}-\d{2}-\d{2}\/predictions\.json$/
 ];
 
 // Install event - cache static assets
@@ -128,7 +128,7 @@ self.addEventListener('fetch', (event) => {
             
             // Return offline page for navigation requests
             if (request.destination === 'document') {
-              return caches.match('/index.html');
+              return caches.match('./index.html');
             }
             
             // For other requests, you might want to return a default response

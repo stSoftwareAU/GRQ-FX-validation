@@ -2,12 +2,12 @@
   "name": "GRQ FX Validation Dashboard",
   "short_name": "GRQ FX",
   "description": "Track FX predictions against actual rates over time",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#f8f9fa",
   "theme_color": "#0d6efd",
   "orientation": "landscape-primary",
-  "scope": "/",
+  "scope": "./",
   "lang": "en",
   "categories": ["finance", "business", "productivity"],
   "icons": [
@@ -81,7 +81,7 @@
       "name": "View Latest Predictions",
       "short_name": "Latest",
       "description": "View the most recent FX predictions",
-      "url": "/",
+      "url": "./",
       "icons": [
         {
           "src": "icons/icon-96x96.png",
