@@ -51,7 +51,7 @@ self.addEventListener('install', (event) => {
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker: Activating...');
+  console.log('Service Worker: Activating version', CACHE_NAME);
   
   event.waitUntil(
     caches.keys()
@@ -68,8 +68,22 @@ self.addEventListener('activate', (event) => {
         );
       })
       .then(() => {
-        console.log('Service Worker: Activated successfully');
+        console.log('Service Worker: Activated successfully, claiming clients');
+        // Force claim all clients immediately
         return self.clients.claim();
+      })
+      .then(() => {
+        // Notify all clients about the update
+        return self.clients.matchAll();
+      })
+      .then((clients) => {
+        clients.forEach(client => {
+          client.postMessage({ 
+            type: 'SW_UPDATED', 
+            version: CACHE_NAME,
+            timestamp: Date.now()
+          });
+        });
       })
   );
 });

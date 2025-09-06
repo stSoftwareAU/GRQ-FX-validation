@@ -306,7 +306,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <!-- Custom JavaScript -->
-  <script src="index.js"></script>
+  <script src="index.js?v=1.0.3"></script>
   
   <!-- Service Worker Registration -->
   <script>
@@ -349,11 +349,19 @@
               });
             });
             
-            // Listen for force reload messages from service worker
+            // Listen for messages from service worker
             navigator.serviceWorker.addEventListener('message', (event) => {
               if (event.data && event.data.type === 'FORCE_RELOAD') {
                 console.log('Service worker requested force reload');
                 window.location.reload(true);
+              }
+              if (event.data && event.data.type === 'SW_UPDATED') {
+                console.log('Service worker updated to version:', event.data.version);
+                // Force reload for Safari
+                if (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome')) {
+                  console.log('Safari detected, forcing reload');
+                  window.location.reload(true);
+                }
               }
             });
           })
