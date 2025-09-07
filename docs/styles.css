@@ -1,5 +1,10 @@
 /* Custom styles for GRQ FX Validation Dashboard */
 
+/* Ensure full width background for light mode */
+html {
+  background-color: #f8f9fa !important;
+}
+
 /* Custom color variables */
 :root {
   --primary-color: #667eea;
@@ -32,19 +37,20 @@
 }
 
 /* Prevent horizontal overflow and ensure full width */
-body {
+html, body {
   overflow-x: hidden;
-  margin: 0;
-  padding: 0;
-  width: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 .container-fluid {
   overflow-x: hidden;
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  max-width: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
 }
 
 /* Ensure the main card takes full width */
@@ -806,11 +812,13 @@ input, select, textarea {
     }
   
   /* Main body and background */
-  body {
+  html, body {
     background-color: #0d1117 !important;
     color: #ffffff !important;
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
   
   /* Ensure container takes full width in dark mode */
@@ -1303,11 +1311,13 @@ body.dark-mode-forced {
   --light-color: #212529;
   --dark-color: #f8f9fa;
   /* Main body and background */
-  body {
+  html, body {
     background-color: #0d1117 !important;
     color: #ffffff !important;
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
   
   /* Ensure container takes full width in dark mode */
