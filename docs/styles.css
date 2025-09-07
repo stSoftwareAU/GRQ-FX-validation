@@ -827,7 +827,8 @@ input, select, textarea {
   }
   
   .prediction-summary small {
-    color: #8b949e !important;
+    color: #c9d1d9 !important;
+    font-weight: 500 !important;
   }
   
   /* Dark mode scrollbar styling */
@@ -1306,7 +1307,8 @@ body.dark-mode-forced {
   }
   
   .prediction-summary small {
-    color: #8b949e !important;
+    color: #c9d1d9 !important;
+    font-weight: 500 !important;
   }
   
   /* Dark mode scrollbar styling */
