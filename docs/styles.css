@@ -73,6 +73,13 @@
     var(--secondary-color) 100%
   ) !important;
   color: white !important;
+  /* Ensure header extends to edges on mobile PWA */
+  margin-left: calc(-1 * max(1rem, env(safe-area-inset-left, 1rem)));
+  margin-right: calc(-1 * max(1rem, env(safe-area-inset-right, 1rem)));
+  padding-left: max(1rem, env(safe-area-inset-left, 1rem));
+  padding-right: max(1rem, env(safe-area-inset-right, 1rem));
+  /* Add extra padding at top for status bar */
+  padding-top: max(1rem, env(safe-area-inset-top, 1rem));
 }
 
 .header-gradient h1,
@@ -564,6 +571,13 @@ input, select, textarea {
   
   .card-header {
     padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  /* Ensure header extends full width on mobile PWA */
+  .card {
+    margin-left: calc(-1 * max(1rem, env(safe-area-inset-left)));
+    margin-right: calc(-1 * max(1rem, env(safe-area-inset-right)));
+    width: calc(100% + 2 * max(1rem, env(safe-area-inset-left)));
   }
 }
 
