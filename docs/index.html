@@ -41,7 +41,7 @@
 
 
     <!-- Custom styles -->
-    <link rel="stylesheet" href="styles.css?v=1.0.92">
+    <link rel="stylesheet" href="styles.css?v=1.0.94">
 
 
   </head>
@@ -300,21 +300,21 @@
 
     <!-- Version display -->
     <div class="text-center text-muted small py-2">
-      v<span id="version">1.0.92</span>
+      v<span id="version">1.0.94</span>
     </div>
 
     <!-- Bootstrap 5 JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <!-- Custom JavaScript -->
-  <script src="index.js?v=1.0.92"></script>
+  <script src="index.js?v=1.0.94"></script>
   
   <!-- Service Worker Registration -->
   <script>
     // Register service worker
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
+        navigator.serviceWorker.register('./sw.js?v=1.0.94')
           .then((registration) => {
             console.log('SW registered: ', registration);
             
@@ -327,21 +327,13 @@
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed') {
                   if (navigator.serviceWorker.controller) {
-                    // New content is available, force immediate refresh for iOS
+                    // New content is available, force immediate refresh
                     console.log('New version available, forcing refresh...');
                     
-                    // For iOS, force immediate update
-                    if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
-                      // Send message to service worker to force update
-                      navigator.serviceWorker.controller.postMessage({ type: 'FORCE_UPDATE' });
-                      // Force reload immediately
-                      window.location.reload(true);
-                    } else {
-                      // For other browsers, wait 2 seconds
-                      setTimeout(() => {
-                        window.location.reload();
-                      }, 2000);
-                    }
+                    // Force immediate update for all browsers
+                    navigator.serviceWorker.controller.postMessage({ type: 'FORCE_UPDATE' });
+                    // Force reload immediately
+                    window.location.reload(true);
                   } else {
                     // First time installation
                     console.log('Service worker installed for the first time');
@@ -358,13 +350,26 @@
               }
               if (event.data && event.data.type === 'SW_UPDATED') {
                 console.log('Service worker updated to version:', event.data.version);
-                // Force reload for Safari
-                if (navigator.userAgent.includes('Safari') && !navigator.userAgent.includes('Chrome')) {
-                  console.log('Safari detected, forcing reload');
-                  window.location.reload(true);
-                }
+                // Force reload for all browsers when SW updates
+                console.log('SW updated, forcing reload');
+                window.location.reload(true);
               }
             });
+            
+            // Listen for messages from service worker controller
+            if (navigator.serviceWorker.controller) {
+              navigator.serviceWorker.controller.addEventListener('message', (event) => {
+                if (event.data && event.data.type === 'SW_UPDATED' && event.data.forceReload) {
+                  console.log('Force reload requested due to version update');
+                  window.location.reload(true);
+                }
+              });
+            }
+            
+            // Check for updates every 30 seconds
+            setInterval(() => {
+              registration.update();
+            }, 30000);
           })
           .catch((registrationError) => {
             console.log('SW registration failed: ', registrationError);

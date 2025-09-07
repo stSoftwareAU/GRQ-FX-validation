@@ -1,9 +1,9 @@
 // Service Worker for GRQ FX Validation Dashboard
-// Version 1.0.17 - Fixed theme toggle positioning in header
+// Version 1.0.94 - Aggressive caching with version-based invalidation
 
-const CACHE_NAME = 'grq-fx-v1.0.17';
-const STATIC_CACHE_NAME = 'grq-fx-static-v1.0.17';
-const DYNAMIC_CACHE_NAME = 'grq-fx-dynamic-v1.0.17';
+const CACHE_NAME = 'grq-fx-v1.0.94';
+const STATIC_CACHE_NAME = 'grq-fx-static-v1.0.94';
+const DYNAMIC_CACHE_NAME = 'grq-fx-dynamic-v1.0.94';
 
 // Files to cache immediately (static assets)
 const STATIC_ASSETS = [
@@ -28,28 +28,30 @@ const DYNAMIC_PATTERNS = [
   /\.\/\d{4}-\d{2}-\d{2}\/predictions\.json$/
 ];
 
-// Install event - cache static assets
+// Install event - aggressively cache static assets
 self.addEventListener('install', (event) => {
   console.log('Service Worker: Installing version', CACHE_NAME);
   
   event.waitUntil(
     caches.open(STATIC_CACHE_NAME)
       .then((cache) => {
-        console.log('Service Worker: Caching static assets');
+        console.log('Service Worker: Aggressively caching static assets');
         return cache.addAll(STATIC_ASSETS);
       })
       .then(() => {
         console.log('Service Worker: Static assets cached successfully');
-        // Force immediate activation for iOS
+        // Force immediate activation to ensure new version takes over
         return self.skipWaiting();
       })
       .catch((error) => {
         console.error('Service Worker: Failed to cache static assets', error);
+        // Still skip waiting even if caching fails
+        return self.skipWaiting();
       })
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up old caches and force version update
 self.addEventListener('activate', (event) => {
   console.log('Service Worker: Activating version', CACHE_NAME);
   
@@ -58,9 +60,8 @@ self.addEventListener('activate', (event) => {
       .then((cacheNames) => {
         return Promise.all(
           cacheNames.map((cacheName) => {
-            if (cacheName !== STATIC_CACHE_NAME && 
-                cacheName !== DYNAMIC_CACHE_NAME &&
-                cacheName.startsWith('grq-fx-')) {
+            // Delete ALL old caches to force fresh downloads
+            if (cacheName.startsWith('grq-fx-')) {
               console.log('Service Worker: Deleting old cache', cacheName);
               return caches.delete(cacheName);
             }
@@ -68,12 +69,12 @@ self.addEventListener('activate', (event) => {
         );
       })
       .then(() => {
-        console.log('Service Worker: Activated successfully, claiming clients');
+        console.log('Service Worker: All old caches deleted, claiming clients');
         // Force claim all clients immediately
         return self.clients.claim();
       })
       .then(() => {
-        // Notify all clients about the update
+        // Notify all clients about the update and force reload
         return self.clients.matchAll();
       })
       .then((clients) => {
@@ -81,7 +82,8 @@ self.addEventListener('activate', (event) => {
           client.postMessage({ 
             type: 'SW_UPDATED', 
             version: CACHE_NAME,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            forceReload: true
           });
         });
       })
@@ -115,29 +117,33 @@ self.addEventListener('fetch', (event) => {
                        url.pathname.endsWith('.json');
   
   if (isStaticAsset) {
-    // For static assets: Network first, then cache (always try to get fresh version)
+    // For static assets: Cache first with version-based invalidation
+    // Aggressive caching since version changes invalidate all caches
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // If network request succeeds, update cache and return fresh content
-          if (response && response.status === 200 && response.type === 'basic') {
-            const responseToCache = response.clone();
-            caches.open(STATIC_CACHE_NAME)
-              .then((cache) => {
-                console.log('Service Worker: Updating static cache', request.url);
-                cache.put(request, responseToCache);
-              });
+      caches.match(request)
+        .then((cachedResponse) => {
+          if (cachedResponse) {
+            console.log('Service Worker: Serving from cache', request.url);
+            return cachedResponse;
           }
-          return response;
-        })
-        .catch((error) => {
-          console.log('Service Worker: Network failed, serving from cache', request.url);
-          // Network failed, try cache
-          return caches.match(request)
-            .then((cachedResponse) => {
-              if (cachedResponse) {
-                return cachedResponse;
+          
+          // Not in cache, fetch from network and cache it
+          console.log('Service Worker: Fetching from network', request.url);
+          return fetch(request)
+            .then((response) => {
+              // If network request succeeds, cache it
+              if (response && response.status === 200 && response.type === 'basic') {
+                const responseToCache = response.clone();
+                caches.open(STATIC_CACHE_NAME)
+                  .then((cache) => {
+                    console.log('Service Worker: Caching fresh content', request.url);
+                    cache.put(request, responseToCache);
+                  });
               }
+              return response;
+            })
+            .catch((error) => {
+              console.log('Service Worker: Network failed, no cache available', request.url);
               // If no cache and it's a navigation request, return offline page
               if (request.destination === 'document') {
                 return caches.match('./index.html');
@@ -181,7 +187,8 @@ self.addEventListener('fetch', (event) => {
         })
     );
   } else {
-    // For other files: Cache first, then network
+    // For other files: Cache first with version-based invalidation
+    // Aggressive caching since version changes invalidate all caches
     event.respondWith(
       caches.match(request)
         .then((cachedResponse) => {
@@ -190,18 +197,24 @@ self.addEventListener('fetch', (event) => {
             return cachedResponse;
           }
           
-          // Not in cache, fetch from network
+          // Not in cache, fetch from network and cache it
+          console.log('Service Worker: Fetching from network', request.url);
           return fetch(request)
             .then((response) => {
+              // If network request succeeds, cache it
               if (response && response.status === 200 && response.type === 'basic') {
                 const responseToCache = response.clone();
                 caches.open(STATIC_CACHE_NAME)
                   .then((cache) => {
-                    console.log('Service Worker: Caching new content', request.url);
+                    console.log('Service Worker: Caching fresh content', request.url);
                     cache.put(request, responseToCache);
                   });
               }
               return response;
+            })
+            .catch((error) => {
+              console.log('Service Worker: Network failed, no cache available', request.url);
+              throw error;
             });
         })
     );
