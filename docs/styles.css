@@ -5,6 +5,107 @@ html {
   background-color: #f8f9fa !important;
 }
 
+/* Offline mode color scheme - brown theme */
+body.offline-mode {
+  background-color: #8B4513 !important; /* Saddle Brown */
+}
+
+body.offline-mode .container-fluid {
+  background-color: #8B4513 !important;
+}
+
+body.offline-mode .card {
+  background-color: #A0522D !important; /* Sienna */
+  border-color: #CD853F !important; /* Peru */
+}
+
+body.offline-mode .card-header {
+  background-color: #D2691E !important; /* Chocolate */
+  border-color: #CD853F !important;
+  color: #FFF8DC !important; /* Cornsilk */
+}
+
+body.offline-mode .card-body {
+  background-color: #A0522D !important;
+  color: #FFF8DC !important;
+}
+
+body.offline-mode .fx-pair-card {
+  background: linear-gradient(135deg, #A0522D 0%, #D2691E 100%) !important;
+  border-color: #CD853F !important;
+  color: #FFF8DC !important;
+}
+
+body.offline-mode .fx-pair-card:hover {
+  background: linear-gradient(135deg, #D2691E 0%, #CD853F 100%) !important;
+}
+
+body.offline-mode .table {
+  background-color: #A0522D !important;
+  color: #FFF8DC !important;
+}
+
+body.offline-mode .table th {
+  background-color: #D2691E !important;
+  border-color: #CD853F !important;
+  color: #FFF8DC !important;
+}
+
+body.offline-mode .table td {
+  background-color: #A0522D !important;
+  color: #FFF8DC !important;
+}
+
+body.offline-mode .table-striped tbody tr:nth-of-type(odd) td {
+  background-color: #8B4513 !important;
+}
+
+body.offline-mode .form-control,
+body.offline-mode .form-select {
+  background-color: #D2691E !important;
+  border-color: #CD853F !important;
+  color: #FFF8DC !important;
+}
+
+body.offline-mode .btn-outline-secondary {
+  border-color: #FFF8DC !important;
+  color: #FFF8DC !important;
+}
+
+body.offline-mode .btn-outline-secondary:hover {
+  background-color: #FFF8DC !important;
+  border-color: #FFF8DC !important;
+  color: #8B4513 !important;
+}
+
+body.offline-mode .text-muted {
+  color: #F5DEB3 !important; /* Wheat */
+}
+
+body.offline-mode h1, 
+body.offline-mode h2, 
+body.offline-mode h3, 
+body.offline-mode h4, 
+body.offline-mode h5, 
+body.offline-mode h6 {
+  color: #FFF8DC !important;
+}
+
+body.offline-mode .prediction-summary {
+  color: #FFF8DC !important;
+}
+
+body.offline-mode .prediction-summary small {
+  color: #F5DEB3 !important;
+}
+
+/* Offline banner styling to match brown theme */
+body.offline-mode .alert-warning {
+  background-color: #D2691E !important;
+  border-color: #CD853F !important;
+  color: #FFF8DC !important;
+}
+
 /* Override Bootstrap defaults that might cause white borders */
 * {
   box-sizing: border-box;

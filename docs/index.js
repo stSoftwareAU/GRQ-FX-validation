@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.97";
+const VERSION = "1.0.98";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -39,29 +39,16 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// Offline indicator functionality
+// Offline indicator functionality - uses color scheme instead of floating message
 function initializeOfflineIndicator() {
-  // Create offline indicator element
-  const offlineIndicator = document.createElement('div');
-  offlineIndicator.id = 'offline-indicator';
-  offlineIndicator.className = 'alert alert-warning position-fixed';
-  offlineIndicator.style.cssText = 'top: 10px; left: 10px; z-index: 9999; display: none; max-width: 300px;';
-  offlineIndicator.innerHTML = `
-    <small>
-      <i class="fas fa-wifi me-1"></i>
-      <strong>Offline Mode:</strong> Using cached data. Some features may be limited.
-    </small>
-  `;
-  document.body.appendChild(offlineIndicator);
-  
-  // Monitor online/offline status
+  // Monitor online/offline status and apply color scheme
   function updateOnlineStatus() {
-    const indicator = document.getElementById('offline-indicator');
     if (!navigator.onLine) {
-      indicator.style.display = 'block';
-      indicator.className = 'alert alert-warning position-fixed';
+      // Apply offline color scheme
+      document.body.classList.add('offline-mode');
     } else {
-      indicator.style.display = 'none';
+      // Remove offline color scheme
+      document.body.classList.remove('offline-mode');
     }
   }
   
@@ -186,10 +173,10 @@ function initializeValidationStatus() {
   });
   
   window.addEventListener('offline', () => {
-    // Show big warning when offline
+    // Show subtle warning when offline - color scheme already indicates offline
     statusElement.style.display = 'block';
-    statusElement.querySelector('.alert').className = 'alert alert-danger mb-0';
-    statusText.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>OFFLINE - Validation may be inaccurate!';
+    statusElement.querySelector('.alert').className = 'alert alert-warning mb-0';
+    statusText.innerHTML = '<i class="fas fa-wifi me-1"></i>Offline Mode - Using cached data';
   });
 }
 
