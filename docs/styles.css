@@ -68,7 +68,7 @@
 /* Header gradient - fix the white on white issue */
 .header-gradient {
   background: linear-gradient(
-    135deg,
+    to bottom,
     var(--primary-color) 0%,
     var(--secondary-color) 100%
   ) !important;
