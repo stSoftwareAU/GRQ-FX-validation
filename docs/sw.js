@@ -1,9 +1,9 @@
 // Service Worker for GRQ FX Validation Dashboard
-// Version 1.0.95 - Aggressive caching with version-based invalidation
+// Version 1.0.96 - Aggressive caching with version-based invalidation
 
-const CACHE_NAME = 'grq-fx-v1.0.95';
-const STATIC_CACHE_NAME = 'grq-fx-static-v1.0.95';
-const DYNAMIC_CACHE_NAME = 'grq-fx-dynamic-v1.0.95';
+const CACHE_NAME = 'grq-fx-v1.0.96';
+const STATIC_CACHE_NAME = 'grq-fx-static-v1.0.96';
+const DYNAMIC_CACHE_NAME = 'grq-fx-dynamic-v1.0.96';
 
 // Files to cache immediately (static assets)
 const STATIC_ASSETS = [

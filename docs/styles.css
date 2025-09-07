@@ -5,6 +5,17 @@ html {
   background-color: #f8f9fa !important;
 }
 
+/* Override Bootstrap defaults that might cause white borders */
+* {
+  box-sizing: border-box;
+}
+
+body.bg-light {
+  background-color: #f8f9fa !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
 /* Custom color variables */
 :root {
   --primary-color: #667eea;
@@ -53,11 +64,32 @@ html, body {
   max-width: 100% !important;
 }
 
+/* Override Bootstrap row margins */
+.row {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* Override Bootstrap col padding */
+.col-12 {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
 /* Ensure the main card takes full width */
 .card {
-  margin: 0;
-  border-radius: 0;
-  width: 100%;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  width: 100% !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+/* Ensure card header and body take full width */
+.card-header, .card-body {
+  margin: 0 !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
 }
 
 /* Ensure FX pairs container doesn't cause horizontal scroll */
@@ -829,11 +861,25 @@ input, select, textarea {
     max-width: 100% !important;
   }
   
+  /* Override Bootstrap row margins in dark mode */
+  .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  /* Override Bootstrap col padding in dark mode */
+  .col-12 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
   /* Ensure main card takes full width in dark mode */
   .card {
     margin: 0 !important;
     border-radius: 0 !important;
     width: 100% !important;
+    border-left: none !important;
+    border-right: none !important;
   }
   
   /* Cards and containers */
@@ -1328,11 +1374,25 @@ body.dark-mode-forced {
     max-width: 100% !important;
   }
   
+  /* Override Bootstrap row margins in dark mode */
+  .row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  /* Override Bootstrap col padding in dark mode */
+  .col-12 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+  
   /* Ensure main card takes full width in dark mode */
   .card {
     margin: 0 !important;
     border-radius: 0 !important;
     width: 100% !important;
+    border-left: none !important;
+    border-right: none !important;
   }
   
   /* Cards and containers */
