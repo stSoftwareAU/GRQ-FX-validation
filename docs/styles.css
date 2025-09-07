@@ -12,6 +12,62 @@
   --dark-color: #343a40;
 }
 
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Prevent horizontal overflow */
+body {
+  overflow-x: hidden;
+}
+
+.container-fluid {
+  overflow-x: hidden;
+}
+
+/* Ensure FX pairs container doesn't cause horizontal scroll */
+#fxPairsContainer {
+  overflow-x: hidden;
+}
+
+#fxPairsList {
+  overflow-x: hidden;
+}
+
+/* Ensure FX pair cards wrap properly and don't cause horizontal overflow */
+#fxPairsList .row {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+#fxPairsList .col-md-6,
+#fxPairsList .col-lg-4 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Ensure cards don't exceed container width */
+.fx-pair-card {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 /* FX Pair Card Styles */
 .fx-pair-card {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
@@ -549,16 +605,16 @@
   /* Yahoo Finance data sections */
   #yahooDataContent .table td {
     color: #ffffff !important;
-    background-color: #2d2d2d !important;
+    background-color: #161b22 !important;
   }
   
   #yahooDataContent .table th {
     color: #ffffff !important;
-    background-color: #404040 !important;
+    background-color: #21262d !important;
   }
   
   #yahooDataContent .table {
-    background-color: #2d2d2d !important;
+    background-color: #161b22 !important;
   }
 
 /* PWA-specific styles */
@@ -732,94 +788,122 @@ input, select, textarea {
   
   /* Main body and background */
   body {
-    background-color: #1a1a1a !important;
+    background-color: #0d1117 !important;
     color: #ffffff !important;
   }
   
   /* Cards and containers */
   .card {
-    background-color: #2d2d2d !important;
-    border-color: #404040 !important;
+    background-color: #161b22 !important;
+    border-color: #30363d !important;
     color: #ffffff !important;
   }
   
   .card-header {
-    background-color: #404040 !important;
-    border-color: #404040 !important;
+    background-color: #21262d !important;
+    border-color: #30363d !important;
     color: #ffffff !important;
   }
   
   .card-body {
-    background-color: #2d2d2d !important;
+    background-color: #161b22 !important;
     color: #ffffff !important;
   }
   
   /* FX pair cards */
   .fx-pair-card {
-    background: linear-gradient(135deg, #2d2d2d 0%, #404040 100%) !important;
-    border-color: #404040 !important;
+    background: linear-gradient(135deg, #161b22 0%, #21262d 100%) !important;
+    border-color: #30363d !important;
     color: #ffffff !important;
   }
   
   .fx-pair-card:hover {
-    background: linear-gradient(135deg, #404040 0%, #4a4a4a 100%) !important;
+    background: linear-gradient(135deg, #21262d 0%, #30363d 100%) !important;
+  }
+  
+  /* Prediction summary text - improve contrast in dark mode */
+  .prediction-summary {
+    color: #e6edf3 !important;
+  }
+  
+  .prediction-summary small {
+    color: #8b949e !important;
+  }
+  
+  /* Dark mode scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #0d1117 !important;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #30363d !important;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #484f58 !important;
   }
   
   /* Tables */
   .table {
     color: #ffffff !important;
-    background-color: #2d2d2d !important;
+    background-color: #161b22 !important;
   }
   
   .table th {
-    background-color: #404040 !important;
-    border-color: #404040 !important;
+    background-color: #21262d !important;
+    border-color: #30363d !important;
     color: #ffffff !important;
   }
   
   .table td {
-    border-color: #404040 !important;
+    border-color: #30363d !important;
     color: #ffffff !important;
-    background-color: #2d2d2d !important;
+    background-color: #161b22 !important;
   }
   
   .table-striped tbody tr:nth-of-type(odd) {
-    background-color: #353535 !important;
+    background-color: #1c2128 !important;
   }
   
   .table-striped tbody tr:nth-of-type(odd) td {
-    background-color: #353535 !important;
+    background-color: #1c2128 !important;
   }
   
   /* Table responsive containers */
   .table-responsive {
-    background-color: #2d2d2d !important;
+    background-color: #161b22 !important;
   }
   
   /* Yahoo Finance data sections */
   #yahooDataContent .table td {
     color: #ffffff !important;
-    background-color: #2d2d2d !important;
+    background-color: #161b22 !important;
   }
   
   #yahooDataContent .table th {
     color: #ffffff !important;
-    background-color: #404040 !important;
+    background-color: #21262d !important;
   }
   
   #yahooDataContent .table {
-    background-color: #2d2d2d !important;
+    background-color: #161b22 !important;
   }
   
   /* Form elements */
   .form-control, .form-select {
-    background-color: #404040 !important;
-    border-color: #404040 !important;
+    background-color: #21262d !important;
+    border-color: #30363d !important;
     color: #ffffff !important;
   }
   
   .form-control:focus, .form-select:focus {
-    background-color: #404040 !important;
+    background-color: #21262d !important;
     border-color: #667eea !important;
     color: #ffffff !important;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
@@ -1183,94 +1267,122 @@ body.dark-mode-forced {
   --dark-color: #f8f9fa;
   /* Main body and background */
   body {
-    background-color: #1a1a1a !important;
+    background-color: #0d1117 !important;
     color: #ffffff !important;
   }
   
   /* Cards and containers */
   .card {
-    background-color: #2d2d2d !important;
-    border-color: #404040 !important;
+    background-color: #161b22 !important;
+    border-color: #30363d !important;
     color: #ffffff !important;
   }
   
   .card-header {
-    background-color: #404040 !important;
-    border-color: #404040 !important;
+    background-color: #21262d !important;
+    border-color: #30363d !important;
     color: #ffffff !important;
   }
   
   .card-body {
-    background-color: #2d2d2d !important;
+    background-color: #161b22 !important;
     color: #ffffff !important;
   }
   
   /* FX pair cards */
   .fx-pair-card {
-    background: linear-gradient(135deg, #2d2d2d 0%, #404040 100%) !important;
-    border-color: #404040 !important;
+    background: linear-gradient(135deg, #161b22 0%, #21262d 100%) !important;
+    border-color: #30363d !important;
     color: #ffffff !important;
   }
   
   .fx-pair-card:hover {
-    background: linear-gradient(135deg, #404040 0%, #4a4a4a 100%) !important;
+    background: linear-gradient(135deg, #21262d 0%, #30363d 100%) !important;
+  }
+  
+  /* Prediction summary text - improve contrast in dark mode */
+  .prediction-summary {
+    color: #e6edf3 !important;
+  }
+  
+  .prediction-summary small {
+    color: #8b949e !important;
+  }
+  
+  /* Dark mode scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #0d1117 !important;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #30363d !important;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #484f58 !important;
   }
   
   /* Tables */
   .table {
     color: #ffffff !important;
-    background-color: #2d2d2d !important;
+    background-color: #161b22 !important;
   }
   
   .table th {
-    background-color: #404040 !important;
-    border-color: #404040 !important;
+    background-color: #21262d !important;
+    border-color: #30363d !important;
     color: #ffffff !important;
   }
   
   .table td {
-    border-color: #404040 !important;
+    border-color: #30363d !important;
     color: #ffffff !important;
-    background-color: #2d2d2d !important;
+    background-color: #161b22 !important;
   }
   
   .table-striped tbody tr:nth-of-type(odd) {
-    background-color: #353535 !important;
+    background-color: #1c2128 !important;
   }
   
   .table-striped tbody tr:nth-of-type(odd) td {
-    background-color: #353535 !important;
+    background-color: #1c2128 !important;
   }
   
   /* Table responsive containers */
   .table-responsive {
-    background-color: #2d2d2d !important;
+    background-color: #161b22 !important;
   }
   
   /* Yahoo Finance data sections */
   #yahooDataContent .table td {
     color: #ffffff !important;
-    background-color: #2d2d2d !important;
+    background-color: #161b22 !important;
   }
   
   #yahooDataContent .table th {
     color: #ffffff !important;
-    background-color: #404040 !important;
+    background-color: #21262d !important;
   }
   
   #yahooDataContent .table {
-    background-color: #2d2d2d !important;
+    background-color: #161b22 !important;
   }
   
   /* Form elements */
   .form-control, .form-select {
-    background-color: #404040 !important;
-    border-color: #404040 !important;
+    background-color: #21262d !important;
+    border-color: #30363d !important;
     color: #ffffff !important;
   }
   
   .form-control:focus, .form-select:focus {
-    background-color: #404040 !important;
+    background-color: #21262d !important;
     border-color: #667eea !important;
     color: #ffffff !important;
     box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
