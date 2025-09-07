@@ -72,6 +72,11 @@
     var(--primary-color) 0%,
     var(--secondary-color) 100%
   ) !important;
+  background-image: linear-gradient(
+    to bottom,
+    var(--primary-color) 0%,
+    var(--secondary-color) 100%
+  ) !important;
   color: white !important;
   /* Ensure header extends to edges on mobile PWA */
   margin-left: calc(-1 * max(1rem, env(safe-area-inset-left, 1rem)));
