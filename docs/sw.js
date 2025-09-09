@@ -14,7 +14,6 @@ const STATIC_ASSETS = [
   './manifest.json',
   './logo.png',
   './logo2.webp',
-  './index.json',
   // Bootstrap and Chart.js CDN resources
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js',
@@ -26,6 +25,11 @@ const STATIC_ASSETS = [
 const DYNAMIC_PATTERNS = [
   /\.\/data\/.*\.csv$/,
   /\.\/\d{4}-\d{2}-\d{2}\/predictions\.json$/
+];
+
+// Files that should use Network First strategy (always try fresh first)
+const NETWORK_FIRST_PATTERNS = [
+  /\.\/index\.json$/
 ];
 
 // Install event - aggressively cache static assets
@@ -109,12 +113,15 @@ self.addEventListener('fetch', (event) => {
   // Check if this is a data file (CSV or predictions)
   const isDataFile = DYNAMIC_PATTERNS.some(pattern => pattern.test(url.pathname));
   
+  // Check if this should use Network First strategy (index.json)
+  const isNetworkFirst = NETWORK_FIRST_PATTERNS.some(pattern => pattern.test(url.pathname));
+  
   // Check if this is a static asset (JS, CSS, HTML)
   const isStaticAsset = url.pathname.endsWith('.js') || 
                        url.pathname.endsWith('.css') || 
                        url.pathname.endsWith('.html') ||
                        url.pathname === './' ||
-                       url.pathname.endsWith('.json');
+                       (url.pathname.endsWith('.json') && !isNetworkFirst);
   
   if (isStaticAsset) {
     // For static assets: Cache first with version-based invalidation
@@ -150,6 +157,60 @@ self.addEventListener('fetch', (event) => {
               }
               throw error;
             });
+        })
+    );
+  } else if (isNetworkFirst) {
+    // For index.json: Stale While Revalidate - serve cache immediately, update in background
+    event.respondWith(
+      caches.match(request)
+        .then((cachedResponse) => {
+          // Start network request in background to update cache
+          const networkResponse = fetch(request)
+            .then((response) => {
+              // If network request succeeds, update cache
+              if (response && response.status === 200 && response.type === 'basic') {
+                const responseToCache = response.clone();
+                caches.open(DYNAMIC_CACHE_NAME)
+                  .then((cache) => {
+                    console.log('Service Worker: Background updating index.json cache', request.url);
+                    cache.put(request, responseToCache);
+                    
+                    // Notify clients that fresh data is available
+                    self.clients.matchAll().then(clients => {
+                      clients.forEach(client => {
+                        client.postMessage({ 
+                          type: 'INDEX_UPDATED', 
+                          url: request.url,
+                          timestamp: Date.now()
+                        });
+                      });
+                    });
+                  });
+              }
+              return response;
+            })
+            .catch((error) => {
+              console.warn('Service Worker: Background update failed for index.json', request.url, error);
+              // Don't throw - this is just a background update
+            });
+          
+          // Return cached response immediately if available
+          if (cachedResponse) {
+            console.log('Service Worker: Serving cached index.json immediately, updating in background', request.url);
+            
+            // Add headers to indicate this is stale-while-revalidate
+            const responseClone = cachedResponse.clone();
+            responseClone.headers.set('X-Served-From-Cache', 'true');
+            responseClone.headers.set('X-Validation-Warning', 'STALE-WHILE-REVALIDATE');
+            responseClone.headers.set('X-Cache-Timestamp', new Date().toISOString());
+            responseClone.headers.set('X-Background-Update', 'true');
+            
+            return responseClone;
+          }
+          
+          // No cache available - wait for network response
+          console.log('Service Worker: No cache available, waiting for network response', request.url);
+          return networkResponse;
         })
     );
   } else if (isDataFile) {

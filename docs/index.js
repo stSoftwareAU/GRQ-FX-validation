@@ -81,6 +81,18 @@ function initializeOfflineIndicator() {
           console.error('VALIDATION ERROR: Cached data being used for validation!');
         }
         
+        // Check for stale index.json warnings
+        if (response.headers.get('X-Validation-Warning') === 'STALE-INDEX') {
+          showStaleIndexWarning();
+          console.warn('VALIDATION WARNING: Using stale index.json data!');
+        }
+        
+        // Check for stale-while-revalidate
+        if (response.headers.get('X-Validation-Warning') === 'STALE-WHILE-REVALIDATE') {
+          showStaleWhileRevalidateIndicator();
+          console.log('INFO: Serving cached index.json, updating in background');
+        }
+        
         return response;
       })
       .catch(error => {
@@ -129,6 +141,118 @@ function showCacheIndicator() {
     
     // Never auto-hide for validation warnings
     // User must manually dismiss or fix network connection
+  }
+}
+
+function showStaleIndexWarning() {
+  const indicator = document.getElementById('stale-index-indicator');
+  if (indicator) {
+    indicator.style.display = 'block';
+    indicator.className = 'alert alert-warning position-fixed';
+    indicator.style.cssText = 'top: 10px; right: 10px; z-index: 9999; display: block; max-width: 400px; border: 3px solid #ffc107; box-shadow: 0 0 20px rgba(255, 193, 7, 0.5); animation: pulse-warning 2s infinite;';
+    indicator.innerHTML = `
+      <div class="d-flex align-items-center">
+        <i class="fas fa-clock me-3" style="font-size: 1.5rem; color: #ffc107; animation: shake 0.5s infinite;"></i>
+        <div>
+          <strong style="color: #856404; font-size: 1.1rem;">⚠️ STALE DATA WARNING ⚠️</strong><br>
+          <strong style="color: #856404;">Using cached index.json - may be outdated!</strong><br>
+          <small class="text-muted">🔄 Connect to internet for latest prediction dates 🔄</small>
+        </div>
+      </div>
+    `;
+    
+    // Add pulsing animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes pulse-warning {
+        0% { box-shadow: 0 0 20px rgba(255, 193, 7, 0.5); }
+        50% { box-shadow: 0 0 30px rgba(255, 193, 7, 0.8); }
+        100% { box-shadow: 0 0 20px rgba(255, 193, 7, 0.5); }
+      }
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-2px); }
+        75% { transform: translateX(2px); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Auto-hide after 10 seconds
+    setTimeout(() => {
+      if (indicator) {
+        indicator.style.display = 'none';
+      }
+    }, 10000);
+  }
+}
+
+function showStaleWhileRevalidateIndicator() {
+  // Just show a subtle indicator in the header area
+  const header = document.querySelector('.card-header');
+  if (header) {
+    // Add a small sync icon to the header
+    let syncIcon = document.getElementById('background-sync-icon');
+    if (!syncIcon) {
+      syncIcon = document.createElement('i');
+      syncIcon.id = 'background-sync-icon';
+      syncIcon.className = 'fas fa-sync-alt';
+      syncIcon.style.cssText = 'position: absolute; top: 15px; right: 70px; color: rgba(255,255,255,0.7); font-size: 14px; animation: spin 2s linear infinite;';
+      header.style.position = 'relative';
+      header.appendChild(syncIcon);
+    }
+    
+    // Add spinning animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      if (syncIcon) {
+        syncIcon.remove();
+      }
+    }, 3000);
+  }
+}
+
+function showUpdateAvailableNotification() {
+  // Show a subtle checkmark in the header briefly
+  const header = document.querySelector('.card-header');
+  if (header) {
+    // Add a small checkmark icon to the header
+    let checkIcon = document.getElementById('update-check-icon');
+    if (!checkIcon) {
+      checkIcon = document.createElement('i');
+      checkIcon.id = 'update-check-icon';
+      checkIcon.className = 'fas fa-check';
+      checkIcon.style.cssText = 'position: absolute; top: 15px; right: 70px; color: rgba(40, 167, 69, 0.8); font-size: 14px; animation: fadeInOut 2s ease-in-out;';
+      header.style.position = 'relative';
+      header.appendChild(checkIcon);
+    }
+    
+    // Add fade animation
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes fadeInOut {
+        0% { opacity: 0; transform: scale(0.8); }
+        20% { opacity: 1; transform: scale(1.1); }
+        80% { opacity: 1; transform: scale(1); }
+        100% { opacity: 0; transform: scale(0.8); }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Auto-hide after 2 seconds
+    setTimeout(() => {
+      if (checkIcon) {
+        checkIcon.remove();
+      }
+    }, 2000);
   }
 }
 

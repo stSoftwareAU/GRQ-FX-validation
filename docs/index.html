@@ -67,6 +67,13 @@
                 <span id="validation-status-text">Checking...</span>
               </div>
             </div>
+            
+            <!-- Stale Index Warning Indicator - Shows when using cached index.json -->
+            <div id="stale-index-indicator" style="display: none;"></div>
+            
+            <!-- Background Update Indicators - Subtle icons in header -->
+            <div id="background-update-indicator" style="display: none;"></div>
+            <div id="update-available-indicator" style="display: none;"></div>
             </div>
 
             <div class="card-body p-4">
@@ -353,6 +360,10 @@
                 // Force reload for all browsers when SW updates
                 console.log('SW updated, forcing reload');
                 window.location.reload(true);
+              }
+              if (event.data && event.data.type === 'INDEX_UPDATED') {
+                console.log('Index.json updated in background');
+                showUpdateAvailableNotification();
               }
             });
             
