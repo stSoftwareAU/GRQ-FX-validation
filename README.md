@@ -138,6 +138,20 @@ This is a static site that can be deployed to any web server or CDN:
 3. Add CSV files for actual rates as they become available
 4. Update `index.json` to include the new entry
 
+### Troubleshooting: today’s date not selectable
+
+If you’ve added a new dated folder (for example `docs/2025-12-31/`) but it **doesn’t appear in the date dropdown**, the most common cause is a stale cached `index.json` (often via the PWA/service worker cache).
+
+- **Check the index**: confirm `docs/index.json` includes the new date entry.
+- **Clear the site cache** (Chrome): DevTools → Application → Clear storage → “Clear site data”, then reload.
+- **Unregister the service worker** (Chrome): DevTools → Application → Service Workers → “Unregister”, then reload.
+
+You can also run the regression guard tests locally:
+
+```bash
+node --test tests/pwa-index-freshness.test.js
+```
+
 ## Browser Compatibility
 
 - Chrome 60+

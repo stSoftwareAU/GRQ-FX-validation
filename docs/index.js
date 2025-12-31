@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.101";
+const VERSION = "1.0.102";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -1219,7 +1219,9 @@ class GRQFXValidator {
   async loadIndex() {
     try {
       this.showLoading();
-      const response = await fetch("index.json");
+      // Ensure we always fetch the latest prediction index for validation.
+      // This prevents browsers (and some intermediaries) from serving stale `index.json`.
+      const response = await fetch("index.json", { cache: "no-store" });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

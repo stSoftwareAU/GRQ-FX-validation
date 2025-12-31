@@ -1,9 +1,9 @@
 // Service Worker for GRQ FX Validation Dashboard
-// Version 1.0.100 - Aggressive caching with version-based invalidation
+// Version 1.0.101 - Aggressive caching with version-based invalidation
 
-const CACHE_NAME = 'grq-fx-v1.0.100';
-const STATIC_CACHE_NAME = 'grq-fx-static-v1.0.99';
-const DYNAMIC_CACHE_NAME = 'grq-fx-dynamic-v1.0.99';
+const CACHE_NAME = 'grq-fx-v1.0.101';
+const STATIC_CACHE_NAME = 'grq-fx-static-v1.0.101';
+const DYNAMIC_CACHE_NAME = 'grq-fx-dynamic-v1.0.101';
 
 // Files to cache immediately (static assets)
 const STATIC_ASSETS = [
@@ -29,8 +29,56 @@ const DYNAMIC_PATTERNS = [
 
 // Files that should use Network First strategy (always try fresh first)
 const NETWORK_FIRST_PATTERNS = [
-  /\.\/index\.json$/
+  /\/index\.json$/
 ];
+
+/**
+ * Add diagnostic headers to a response.
+ *
+ * Note: Response headers are immutable; we must create a new Response.
+ */
+function withHeaders(response, extraHeaders) {
+  const cloned = response.clone();
+  const headers = new Headers(cloned.headers);
+  for (const [key, value] of Object.entries(extraHeaders)) {
+    headers.set(key, value);
+  }
+
+  return new Response(cloned.body, {
+    status: cloned.status,
+    statusText: cloned.statusText,
+    headers,
+  });
+}
+
+/**
+ * Network-first for `index.json` so the date dropdown stays current.
+ *
+ * If the network fails, fall back to cached `index.json` with a warning header.
+ */
+async function networkFirstIndexJson(originalRequest) {
+  const request = new Request(originalRequest, { cache: 'no-store' });
+  const cache = await caches.open(DYNAMIC_CACHE_NAME);
+
+  try {
+    const response = await fetch(request);
+    if (response && response.status === 200 && response.type === 'basic') {
+      await cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    console.warn('Service Worker: Network failed for index.json, using cache', request.url, error);
+    const cached = await cache.match(request);
+    if (cached) {
+      return withHeaders(cached, {
+        'X-Served-From-Cache': 'true',
+        'X-Validation-Warning': 'STALE-INDEX',
+        'X-Cache-Timestamp': new Date().toISOString(),
+      });
+    }
+    throw error;
+  }
+}
 
 // Install event - aggressively cache static assets
 self.addEventListener('install', (event) => {
@@ -160,58 +208,9 @@ self.addEventListener('fetch', (event) => {
         })
     );
   } else if (isNetworkFirst) {
-    // For index.json: Stale While Revalidate - serve cache immediately, update in background
+    // For index.json: Network first - keep the date dropdown current when online.
     event.respondWith(
-      caches.match(request)
-        .then((cachedResponse) => {
-          // Start network request in background to update cache
-          const networkResponse = fetch(request)
-            .then((response) => {
-              // If network request succeeds, update cache
-              if (response && response.status === 200 && response.type === 'basic') {
-                const responseToCache = response.clone();
-                caches.open(DYNAMIC_CACHE_NAME)
-                  .then((cache) => {
-                    console.log('Service Worker: Background updating index.json cache', request.url);
-                    cache.put(request, responseToCache);
-                    
-                    // Notify clients that fresh data is available
-                    self.clients.matchAll().then(clients => {
-                      clients.forEach(client => {
-                        client.postMessage({ 
-                          type: 'INDEX_UPDATED', 
-                          url: request.url,
-                          timestamp: Date.now()
-                        });
-                      });
-                    });
-                  });
-              }
-              return response;
-            })
-            .catch((error) => {
-              console.warn('Service Worker: Background update failed for index.json', request.url, error);
-              // Don't throw - this is just a background update
-            });
-          
-          // Return cached response immediately if available
-          if (cachedResponse) {
-            console.log('Service Worker: Serving cached index.json immediately, updating in background', request.url);
-            
-            // Add headers to indicate this is stale-while-revalidate
-            const responseClone = cachedResponse.clone();
-            responseClone.headers.set('X-Served-From-Cache', 'true');
-            responseClone.headers.set('X-Validation-Warning', 'STALE-WHILE-REVALIDATE');
-            responseClone.headers.set('X-Cache-Timestamp', new Date().toISOString());
-            responseClone.headers.set('X-Background-Update', 'true');
-            
-            return responseClone;
-          }
-          
-          // No cache available - wait for network response
-          console.log('Service Worker: No cache available, waiting for network response', request.url);
-          return networkResponse;
-        })
+      networkFirstIndexJson(request)
     );
   } else if (isDataFile) {
     // For data files: Network ONLY - cache is for emergency offline use only
