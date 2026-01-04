@@ -1,10 +1,12 @@
 # GRQ FX Validation Dashboard
 
-A JAMstack-based dashboard for validating AI predictions against actual FX rates over time.
+A JAMstack-based dashboard for validating AI predictions against actual FX rates
+over time.
 
 ## Architecture
 
 This project follows JAMstack principles:
+
 - **JavaScript**: Client-side JavaScript for dynamic functionality
 - **APIs**: Static JSON files served as data APIs
 - **Markup**: Pre-built HTML files served statically
@@ -12,8 +14,10 @@ This project follows JAMstack principles:
 ## Features
 
 - **FX Prediction Validation**: Compare AI predictions with actual FX rates
-- **Time Horizon Analysis**: Focus on monthly (30d), quarterly (90d), half-year (180d), and full-year (365d) predictions
-- **Performance Metrics**: Calculate accuracy, error rates, and performance statistics
+- **Time Horizon Analysis**: Focus on monthly (30d), quarterly (90d), half-year
+  (180d), and full-year (365d) predictions
+- **Performance Metrics**: Calculate accuracy, error rates, and performance
+  statistics
 - **Interactive Charts**: Visualize prediction vs actual rates using Chart.js
 - **Pending Actual Rates**: Handle cases where actual rates aren't available yet
 - **Date-based Filtering**: Browse predictions by date range
@@ -24,18 +28,20 @@ This project follows JAMstack principles:
 
 The dashboard focuses on four key prediction timeframes:
 
-| Period | Days | Description |
-|--------|------|-------------|
-| Monthly | 30 | One-month predictions |
-| Quarterly | 90 | Three-month predictions |
-| Half-Year | 180 | Six-month predictions |
-| Full-Year | 365 | One-year predictions |
+| Period    | Days | Description             |
+| --------- | ---- | ----------------------- |
+| Monthly   | 30   | One-month predictions   |
+| Quarterly | 90   | Three-month predictions |
+| Half-Year | 180  | Six-month predictions   |
+| Full-Year | 365  | One-year predictions    |
 
 ## Data Availability
 
-- **Historical Rates**: 12 months of historical data available from prediction date
+- **Historical Rates**: 12 months of historical data available from prediction
+  date
 - **Actual Rates**: Updated as they become available over time
-- **Pending Status**: Shows "Pending" for future dates where actual rates aren't available yet
+- **Pending Status**: Shows "Pending" for future dates where actual rates aren't
+  available yet
 
 ## File Structure
 
@@ -57,6 +63,7 @@ docs/
 ## Data Format
 
 ### index.json
+
 ```json
 {
   "entries": {
@@ -71,6 +78,7 @@ docs/
 ```
 
 ### predictions.json
+
 ```json
 {
   "date": "2025-07-27",
@@ -133,18 +141,37 @@ This is a static site that can be deployed to any web server or CDN:
 
 ## Adding New Prediction Data
 
-1. Create a new directory in `docs/` with the prediction date (e.g., `2025-08-01/`)
+1. Create a new directory in `docs/` with the prediction date (e.g.,
+   `2025-08-01/`)
 2. Add `predictions.json` with your prediction data for the 4 time horizons
 3. Add CSV files for actual rates as they become available
 4. Update `index.json` to include the new entry
 
 ### Troubleshooting: today’s date not selectable
 
-If you’ve added a new dated folder (for example `docs/2025-12-31/`) but it **doesn’t appear in the date dropdown**, the most common cause is a stale cached `index.json` (often via the PWA/service worker cache).
+If you’ve added a new dated folder (for example `docs/2025-12-31/`) but it
+**doesn’t appear in the date dropdown**, the most common cause is a stale cached
+`index.json` (often via the PWA/service worker cache).
 
 - **Check the index**: confirm `docs/index.json` includes the new date entry.
-- **Clear the site cache** (Chrome): DevTools → Application → Clear storage → “Clear site data”, then reload.
-- **Unregister the service worker** (Chrome): DevTools → Application → Service Workers → “Unregister”, then reload.
+- **Clear the site cache** (Chrome): DevTools → Application → Clear storage →
+  “Clear site data”, then reload.
+- **Unregister the service worker** (Chrome): DevTools → Application → Service
+  Workers → “Unregister”, then reload.
+
+### Troubleshooting: a specific horizon shows N/A (for example Quarter/90d)
+
+If `predictions.json` has a value (for example `days: 90`) but the dashboard
+shows **N/A**, the most common cause is stale PWA/service worker cached data.
+
+- **Confirm the version**: ensure the footer shows **v1.0.103** (or newer).
+- **Hard refresh**: reload the page with a hard refresh.
+- **Clear the site cache** (Chrome): DevTools → Application → Clear storage →
+  “Clear site data”, then reload.
+- **Unregister the service worker** (Chrome): DevTools → Application → Service
+  Workers → “Unregister”, then reload.
+
+Date: 5-Jan-2026
 
 You can also run the regression guard tests locally:
 

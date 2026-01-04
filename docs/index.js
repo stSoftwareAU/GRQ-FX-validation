@@ -1,38 +1,40 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.102";
+const VERSION = "1.0.103";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
 
 // Set version display
 document.addEventListener("DOMContentLoaded", () => {
-  console.log('DOM loaded, setting version:', VERSION);
+  console.log("DOM loaded, setting version:", VERSION);
   const versionElement = document.getElementById("version");
-  console.log('Version element found:', versionElement);
+  console.log("Version element found:", versionElement);
   if (versionElement) {
     versionElement.textContent = VERSION;
-    console.log('Version set to:', versionElement.textContent);
+    console.log("Version set to:", versionElement.textContent);
   } else {
-    console.error('Version element not found!');
+    console.error("Version element not found!");
   }
-  
+
   // Initialize offline indicator
   initializeOfflineIndicator();
-  
+
   // Initialize validation status
   initializeValidationStatus();
-  
+
   // Initialize dark mode toggle with a small delay to ensure DOM is fully ready
   setTimeout(() => {
     initializeDarkModeToggle();
   }, 100);
-  
+
   // Also try to initialize it when the window loads (backup)
-  window.addEventListener('load', () => {
+  window.addEventListener("load", () => {
     setTimeout(() => {
-      const toggleButton = document.getElementById('dark-mode-toggle');
+      const toggleButton = document.getElementById("dark-mode-toggle");
       if (!toggleButton) {
-        console.log('Button still not found after window load, trying again...');
+        console.log(
+          "Button still not found after window load, trying again...",
+        );
         initializeDarkModeToggle();
       }
     }, 200);
@@ -45,61 +47,74 @@ function initializeOfflineIndicator() {
   function updateOnlineStatus() {
     if (!navigator.onLine) {
       // Apply offline color scheme
-      document.body.classList.add('offline-mode');
+      document.body.classList.add("offline-mode");
     } else {
       // Remove offline color scheme
-      document.body.classList.remove('offline-mode');
+      document.body.classList.remove("offline-mode");
     }
   }
-  
+
   // Listen for online/offline events
-  window.addEventListener('online', updateOnlineStatus);
-  window.addEventListener('offline', updateOnlineStatus);
-  
+  window.addEventListener("online", updateOnlineStatus);
+  window.addEventListener("offline", updateOnlineStatus);
+
   // Check initial status
   updateOnlineStatus();
-  
+
   // Monitor fetch requests for cache indicators and validation errors
   const originalFetch = window.fetch;
-  window.fetch = function(...args) {
+  window.fetch = function (...args) {
     const url = args[0];
-    const isDataFile = typeof url === 'string' && (url.includes('.csv') || url.includes('predictions.json'));
-    
+    const isDataFile = typeof url === "string" &&
+      (url.includes(".csv") || url.includes("predictions.json"));
+
     return originalFetch.apply(this, args)
-      .then(response => {
+      .then((response) => {
         // Check if response was served from cache
-        if (response.headers.get('X-Served-From-Cache') === 'true') {
+        if (response.headers.get("X-Served-From-Cache") === "true") {
           if (isDataFile) {
             showCacheIndicator();
-            console.warn('VALIDATION WARNING: Using cached data for', url);
+            console.warn("VALIDATION WARNING: Using cached data for", url);
           }
         }
-        
+
         // Check for validation warnings
-        if (response.headers.get('X-Validation-Warning') === 'CACHED-DATA') {
+        if (response.headers.get("X-Validation-Warning") === "CACHED-DATA") {
           showCacheIndicator();
-          console.error('VALIDATION ERROR: Cached data being used for validation!');
+          console.error(
+            "VALIDATION ERROR: Cached data being used for validation!",
+          );
         }
-        
+
         // Check for stale index.json warnings
-        if (response.headers.get('X-Validation-Warning') === 'STALE-INDEX') {
+        if (response.headers.get("X-Validation-Warning") === "STALE-INDEX") {
           showStaleIndexWarning();
-          console.warn('VALIDATION WARNING: Using stale index.json data!');
+          console.warn("VALIDATION WARNING: Using stale index.json data!");
         }
-        
+
         // Check for stale-while-revalidate
-        if (response.headers.get('X-Validation-Warning') === 'STALE-WHILE-REVALIDATE') {
+        if (
+          response.headers.get("X-Validation-Warning") ===
+            "STALE-WHILE-REVALIDATE"
+        ) {
           showStaleWhileRevalidateIndicator();
-          console.log('INFO: Serving cached index.json, updating in background');
+          console.log(
+            "INFO: Serving cached index.json, updating in background",
+          );
         }
-        
+
         return response;
       })
-      .catch(error => {
+      .catch((error) => {
         // If fetch fails for data files, show validation error
         if (isDataFile && !navigator.onLine) {
-          showValidationError('No network connection available. Cannot load prediction data for validation.');
-          console.error('VALIDATION ERROR: Cannot load data for validation:', error);
+          showValidationError(
+            "No network connection available. Cannot load prediction data for validation.",
+          );
+          console.error(
+            "VALIDATION ERROR: Cannot load data for validation:",
+            error,
+          );
         }
         throw error;
       });
@@ -107,11 +122,12 @@ function initializeOfflineIndicator() {
 }
 
 function showCacheIndicator() {
-  const indicator = document.getElementById('offline-indicator');
+  const indicator = document.getElementById("offline-indicator");
   if (indicator) {
-    indicator.style.display = 'block';
-    indicator.className = 'alert alert-danger position-fixed';
-    indicator.style.cssText = 'top: 10px; left: 10px; z-index: 9999; display: block; max-width: 450px; border: 4px solid #dc3545; box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); animation: pulse-warning 2s infinite;';
+    indicator.style.display = "block";
+    indicator.className = "alert alert-danger position-fixed";
+    indicator.style.cssText =
+      "top: 10px; left: 10px; z-index: 9999; display: block; max-width: 450px; border: 4px solid #dc3545; box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); animation: pulse-warning 2s infinite;";
     indicator.innerHTML = `
       <div class="d-flex align-items-center">
         <i class="fas fa-exclamation-triangle me-3" style="font-size: 1.5rem; color: #dc3545; animation: shake 0.5s infinite;"></i>
@@ -122,9 +138,9 @@ function showCacheIndicator() {
         </div>
       </div>
     `;
-    
+
     // Add pulsing animation
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.textContent = `
       @keyframes pulse-warning {
         0% { box-shadow: 0 0 20px rgba(220, 53, 69, 0.5); }
@@ -138,18 +154,19 @@ function showCacheIndicator() {
       }
     `;
     document.head.appendChild(style);
-    
+
     // Never auto-hide for validation warnings
     // User must manually dismiss or fix network connection
   }
 }
 
 function showStaleIndexWarning() {
-  const indicator = document.getElementById('stale-index-indicator');
+  const indicator = document.getElementById("stale-index-indicator");
   if (indicator) {
-    indicator.style.display = 'block';
-    indicator.className = 'alert alert-warning position-fixed';
-    indicator.style.cssText = 'top: 10px; right: 10px; z-index: 9999; display: block; max-width: 400px; border: 3px solid #ffc107; box-shadow: 0 0 20px rgba(255, 193, 7, 0.5); animation: pulse-warning 2s infinite;';
+    indicator.style.display = "block";
+    indicator.className = "alert alert-warning position-fixed";
+    indicator.style.cssText =
+      "top: 10px; right: 10px; z-index: 9999; display: block; max-width: 400px; border: 3px solid #ffc107; box-shadow: 0 0 20px rgba(255, 193, 7, 0.5); animation: pulse-warning 2s infinite;";
     indicator.innerHTML = `
       <div class="d-flex align-items-center">
         <i class="fas fa-clock me-3" style="font-size: 1.5rem; color: #ffc107; animation: shake 0.5s infinite;"></i>
@@ -160,9 +177,9 @@ function showStaleIndexWarning() {
         </div>
       </div>
     `;
-    
+
     // Add pulsing animation
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.textContent = `
       @keyframes pulse-warning {
         0% { box-shadow: 0 0 20px rgba(255, 193, 7, 0.5); }
@@ -176,11 +193,11 @@ function showStaleIndexWarning() {
       }
     `;
     document.head.appendChild(style);
-    
+
     // Auto-hide after 10 seconds
     setTimeout(() => {
       if (indicator) {
-        indicator.style.display = 'none';
+        indicator.style.display = "none";
       }
     }, 10000);
   }
@@ -188,21 +205,22 @@ function showStaleIndexWarning() {
 
 function showStaleWhileRevalidateIndicator() {
   // Just show a subtle indicator in the header area
-  const header = document.querySelector('.card-header');
+  const header = document.querySelector(".card-header");
   if (header) {
     // Add a small sync icon to the header
-    let syncIcon = document.getElementById('background-sync-icon');
+    let syncIcon = document.getElementById("background-sync-icon");
     if (!syncIcon) {
-      syncIcon = document.createElement('i');
-      syncIcon.id = 'background-sync-icon';
-      syncIcon.className = 'fas fa-sync-alt';
-      syncIcon.style.cssText = 'position: absolute; top: 15px; right: 70px; color: rgba(255,255,255,0.7); font-size: 14px; animation: spin 2s linear infinite;';
-      header.style.position = 'relative';
+      syncIcon = document.createElement("i");
+      syncIcon.id = "background-sync-icon";
+      syncIcon.className = "fas fa-sync-alt";
+      syncIcon.style.cssText =
+        "position: absolute; top: 15px; right: 70px; color: rgba(255,255,255,0.7); font-size: 14px; animation: spin 2s linear infinite;";
+      header.style.position = "relative";
       header.appendChild(syncIcon);
     }
-    
+
     // Add spinning animation
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.textContent = `
       @keyframes spin {
         0% { transform: rotate(0deg); }
@@ -210,7 +228,7 @@ function showStaleWhileRevalidateIndicator() {
       }
     `;
     document.head.appendChild(style);
-    
+
     // Auto-hide after 3 seconds
     setTimeout(() => {
       if (syncIcon) {
@@ -222,21 +240,22 @@ function showStaleWhileRevalidateIndicator() {
 
 function showUpdateAvailableNotification() {
   // Show a subtle checkmark in the header briefly
-  const header = document.querySelector('.card-header');
+  const header = document.querySelector(".card-header");
   if (header) {
     // Add a small checkmark icon to the header
-    let checkIcon = document.getElementById('update-check-icon');
+    let checkIcon = document.getElementById("update-check-icon");
     if (!checkIcon) {
-      checkIcon = document.createElement('i');
-      checkIcon.id = 'update-check-icon';
-      checkIcon.className = 'fas fa-check';
-      checkIcon.style.cssText = 'position: absolute; top: 15px; right: 70px; color: rgba(40, 167, 69, 0.8); font-size: 14px; animation: fadeInOut 2s ease-in-out;';
-      header.style.position = 'relative';
+      checkIcon = document.createElement("i");
+      checkIcon.id = "update-check-icon";
+      checkIcon.className = "fas fa-check";
+      checkIcon.style.cssText =
+        "position: absolute; top: 15px; right: 70px; color: rgba(40, 167, 69, 0.8); font-size: 14px; animation: fadeInOut 2s ease-in-out;";
+      header.style.position = "relative";
       header.appendChild(checkIcon);
     }
-    
+
     // Add fade animation
-    const style = document.createElement('style');
+    const style = document.createElement("style");
     style.textContent = `
       @keyframes fadeInOut {
         0% { opacity: 0; transform: scale(0.8); }
@@ -246,7 +265,7 @@ function showUpdateAvailableNotification() {
       }
     `;
     document.head.appendChild(style);
-    
+
     // Auto-hide after 2 seconds
     setTimeout(() => {
       if (checkIcon) {
@@ -258,10 +277,11 @@ function showUpdateAvailableNotification() {
 
 function showValidationError(message) {
   // Create a more prominent error indicator
-  const errorIndicator = document.createElement('div');
-  errorIndicator.id = 'validation-error';
-  errorIndicator.className = 'alert alert-danger position-fixed';
-  errorIndicator.style.cssText = 'top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; max-width: 500px; text-align: center;';
+  const errorIndicator = document.createElement("div");
+  errorIndicator.id = "validation-error";
+  errorIndicator.className = "alert alert-danger position-fixed";
+  errorIndicator.style.cssText =
+    "top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; max-width: 500px; text-align: center;";
   errorIndicator.innerHTML = `
     <div class="d-flex flex-column align-items-center">
       <i class="fas fa-exclamation-circle mb-3" style="font-size: 3rem; color: #dc3545;"></i>
@@ -272,109 +292,134 @@ function showValidationError(message) {
       </button>
     </div>
   `;
-  
+
   // Remove any existing error indicator
-  const existing = document.getElementById('validation-error');
+  const existing = document.getElementById("validation-error");
   if (existing) existing.remove();
-  
+
   document.body.appendChild(errorIndicator);
 }
 
 // Validation status functionality - only show when there's a problem
 function initializeValidationStatus() {
-  const statusElement = document.getElementById('validation-status');
-  const statusText = document.getElementById('validation-status-text');
-  
+  const statusElement = document.getElementById("validation-status");
+  const statusText = document.getElementById("validation-status-text");
+
   if (!statusElement || !statusText) return;
-  
+
   // Hide by default - only show when there's a problem
-  statusElement.style.display = 'none';
-  
+  statusElement.style.display = "none";
+
   // Monitor network status changes
-  window.addEventListener('online', () => {
+  window.addEventListener("online", () => {
     // Hide status when back online - everything is fine
-    statusElement.style.display = 'none';
+    statusElement.style.display = "none";
   });
-  
-  window.addEventListener('offline', () => {
+
+  window.addEventListener("offline", () => {
     // Show subtle warning when offline - color scheme already indicates offline
-    statusElement.style.display = 'block';
-    statusElement.querySelector('.alert').className = 'alert alert-warning mb-0';
-    statusText.innerHTML = '<i class="fas fa-wifi me-1"></i>Offline Mode - Using cached data';
+    statusElement.style.display = "block";
+    statusElement.querySelector(".alert").className =
+      "alert alert-warning mb-0";
+    statusText.innerHTML =
+      '<i class="fas fa-wifi me-1"></i>Offline Mode - Using cached data';
   });
 }
 
 // Dark mode toggle functionality - Three states: Light, Auto, Dark
 function initializeDarkModeToggle() {
-  console.log('Initializing dark mode toggle...');
-  console.log('All buttons in DOM:', document.querySelectorAll('button'));
-  console.log('All elements with id containing "dark":', document.querySelectorAll('[id*="dark"]'));
-  
-  let toggleButton = document.getElementById('dark-mode-toggle');
-  let toggleIcon = document.getElementById('dark-mode-icon');
-  
-  console.log('Dark mode toggle elements:', { toggleButton, toggleIcon });
-  
+  console.log("Initializing dark mode toggle...");
+  console.log("All buttons in DOM:", document.querySelectorAll("button"));
+  console.log(
+    'All elements with id containing "dark":',
+    document.querySelectorAll('[id*="dark"]'),
+  );
+
+  let toggleButton = document.getElementById("dark-mode-toggle");
+  let toggleIcon = document.getElementById("dark-mode-icon");
+
+  console.log("Dark mode toggle elements:", { toggleButton, toggleIcon });
+
   // If elements not found, create them dynamically
   if (!toggleButton || !toggleIcon) {
-    console.log('Creating dark mode toggle button dynamically...');
-    
+    console.log("Creating dark mode toggle button dynamically...");
+
     // Remove any existing toggle button first to prevent duplicates
-    const existingToggle = document.getElementById('dark-mode-toggle');
+    const existingToggle = document.getElementById("dark-mode-toggle");
     if (existingToggle) {
       existingToggle.remove();
-      console.log('Removed existing toggle button');
+      console.log("Removed existing toggle button");
     }
-    
+
     // Debug: Show all elements with classes
-    console.log('All elements with d-flex class:', document.querySelectorAll('.d-flex'));
-    console.log('All elements with justify-content-between class:', document.querySelectorAll('.justify-content-between'));
-    console.log('All elements with align-items-center class:', document.querySelectorAll('.align-items-center'));
-    console.log('All elements with mb-2 class:', document.querySelectorAll('.mb-2'));
-    console.log('All card-header elements:', document.querySelectorAll('.card-header'));
-    
+    console.log(
+      "All elements with d-flex class:",
+      document.querySelectorAll(".d-flex"),
+    );
+    console.log(
+      "All elements with justify-content-between class:",
+      document.querySelectorAll(".justify-content-between"),
+    );
+    console.log(
+      "All elements with align-items-center class:",
+      document.querySelectorAll(".align-items-center"),
+    );
+    console.log(
+      "All elements with mb-2 class:",
+      document.querySelectorAll(".mb-2"),
+    );
+    console.log(
+      "All card-header elements:",
+      document.querySelectorAll(".card-header"),
+    );
+
     // Try to find the header container - look for the one with the h1 title
     let headerContainer = null;
-    
+
     // First, find all card headers
-    const cardHeaders = document.querySelectorAll('.card-header');
-    console.log('Found card headers:', cardHeaders);
-    
+    const cardHeaders = document.querySelectorAll(".card-header");
+    console.log("Found card headers:", cardHeaders);
+
     // Look for the one that contains the h1 with "GRQ FX Validation Dashboard"
     for (let header of cardHeaders) {
-      const h1 = header.querySelector('h1');
-      if (h1 && h1.textContent.includes('GRQ FX Validation Dashboard')) {
-        console.log('Found header with GRQ FX title:', header);
+      const h1 = header.querySelector("h1");
+      if (h1 && h1.textContent.includes("GRQ FX Validation Dashboard")) {
+        console.log("Found header with GRQ FX title:", header);
         // Now look for the flex container within this header
-        headerContainer = header.querySelector('.d-flex.justify-content-between.align-items-center.mb-2');
+        headerContainer = header.querySelector(
+          ".d-flex.justify-content-between.align-items-center.mb-2",
+        );
         if (headerContainer) {
-          console.log('Found flex container in header:', headerContainer);
+          console.log("Found flex container in header:", headerContainer);
           break;
         }
       }
     }
-    
+
     if (!headerContainer) {
-      console.error('No suitable header container found!');
-      console.log('Available elements with card-header class:', document.querySelectorAll('.card-header'));
-      
+      console.error("No suitable header container found!");
+      console.log(
+        "Available elements with card-header class:",
+        document.querySelectorAll(".card-header"),
+      );
+
       // Try to find any card header and use it
-      const anyCardHeader = document.querySelector('.card-header');
+      const anyCardHeader = document.querySelector(".card-header");
       if (anyCardHeader) {
-        console.log('Using any available card header:', anyCardHeader);
+        console.log("Using any available card header:", anyCardHeader);
         headerContainer = anyCardHeader;
       } else {
-        console.error('No card header found at all!');
+        console.error("No card header found at all!");
         return;
       }
     }
-    
+
     // Create the button with slider switch design - always in header
-    toggleButton = document.createElement('button');
-    toggleButton.id = 'dark-mode-toggle';
-    toggleButton.className = 'theme-toggle-switch';
-    toggleButton.title = 'Theme Toggle (Auto/Light/Dark)';
-    
+    toggleButton = document.createElement("button");
+    toggleButton.id = "dark-mode-toggle";
+    toggleButton.className = "theme-toggle-switch";
+    toggleButton.title = "Theme Toggle (Auto/Light/Dark)";
+
     // Header button styles - slider switch design
     toggleButton.style.cssText = `
       width: 50px;
@@ -393,11 +438,11 @@ function initializeDarkModeToggle() {
       overflow: hidden;
       margin-left: 10px;
     `;
-    
+
     // Create the icon/text indicator
-    toggleIcon = document.createElement('span');
-    toggleIcon.id = 'dark-mode-icon';
-    toggleIcon.textContent = 'A'; // Default to Auto
+    toggleIcon = document.createElement("span");
+    toggleIcon.id = "dark-mode-icon";
+    toggleIcon.textContent = "A"; // Default to Auto
     toggleIcon.style.cssText = `
       display: flex;
       align-items: center;
@@ -406,137 +451,150 @@ function initializeDarkModeToggle() {
       height: 100%;
       transition: all 0.3s ease;
     `;
-    
+
     // Add icon to button
     toggleButton.appendChild(toggleIcon);
-    
+
     // Add button to header container in the correct position
     // Try to find the flex container within the header first
-    const flexContainer = headerContainer.querySelector('.d-flex.justify-content-between.align-items-center.mb-2');
+    const flexContainer = headerContainer.querySelector(
+      ".d-flex.justify-content-between.align-items-center.mb-2",
+    );
     if (flexContainer) {
-      console.log('Flex container found:', flexContainer);
-      console.log('Flex container children:', flexContainer.children);
-      console.log('Flex container children length:', flexContainer.children.length);
-      
+      console.log("Flex container found:", flexContainer);
+      console.log("Flex container children:", flexContainer.children);
+      console.log(
+        "Flex container children length:",
+        flexContainer.children.length,
+      );
+
       // The flex container should have: [empty div, h1, (our button should go here)]
       // Insert the button as the third child (after the h1)
       const children = flexContainer.children;
       if (children.length >= 2) {
         // Insert after the h1 (second child)
         flexContainer.insertBefore(toggleButton, children[2] || null);
-        console.log('Added button to flex container as third child');
+        console.log("Added button to flex container as third child");
       } else {
         // Fallback - append to end
         flexContainer.appendChild(toggleButton);
-        console.log('Added button to flex container at end');
+        console.log("Added button to flex container at end");
       }
     } else {
       // Fallback - add to the header directly with absolute positioning
-      headerContainer.style.position = 'relative';
-      toggleButton.style.position = 'absolute';
-      toggleButton.style.top = '10px';
-      toggleButton.style.right = '10px';
+      headerContainer.style.position = "relative";
+      toggleButton.style.position = "absolute";
+      toggleButton.style.top = "10px";
+      toggleButton.style.right = "10px";
       headerContainer.appendChild(toggleButton);
-      console.log('Added button to header with absolute positioning');
+      console.log("Added button to header with absolute positioning");
     }
-    
-    console.log('Dark mode toggle button created and added to DOM');
+
+    console.log("Dark mode toggle button created and added to DOM");
   }
-  
+
   // Three states: 'light', 'auto', 'dark'
-  let userPreference = localStorage.getItem('dark-mode-preference') || 'auto';
-  const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  
+  let userPreference = localStorage.getItem("dark-mode-preference") || "auto";
+  const systemPrefersDark =
+    window.matchMedia("(prefers-color-scheme: dark)").matches;
+
   // Apply initial state
   updateDarkMode(userPreference);
-  
+
   // Toggle button click handler - cycles through: auto -> light -> dark -> auto
-  toggleButton.addEventListener('click', () => {
-    console.log('Toggle button clicked, current preference:', userPreference);
-    
+  toggleButton.addEventListener("click", () => {
+    console.log("Toggle button clicked, current preference:", userPreference);
+
     let newPreference;
     switch (userPreference) {
-      case 'auto':
-        newPreference = 'light';
+      case "auto":
+        newPreference = "light";
         break;
-      case 'light':
-        newPreference = 'dark';
+      case "light":
+        newPreference = "dark";
         break;
-      case 'dark':
-        newPreference = 'auto';
+      case "dark":
+        newPreference = "auto";
         break;
       default:
-        newPreference = 'auto';
+        newPreference = "auto";
     }
-    
-    console.log('Switching to preference:', newPreference);
+
+    console.log("Switching to preference:", newPreference);
     userPreference = newPreference; // Update the variable
     updateDarkMode(newPreference);
-    localStorage.setItem('dark-mode-preference', newPreference);
+    localStorage.setItem("dark-mode-preference", newPreference);
   });
-  
+
   function updateDarkMode(preference) {
     // Remove all mode classes
-    document.body.classList.remove('dark-mode-forced', 'light-mode-forced');
-    
+    document.body.classList.remove("dark-mode-forced", "light-mode-forced");
+
     switch (preference) {
-      case 'light':
-        document.body.classList.add('light-mode-forced');
-        toggleIcon.textContent = 'L';
-        toggleButton.title = 'Light Mode (Click for Dark Mode)';
-        toggleButton.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-        toggleButton.style.color = '#000';
+      case "light":
+        document.body.classList.add("light-mode-forced");
+        toggleIcon.textContent = "L";
+        toggleButton.title = "Light Mode (Click for Dark Mode)";
+        toggleButton.style.backgroundColor = "rgba(255, 255, 255, 0.9)";
+        toggleButton.style.color = "#000";
         break;
-      case 'dark':
-        document.body.classList.add('dark-mode-forced');
-        toggleIcon.textContent = 'D';
-        toggleButton.title = 'Dark Mode (Click for Auto Mode)';
-        toggleButton.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
-        toggleButton.style.color = '#fff';
+      case "dark":
+        document.body.classList.add("dark-mode-forced");
+        toggleIcon.textContent = "D";
+        toggleButton.title = "Dark Mode (Click for Auto Mode)";
+        toggleButton.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+        toggleButton.style.color = "#fff";
         break;
-      case 'auto':
+      case "auto":
       default:
         // No forced class - follows system preference
-        toggleIcon.textContent = 'A';
-        toggleButton.title = 'Auto Mode - Following System (Click for Light Mode)';
-        toggleButton.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
-        toggleButton.style.color = 'white';
+        toggleIcon.textContent = "A";
+        toggleButton.title =
+          "Auto Mode - Following System (Click for Light Mode)";
+        toggleButton.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+        toggleButton.style.color = "white";
         break;
     }
   }
-  
+
   // Listen for system theme changes when in auto mode
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-    if (userPreference === 'auto') {
-      updateDarkMode('auto');
-    }
-  });
-  
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener(
+    "change",
+    (e) => {
+      if (userPreference === "auto") {
+        updateDarkMode("auto");
+      }
+    },
+  );
+
   // Add keyboard shortcut for testing (Ctrl/Cmd + D)
-  document.addEventListener('keydown', (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "d") {
       e.preventDefault();
-      console.log('Keyboard shortcut triggered, current preference:', userPreference);
-      
+      console.log(
+        "Keyboard shortcut triggered, current preference:",
+        userPreference,
+      );
+
       let newPreference;
       switch (userPreference) {
-        case 'auto':
-          newPreference = 'light';
+        case "auto":
+          newPreference = "light";
           break;
-        case 'light':
-          newPreference = 'dark';
+        case "light":
+          newPreference = "dark";
           break;
-        case 'dark':
-          newPreference = 'auto';
+        case "dark":
+          newPreference = "auto";
           break;
         default:
-          newPreference = 'auto';
+          newPreference = "auto";
       }
-      
-      console.log('Keyboard shortcut switching to preference:', newPreference);
+
+      console.log("Keyboard shortcut switching to preference:", newPreference);
       userPreference = newPreference; // Update the variable
       updateDarkMode(newPreference);
-      localStorage.setItem('dark-mode-preference', newPreference);
+      localStorage.setItem("dark-mode-preference", newPreference);
     }
   });
 }
@@ -1327,17 +1385,16 @@ class GRQFXValidator {
 
       // Calculate summary statistics with defensive programming
       const monthlyChange = pair.predictions[0]?.predictedChangePercent ?? null;
-      const quarterlyChange = pair.predictions[1]?.predictedChangePercent ?? null;
-      const halfYearChange = pair.predictions[2]?.predictedChangePercent ?? null;
-      const threeQuarterChange = pair.predictions[3]?.predictedChangePercent ?? null;
+      const quarterlyChange = pair.predictions[1]?.predictedChangePercent ??
+        null;
+      const halfYearChange = pair.predictions[2]?.predictedChangePercent ??
+        null;
+      const threeQuarterChange = pair.predictions[3]?.predictedChangePercent ??
+        null;
       const yearlyChange = pair.predictions[4]?.predictedChangePercent ?? null;
 
       // Calculate best fit slope (linear regression)
       const slope = this.calculateBestFitSlope(pair.predictions);
-
-
-
-
 
       col.innerHTML = `
         <div class="fx-pair-card" onclick="fxValidator.selectFXPair('${pair.pair}')">
@@ -1360,7 +1417,9 @@ class GRQFXValidator {
               <div class="col-6">
                 <small>Quarter (90d):</small><br>
                 <span class="prediction-change ${
-        quarterlyChange !== null && quarterlyChange >= 0 ? "positive" : "negative"
+        quarterlyChange !== null && quarterlyChange >= 0
+          ? "positive"
+          : "negative"
       }">
                   ${formatPercentage(quarterlyChange)}
                 </span>
@@ -1378,7 +1437,9 @@ class GRQFXValidator {
               <div class="col-6">
                 <small>3/4 Year (270d):</small><br>
                 <span class="prediction-change ${
-        threeQuarterChange !== null && threeQuarterChange >= 0 ? "positive" : "negative"
+        threeQuarterChange !== null && threeQuarterChange >= 0
+          ? "positive"
+          : "negative"
       }">
                   ${formatPercentage(threeQuarterChange)}
                 </span>
@@ -1398,7 +1459,9 @@ class GRQFXValidator {
                 <span class="prediction-change ${
         slope !== null && slope >= 0 ? "positive" : "negative"
       }">
-                  ${slope !== null ? `${slope >= 0 ? '+' : ''}${slope.toFixed(2)}%` : 'N/A'}
+                  ${
+        slope !== null ? `${slope >= 0 ? "+" : ""}${slope.toFixed(2)}%` : "N/A"
+      }
                 </span>
               </div>
             </div>
@@ -1515,9 +1578,10 @@ class GRQFXValidator {
 
     // Add all prediction points
     pair.predictions.forEach((prediction) => {
-      const date = new Date(predictionDate.getTime() + (prediction.days * 24 * 60 * 60 * 1000));
-      
-      
+      const date = new Date(
+        predictionDate.getTime() + (prediction.days * 24 * 60 * 60 * 1000),
+      );
+
       predictionLineData.push({
         x: date.getTime(),
         y: prediction.predictedRate,
@@ -1597,14 +1661,16 @@ class GRQFXValidator {
 
     // Collect prediction points for best fit line calculation
     const predictionPoints = [];
-    
+
     pair.predictions.forEach((prediction, index) => {
-      const date = new Date(predictionDate.getTime() + (prediction.days * 24 * 60 * 60 * 1000));
+      const date = new Date(
+        predictionDate.getTime() + (prediction.days * 24 * 60 * 60 * 1000),
+      );
       const point = {
         x: date.getTime(),
         y: prediction.predictedRate,
       };
-      
+
       predictionPoints.push(point);
 
       datasets.push({
@@ -1629,36 +1695,36 @@ class GRQFXValidator {
       // Using least squares with fixed intercept (current rate)
       const startTime = predictionDate.getTime();
       const startRate = pair.currentRate;
-      
+
       // Calculate slope that minimizes distance to prediction points
       // when line is anchored at (startTime, startRate)
       let numerator = 0;
       let denominator = 0;
-      
-      predictionPoints.forEach(point => {
+
+      predictionPoints.forEach((point) => {
         const timeDiff = point.x - startTime;
         const rateDiff = point.y - startRate;
         numerator += timeDiff * rateDiff;
         denominator += timeDiff * timeDiff;
       });
-      
+
       const slope = denominator !== 0 ? numerator / denominator : 0;
-      
+
       // Create best fit line from start to end of prediction range
       const endTime = predictionPoints[predictionPoints.length - 1].x;
       const endRate = startRate + slope * (endTime - startTime);
-      
+
       const bestFitLine = [
         {
           x: startTime,
-          y: startRate
+          y: startRate,
         },
         {
           x: endTime,
-          y: endRate
-        }
+          y: endRate,
+        },
       ];
-      
+
       datasets.push({
         label: "Best Fit Trend",
         data: bestFitLine,
@@ -1676,7 +1742,6 @@ class GRQFXValidator {
     }
 
     if (typeof Chart !== "undefined") {
-      
       this.chart = new Chart(ctx, {
         type: "line",
         data: { datasets },
@@ -1690,18 +1755,24 @@ class GRQFXValidator {
                 const predictionDate = new Date(this.predictionData.date);
                 const twelveMonthsLater = new Date(predictionDate);
                 twelveMonthsLater.setMonth(twelveMonthsLater.getMonth() + 12);
-                
+
                 let title = `${pair.pair} Rate Analysis - 12M Historical + `;
-                
+
                 if (actualData.length > 0) {
-                  const lastActualDate = new Date(Math.max(...actualData.map(d => d.x)));
-                  const actualMonths = Math.ceil((lastActualDate - predictionDate) / (1000 * 60 * 60 * 24 * 30));
+                  const lastActualDate = new Date(
+                    Math.max(...actualData.map((d) => d.x)),
+                  );
+                  const actualMonths = Math.ceil(
+                    (lastActualDate - predictionDate) /
+                      (1000 * 60 * 60 * 24 * 30),
+                  );
                   const remainingMonths = Math.max(0, 12 - actualMonths);
-                  title += `${actualMonths}M Actual + ${remainingMonths}M Predicted`;
+                  title +=
+                    `${actualMonths}M Actual + ${remainingMonths}M Predicted`;
                 } else {
                   title += "12M Predicted";
                 }
-                
+
                 return title;
               })(),
               font: {
@@ -1720,7 +1791,7 @@ class GRQFXValidator {
                     year: "numeric",
                     month: "short",
                     day: "numeric",
-                    timeZone: "UTC"
+                    timeZone: "UTC",
                   });
                 },
                 label: function (context) {
@@ -1753,7 +1824,7 @@ class GRQFXValidator {
                 console.log("Chart X-axis min:", {
                   predictionDate: predictionDate.toISOString(),
                   twelveMonthsAgo: twelveMonthsAgo.toISOString(),
-                  timestamp: twelveMonthsAgo.getTime()
+                  timestamp: twelveMonthsAgo.getTime(),
                 });
                 return twelveMonthsAgo.getTime();
               })(),
@@ -1762,13 +1833,18 @@ class GRQFXValidator {
                 const predictionDate = new Date(this.predictionData.date);
                 const twelveMonthsLater = new Date(predictionDate);
                 twelveMonthsLater.setMonth(twelveMonthsLater.getMonth() + 12);
-                
+
                 // Also check if we need to extend to include the Full-Year prediction (365 days)
-                const fullYearLater = new Date(predictionDate.getTime() + (365 * 24 * 60 * 60 * 1000));
-                
+                const fullYearLater = new Date(
+                  predictionDate.getTime() + (365 * 24 * 60 * 60 * 1000),
+                );
+
                 // Use the later of the two dates, plus a small buffer to ensure the point is not at the edge
-                const maxDate = Math.max(twelveMonthsLater.getTime(), fullYearLater.getTime()) + (7 * 24 * 60 * 60 * 1000); // Add 7 days buffer
-                
+                const maxDate = Math.max(
+                  twelveMonthsLater.getTime(),
+                  fullYearLater.getTime(),
+                ) + (7 * 24 * 60 * 60 * 1000); // Add 7 days buffer
+
                 return maxDate;
               })(),
             },
@@ -1943,24 +2019,30 @@ class GRQFXValidator {
 
         // Add range logic validation
         let rangeLogicHTML = "";
-        
+
         if (period === "1Y" && comprehensiveData["5Y"]) {
           const fiveYear = comprehensiveData["5Y"];
-          const oneYearInFiveYear = data.min >= fiveYear.min && data.max <= fiveYear.max;
-          
+          const oneYearInFiveYear = data.min >= fiveYear.min &&
+            data.max <= fiveYear.max;
+
           if (oneYearInFiveYear) {
-            rangeLogicHTML = '<small class="text-success"><i class="fas fa-check-circle me-1"></i>Within 5Y range ✓</small>';
+            rangeLogicHTML =
+              '<small class="text-success"><i class="fas fa-check-circle me-1"></i>Within 5Y range ✓</small>';
           } else {
-            rangeLogicHTML = '<small class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Outside 5Y range</small>';
+            rangeLogicHTML =
+              '<small class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Outside 5Y range</small>';
           }
         } else if (period === "5Y" && comprehensiveData["10Y"]) {
           const tenYear = comprehensiveData["10Y"];
-          const fiveYearInTenYear = data.min >= tenYear.min && data.max <= tenYear.max;
-          
+          const fiveYearInTenYear = data.min >= tenYear.min &&
+            data.max <= tenYear.max;
+
           if (fiveYearInTenYear) {
-            rangeLogicHTML = '<small class="text-success"><i class="fas fa-check-circle me-1"></i>Within 10Y range ✓</small>';
+            rangeLogicHTML =
+              '<small class="text-success"><i class="fas fa-check-circle me-1"></i>Within 10Y range ✓</small>';
           } else {
-            rangeLogicHTML = '<small class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Outside 10Y range</small>';
+            rangeLogicHTML =
+              '<small class="text-danger"><i class="fas fa-exclamation-triangle me-1"></i>Outside 10Y range</small>';
           }
         }
 
@@ -2356,8 +2438,6 @@ class GRQFXValidator {
     this.chart.update();
   }
 
-
-
   addHistoricalRangeLines(comprehensiveData) {
     if (!this.chart) return;
 
@@ -2373,10 +2453,12 @@ class GRQFXValidator {
     twelveMonthsBefore.setMonth(twelveMonthsBefore.getMonth() - 12);
     const twelveMonthsAfter = new Date(predictionDate);
     twelveMonthsAfter.setMonth(twelveMonthsAfter.getMonth() + 12);
-    
+
     // Use the minimum of today's date or 12 months after prediction date
     const today = new Date();
-    const maxDate = new Date(Math.min(today.getTime(), twelveMonthsAfter.getTime()));
+    const maxDate = new Date(
+      Math.min(today.getTime(), twelveMonthsAfter.getTime()),
+    );
 
     const minX = twelveMonthsBefore.getTime();
     const maxX = maxDate.getTime();
@@ -2501,9 +2583,9 @@ class GRQFXValidator {
     if (!predictions || predictions.length < 2) return null;
 
     // Filter out null values
-    const validPredictions = predictions.filter(p => 
-      p.predictedChangePercent !== null && 
-      p.predictedChangePercent !== undefined && 
+    const validPredictions = predictions.filter((p) =>
+      p.predictedChangePercent !== null &&
+      p.predictedChangePercent !== undefined &&
       !isNaN(p.predictedChangePercent)
     );
 
@@ -2511,13 +2593,16 @@ class GRQFXValidator {
 
     // Calculate the average monthly change rate
     // This gives a more intuitive measure of the overall trend
-    const totalChange = validPredictions[validPredictions.length - 1].predictedChangePercent - validPredictions[0].predictedChangePercent;
-    const totalMonths = (validPredictions[validPredictions.length - 1].days - validPredictions[0].days) / 30;
-    
+    const totalChange =
+      validPredictions[validPredictions.length - 1].predictedChangePercent -
+      validPredictions[0].predictedChangePercent;
+    const totalMonths = (validPredictions[validPredictions.length - 1].days -
+      validPredictions[0].days) / 30;
+
     if (totalMonths === 0) return null;
-    
+
     const averageMonthlyChange = totalChange / totalMonths;
-    
+
     return averageMonthlyChange;
   }
 }

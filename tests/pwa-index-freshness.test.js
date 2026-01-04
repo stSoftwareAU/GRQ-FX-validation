@@ -30,8 +30,14 @@ test("`docs/index.json` includes the latest prediction date folder", () => {
   const indexPath = path.join(DOCS_DIR, "index.json");
   const index = JSON.parse(fs.readFileSync(indexPath, "utf8"));
 
-  assert.ok(index && typeof index === "object", "index.json should parse to an object");
-  assert.ok(index.entries && typeof index.entries === "object", "index.json should contain an entries object");
+  assert.ok(
+    index && typeof index === "object",
+    "index.json should parse to an object",
+  );
+  assert.ok(
+    index.entries && typeof index.entries === "object",
+    "index.json should contain an entries object",
+  );
   assert.ok(
     Object.prototype.hasOwnProperty.call(index.entries, latestDateDir),
     `index.json is missing the latest date directory: ${latestDateDir}`,
@@ -66,4 +72,34 @@ test("`docs/index.html` has a valid service worker registration call (no broken 
   );
 });
 
+test("Service worker treats predictions.json and CSV data files as dynamic (pathname-based)", () => {
+  const swPath = path.join(DOCS_DIR, "sw.js");
+  const sw = fs.readFileSync(swPath, "utf8");
 
+  // These patterns must match URL.pathname, which starts with `/...`.
+  assert.ok(
+    sw.includes("/\/data\/.*\.csv$/"),
+    "Expected sw.js to include pathname regex /\/data\/.*\.csv$/ for CSV data files",
+  );
+  assert.ok(
+    sw.includes("/\/\d{4}-\d{2}-\d{2}\/predictions\.json$/"),
+    "Expected sw.js to include pathname regex for dated predictions.json files",
+  );
+
+  // Guard against the common broken form using `./...` which never matches pathname.
+  assert.ok(
+    !sw.includes("\.\/data\/"),
+    "sw.js still appears to contain './data/' patterns which do not match URL.pathname",
+  );
+});
+
+test("Service worker does not treat predictions.json as a static JSON asset", () => {
+  const swPath = path.join(DOCS_DIR, "sw.js");
+  const sw = fs.readFileSync(swPath, "utf8");
+
+  // Predictions JSON must not be captured by the cache-first static asset path.
+  assert.ok(
+    sw.includes("endsWith('.json') && !isNetworkFirst && !isDataFile"),
+    "Expected sw.js to exclude dynamic data JSON from the static asset .json matcher",
+  );
+});
