@@ -21,3 +21,13 @@ target
 #.idea/
 
 !.gitattributes
+
+*.json.error
+*.json.error.*
+*.json.unfixable
+*.json.unfixable.*
+*.json.corrupt
+*.json.corrupt.*
+*.json.bak
+*.json.orig
+*.json.tmp
