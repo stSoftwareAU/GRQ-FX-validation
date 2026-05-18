@@ -23,18 +23,23 @@ This project uses an automated version incrementing system similar to the one in
 ## Usage
 
 ### Initial Setup
+
 ```bash
 ./setup-hooks.sh
 ```
 
 ### Manual Version Update
+
 If you need to manually update the version, edit the VERSION constant in `docs/index.js`:
+
 ```javascript
 const VERSION = "1.0.1";
 ```
 
 ### Automatic Version Increment
+
 The version will automatically increment when you commit changes to any files in the `docs/` directory:
+
 ```bash
 git add docs/some-file.html
 git commit -m "Update some file"
@@ -42,9 +47,11 @@ git commit -m "Update some file"
 ```
 
 ## Version Format
+
 - Format: `major.minor.patch` (e.g., 1.0.1)
 - Only the patch version is auto-incremented
 - Major and minor versions must be updated manually if needed
 
 ## Browser Cache Busting
-The version number is used to force browsers to reload JS/CSS files when the version changes, ensuring users always get the latest version of the application. 
+
+The version number is used to force browsers to reload JS/CSS files when the version changes, ensuring users always get the latest version of the application.
