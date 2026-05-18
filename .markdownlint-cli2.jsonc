@@ -1,0 +1,26 @@
+// markdownlint-cli2 configuration for GRQ FX Validation Dashboard.
+// See https://github.com/DavidAnson/markdownlint-cli2 for documentation.
+{
+  "globs": [
+    "**/*.md"
+  ],
+  "ignores": [
+    "node_modules/**",
+    ".git/**"
+  ],
+  "config": {
+    // Allow long lines — many of the existing docs include URLs and tables
+    // that exceed the default 80-character limit.
+    "MD013": false,
+    // Allow duplicate headings — common in changelog/summary style documents.
+    "MD024": false,
+    // Allow trailing punctuation in headings (e.g. "Note:").
+    "MD026": false,
+    // Allow bare URLs in plain prose.
+    "MD034": false,
+    // Allow fenced code blocks without a language (legacy docs use plain ```).
+    "MD040": false,
+    // Do not require the first line of a file to be a top-level heading.
+    "MD041": false
+  }
+}

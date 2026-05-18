@@ -14,6 +14,7 @@ This document summarizes the refactoring work done to separate HTML, JavaScript,
 ## 📁 New File Structure
 
 ### Source Files (TypeScript)
+
 ```
 src/
 ├── utils.ts              # Utility functions and interfaces
@@ -22,12 +23,14 @@ src/
 ```
 
 ### Test Files
+
 ```
 tests/
 └── utils_test.ts        # Comprehensive tests for utility functions
 ```
 
 ### Generated Files (JavaScript)
+
 ```
 docs/
 ├── utils.js             # Compiled utility functions
@@ -40,6 +43,7 @@ docs/
 ```
 
 ### Configuration
+
 ```
 deno.json               # Deno configuration with tasks
 build.ts               # Build script for browser deployment
@@ -48,11 +52,13 @@ build.ts               # Build script for browser deployment
 ## 🧪 Testing
 
 ### Test Coverage
+
 - **16 comprehensive tests** covering all utility functions
 - **100% test pass rate** with edge case handling
 - **Type safety** with TypeScript interfaces
 
 ### Test Categories
+
 1. **Formatting Functions**
    - `formatCurrency()` - Currency formatting with decimal places
    - `formatPercentage()` - Percentage formatting
@@ -73,6 +79,7 @@ build.ts               # Build script for browser deployment
    - Performance metrics calculations
 
 ### Running Tests
+
 ```bash
 deno test --allow-net --allow-read tests/
 ```
@@ -80,11 +87,13 @@ deno test --allow-net --allow-read tests/
 ## 🔧 Build System
 
 ### Build Process
+
 1. **TypeScript to JavaScript**: Manual compilation for browser compatibility
 2. **HTML Updates**: Automatic script tag replacement
 3. **File Cleanup**: Removal of old JavaScript files
 
 ### Build Commands
+
 ```bash
 # Build for browser deployment
 deno run --allow-read --allow-write build.ts
@@ -102,6 +111,7 @@ deno test --allow-net --allow-read
 ## 📦 Module Structure
 
 ### Utils Module (`src/utils.ts`)
+
 ```typescript
 // Interfaces
 export interface FXPrediction { ... }
@@ -121,6 +131,7 @@ export function generateChartData(predictionData, actualDataMap)
 ```
 
 ### FX Validator Module (`src/fx-validator.ts`)
+
 ```typescript
 export class GRQFXValidator {
   // Main dashboard functionality
@@ -131,6 +142,7 @@ export class GRQFXValidator {
 ```
 
 ### FX List Module (`src/fx-list.ts`)
+
 ```typescript
 export class GRQFXList {
   // File list management
@@ -143,12 +155,14 @@ export class GRQFXList {
 ## 🎨 CSS Organization
 
 ### Main Styles (`docs/styles.css`)
+
 - Dashboard layout and components
 - FX pair cards and tables
 - Responsive design
 - Color schemes and themes
 
 ### List Styles (`docs/list.css`)
+
 - File list table styling
 - Filter components
 - Summary statistics
@@ -157,11 +171,13 @@ export class GRQFXList {
 ## 🚀 Deployment
 
 ### GitHub Pages Ready
+
 - All files properly organized in `docs/` directory
 - ES6 modules for modern browser support
 - Automatic deployment via GitHub Actions
 
 ### Local Development
+
 ```bash
 # Start local server
 cd docs
@@ -173,18 +189,21 @@ python3 -m http.server 8000
 ## 🔍 Code Quality
 
 ### TypeScript Features
+
 - **Strict typing** with interfaces
 - **Type safety** for all functions
 - **Modern ES6+** syntax
 - **Module imports/exports**
 
 ### Linting & Formatting
+
 - **Deno linting** with recommended rules
 - **Consistent formatting** with 2-space indentation
 - **No unused variables** or imports
 - **Proper error handling**
 
 ### Performance
+
 - **Modular architecture** for better maintainability
 - **Efficient data processing** with proper algorithms
 - **Memory management** with proper cleanup
@@ -203,12 +222,14 @@ python3 -m http.server 8000
 ## 🔄 Migration from Original
 
 ### Before (Monolithic)
+
 - Single `app.js` file with all functionality
 - Mixed concerns in one file
 - No testing framework
 - Manual deployment process
 
 ### After (Modular)
+
 - Separated TypeScript modules
 - Comprehensive test suite
 - Automated build process
@@ -232,4 +253,4 @@ python3 -m http.server 8000
 - **Modular architecture** implemented
 - **Build system** working correctly
 
-The refactoring successfully modernized the codebase while maintaining all original functionality and adding comprehensive testing capabilities. 
+The refactoring successfully modernized the codebase while maintaining all original functionality and adding comprehensive testing capabilities.
