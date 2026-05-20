@@ -16,13 +16,18 @@ flows through HTML or JS-string parsing.
 
 ## Evidence
 
-The change is a backend/DOM hardening: the visible card layout is
-unchanged. Verified locally by:
+The visible card layout is unchanged — Playwright-captured screenshot of
+the dashboard with the new `safe-card.js` builder loaded:
+
+![FX-pair cards rendered via the safe builder](docs/evidence/issue-12-fx-cards.png)
+
+Also verified locally by:
 
 1. Running the new Deno test suite (`tests/fx-card-xss.test.ts`) with a
    malicious `pair.pair` payload — `5 passed | 0 failed`.
-2. Serving `docs/` via `helpers/server.ts` and confirming both
-   `safe-card.js` (HTTP 200) and `index.html` (HTTP 200) load.
+2. Serving `docs/` via `helpers/server.ts`, loading `index.html` in
+   headless Chromium, and confirming `.fx-pair-card` nodes are present
+   (the screenshot above was captured from that run).
 
 ```mermaid
 flowchart LR
