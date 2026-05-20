@@ -6,15 +6,31 @@
  * from the `docs` folder for testing.
  *
  * Usage:
- *   deno run --allow-net --allow-read tests/start-test-server.js [port]
+ *   deno run --allow-net --allow-read helpers/server.ts [port]
  * Default port is 8000 if not specified.
+ *
+ * Security (issue #15): the server resolves every request path against an
+ * absolute `docs/` root and rejects anything that escapes it (parent-dir
+ * segments, URL-encoded `%2e%2e%2f`, absolute paths, null bytes, etc.).
+ * It also binds explicitly to `127.0.0.1` so older Deno releases (<1.35,
+ * where the default was `0.0.0.0`) cannot expose the test server to the
+ * LAN.
  */
 
-import { join } from "https://deno.land/std@0.208.0/path/mod.ts";
+import {
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+} from "https://deno.land/std@0.208.0/path/mod.ts";
 
 const DEFAULT_PORT = 8000;
 const DOCS_DIR = "docs";
-const port = parseInt(Deno.args[0] ?? "") || DEFAULT_PORT;
+
+// Absolute, normalised path to the docs sandbox. Exported so tests can
+// assert that every resolved file path stays under this root.
+export const DOCS_ROOT = resolve(DOCS_DIR);
+
 const DEBUG = true;
 
 const MIME_TYPES: Record<string, string> = {
@@ -35,19 +51,34 @@ const MIME_TYPES: Record<string, string> = {
   ".pdf": "application/pdf",
 };
 
-function getMimeType(filename: string) {
+export function getMimeType(filename: string): string {
   const ext = filename.substring(filename.lastIndexOf(".")).toLowerCase();
   return MIME_TYPES[ext] ?? "application/octet-stream";
 }
 
-function getFilePath(url: string) {
-  let path = decodeURIComponent(url.substring(1));
-
-  if (DEBUG) {
-    console.log(`🔍 Requested URL: "${url}"`);
-    console.log(`📂 Decoded path: "${path}"`);
+/**
+ * Resolve an incoming request URL to an absolute file path under
+ * `DOCS_ROOT`, or `null` if the request escapes the sandbox.
+ *
+ * The caller MUST treat `null` as a 404 (or 403) — never read the file.
+ */
+export function getFilePath(url: string): string | null {
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(url.substring(1));
+  } catch {
+    // Malformed percent-encoding — reject rather than guess.
+    return null;
   }
 
+  // Reject null bytes outright — they have historically been used to
+  // bypass extension checks (e.g. `index.html%00.png`).
+  if (decoded.includes("\0")) return null;
+
+  // Reject absolute paths (e.g. `//etc/passwd`, `/%2fetc/passwd`).
+  if (decoded.startsWith("/") || isAbsolute(decoded)) return null;
+
+  let path = decoded;
   if (path === "" || path === "/") path = "index.html";
   else if (path === "docs" || path === "docs/") path = "index.html";
   else if (path === "index.html") path = "index.html";
@@ -55,9 +86,16 @@ function getFilePath(url: string) {
     path = path.substring(5) || "index.html";
   }
 
-  const fullPath = join(DOCS_DIR, path);
+  const fullPath = resolve(DOCS_ROOT, path);
+  const rel = relative(DOCS_ROOT, fullPath);
 
-  if (DEBUG) console.log(`🎯 Final file path: "${fullPath}"`);
+  // Anything that resolves outside DOCS_ROOT either starts with `..` or
+  // is itself absolute — both must be rejected.
+  if (rel === "" || rel === ".") {
+    // Resolved to DOCS_ROOT itself — treat as directory request.
+    return join(DOCS_ROOT, "index.html");
+  }
+  if (rel.startsWith("..") || isAbsolute(rel)) return null;
 
   return fullPath;
 }
@@ -70,6 +108,15 @@ async function handleRequest(request: Request): Promise<Response> {
     console.log(
       `\n📥 ${new Date().toISOString()} - ${request.method} ${url.pathname}`,
     );
+  }
+
+  if (filePath === null) {
+    if (DEBUG) {
+      console.log(
+        `❌ 404 - Rejected path outside docs sandbox: ${url.pathname}`,
+      );
+    }
+    return new Response("Not Found", { status: 404 });
   }
 
   try {
@@ -111,16 +158,23 @@ async function handleRequest(request: Request): Promise<Response> {
   }
 }
 
-console.log(`🚀 Starting test server on http://localhost:${port}`);
-console.log(`📁 Serving files from: ${DOCS_DIR}`);
-console.log(`🌐 Available URLs:`);
-console.log(`   • http://localhost:${port}/ (main dashboard)`);
-console.log(`   • http://localhost:${port}/docs/ (same as root)`);
-console.log(`   • http://localhost:${port}/index.html (explicit index)`);
-console.log(`   • http://localhost:${port}/scores/ (data files)`);
-console.log(`⏹️  Press Ctrl+C to stop the server`);
-console.log(`🔍 Debug logging is ${DEBUG ? "ENABLED" : "DISABLED"}`);
-console.log("");
+export { handleRequest };
 
-// new native API (no external import required)
-Deno.serve({ port }, handleRequest);
+if (import.meta.main) {
+  const port = parseInt(Deno.args[0] ?? "") || DEFAULT_PORT;
+
+  console.log(`🚀 Starting test server on http://127.0.0.1:${port}`);
+  console.log(`📁 Serving files from: ${DOCS_ROOT}`);
+  console.log(`🌐 Available URLs:`);
+  console.log(`   • http://127.0.0.1:${port}/ (main dashboard)`);
+  console.log(`   • http://127.0.0.1:${port}/docs/ (same as root)`);
+  console.log(`   • http://127.0.0.1:${port}/index.html (explicit index)`);
+  console.log(`   • http://127.0.0.1:${port}/scores/ (data files)`);
+  console.log(`⏹️  Press Ctrl+C to stop the server`);
+  console.log(`🔍 Debug logging is ${DEBUG ? "ENABLED" : "DISABLED"}`);
+  console.log("");
+
+  // Bind explicitly to loopback so older Deno releases (<1.35, default
+  // 0.0.0.0) cannot expose the dev server to the LAN.
+  Deno.serve({ port, hostname: "127.0.0.1" }, handleRequest);
+}
