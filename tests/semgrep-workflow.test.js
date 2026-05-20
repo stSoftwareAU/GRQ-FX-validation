@@ -48,6 +48,23 @@ test("semgrep workflow runs semgrep ci inside the semgrep container", () => {
   assert.match(yaml, /--config\s+p\/default/);
 });
 
+test("semgrep container image is pinned to a sha256 digest (issue #16)", () => {
+  // Supply-chain hardening: the container image must be pinned to an
+  // immutable sha256 digest so a hijacked semgrep/semgrep:latest tag
+  // cannot exfiltrate SEMGREP_APP_TOKEN or tamper with SAST results.
+  const yaml = readWorkflow();
+  assert.match(
+    yaml,
+    /image:\s*semgrep\/semgrep(?::[^\s@]+)?@sha256:[0-9a-f]{64}\b/,
+    "semgrep container image must be pinned to a sha256 digest",
+  );
+  assert.doesNotMatch(
+    yaml,
+    /image:\s*semgrep\/semgrep\s*$/m,
+    "semgrep container image must not use an unpinned (implicit :latest) reference",
+  );
+});
+
 test("semgrep workflow uses least-privilege permissions", () => {
   const yaml = readWorkflow();
   assert.match(yaml, /permissions:\s*\n\s*contents:\s*read/);
