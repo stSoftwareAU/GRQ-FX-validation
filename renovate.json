@@ -1,0 +1,41 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "minimumReleaseAge": "24 hours",
+  "packageRules": [
+    {
+      "description": "Internal stSoftwareAU/* packages are trusted and may update immediately (issue #17).",
+      "matchPackagePatterns": ["^stSoftwareAU/"],
+      "minimumReleaseAge": "0 hours"
+    },
+    {
+      "description": "Apply the 24-hour quarantine explicitly to the github-actions manager so a freshly-pushed tag/SHA cannot land instantly (issue #17).",
+      "matchManagers": ["github-actions"],
+      "minimumReleaseAge": "24 hours"
+    }
+  ],
+  "customManagers": [
+    {
+      "description": "Quarantine Deno standard library URL imports (e.g. https://deno.land/std@0.208.0/path/mod.ts) — these are picked up from any .ts file by matching the URL pattern (issue #17).",
+      "customType": "regex",
+      "fileMatch": ["\\.ts$"],
+      "matchStrings": [
+        "https://deno\\.land/std@(?<currentValue>[^/\"']+)/"
+      ],
+      "depNameTemplate": "denoland/deno_std",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^(?<version>\\d+\\.\\d+\\.\\d+)$"
+    },
+    {
+      "description": "Quarantine CDN-loaded browser libraries (Bootstrap, Chart.js, chart.js-date-fns adapter) referenced from docs/index.html and docs/sw.js. Without this, CDN URLs escape Renovate's built-in managers and avoid the quarantine (issue #17).",
+      "customType": "regex",
+      "fileMatch": ["^docs/.*\\.(html|js)$"],
+      "matchStrings": [
+        "https://cdn\\.jsdelivr\\.net/npm/(?<depName>[^@\"']+)@(?<currentValue>[^/\"']+)",
+        "https://cdnjs\\.cloudflare\\.com/ajax/libs/(?<depName>[^/]+)/(?<currentValue>[^/]+)/",
+        "https://unpkg\\.com/(?<depName>[^@\"']+)@(?<currentValue>[^/\"']+)"
+      ],
+      "datasourceTemplate": "npm"
+    }
+  ]
+}
