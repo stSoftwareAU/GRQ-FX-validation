@@ -193,3 +193,24 @@ node --test tests/pwa-index-freshness.test.js
 - Font Awesome 6.4.0 (CDN)
 
 No build process or server-side code required!
+
+## Dependency Update Quarantine
+
+External (non-`stSoftwareAU/*`) dependencies are held back for at least
+**24 hours** after publication before they are eligible for a bump. The
+delay gives the wider ecosystem time to flag a malicious release before
+it can be merged here. The gate is enforced by `renovate.json` at the
+repository root and covers:
+
+- GitHub Actions referenced from `.github/workflows/*.yml`
+- The Deno standard library imported from `helpers/server.ts`
+- CDN-loaded browser libraries referenced from `docs/index.html` and
+  `docs/sw.js`
+
+Internal `stSoftwareAU/*` packages are exempt and may update
+immediately. Regression coverage lives in
+`tests/renovate-quarantine.test.js` — run it locally with:
+
+```bash
+node --test tests/renovate-quarantine.test.js
+```
