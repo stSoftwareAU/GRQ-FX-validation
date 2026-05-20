@@ -12,7 +12,11 @@ jobs:
     name: Semgrep SAST Scan
     runs-on: ubuntu-latest
     container:
-      image: semgrep/semgrep
+      # semgrep/semgrep:1.163.0 — pinned to an immutable sha256 digest
+      # so a hijacked :latest tag cannot exfiltrate SEMGREP_APP_TOKEN or
+      # tamper with SAST results (Issue #16). When bumping, update both
+      # the tag (for human readability) and the digest from Docker Hub.
+      image: semgrep/semgrep:1.163.0@sha256:7cad2bc2d1e44f87f0bf4be6d1fa23aa90fb72015bebc89fb91385d813987a03
     steps:
       # actions/checkout@v4
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
