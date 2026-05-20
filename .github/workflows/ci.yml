@@ -1,9 +1,13 @@
 name: CI/CD Pipeline
 
+# Third-party actions are pinned to 40-character commit SHAs (Issue #14)
+# so a hijacked tag cannot exfiltrate CI secrets or publish arbitrary
+# content to the production GitHub Pages site through deploy-pages.
+
 on:
   push:
     branches: ["Develop"]
-    
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -15,7 +19,8 @@ jobs:
       docs-changed: ${{ steps.filter.outputs.docs }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        # actions/checkout@v4.3.1
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
           fetch-depth: 0 # Fetch full history for proper diffs
 
@@ -59,16 +64,20 @@ jobs:
       id-token: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        # actions/checkout@v4.3.1
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        # actions/configure-pages@v4
+        uses: actions/configure-pages@1f0c5cde4bc74cd7e1254d0cb4de8d49e9068c7d
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        # actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         with:
           path: ./docs
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        # actions/deploy-pages@v4
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
