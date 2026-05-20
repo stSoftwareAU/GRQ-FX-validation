@@ -30,7 +30,10 @@ if git diff --cached --name-only | grep -E "^docs/" > /dev/null; then
     
     # Update index.html - JS link
     sed -i '' "s/index\.js?v=[^\"]*/index.js?v=$NEW_VERSION/" docs/index.html
-    
+
+    # Update index.html - safe-card JS link (issue #12 XSS hardening)
+    sed -i '' "s/safe-card\.js?v=[^\"]*/safe-card.js?v=$NEW_VERSION/" docs/index.html
+
     # Update index.html - service worker registration
     sed -i '' "s/sw\.js?v=[^\"]*/sw.js?v=$NEW_VERSION/" docs/index.html
     

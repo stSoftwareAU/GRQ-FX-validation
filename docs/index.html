@@ -415,6 +415,8 @@
     ></script>
 
     <!-- Custom JavaScript -->
+    <!-- Safe DOM builder (issue #12: XSS hardening) — must load before index.js -->
+    <script src="safe-card.js?v=1.0.103"></script>
     <script src="index.js?v=1.0.103"></script>
 
     <!-- Service Worker Registration -->

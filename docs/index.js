@@ -1380,95 +1380,19 @@ class GRQFXValidator {
     );
 
     for (const pair of sortedPairs) {
-      const col = document.createElement("div");
-      col.className = "col-md-6 col-lg-4 mb-3";
-
-      // Calculate summary statistics with defensive programming
-      const monthlyChange = pair.predictions[0]?.predictedChangePercent ?? null;
-      const quarterlyChange = pair.predictions[1]?.predictedChangePercent ??
-        null;
-      const halfYearChange = pair.predictions[2]?.predictedChangePercent ??
-        null;
-      const threeQuarterChange = pair.predictions[3]?.predictedChangePercent ??
-        null;
-      const yearlyChange = pair.predictions[4]?.predictedChangePercent ?? null;
-
-      // Calculate best fit slope (linear regression)
-      const slope = this.calculateBestFitSlope(pair.predictions);
-
-      col.innerHTML = `
-        <div class="fx-pair-card" onclick="fxValidator.selectFXPair('${pair.pair}')">
-          <div class="d-flex justify-content-between align-items-start mb-2">
-            <h5 class="mb-0">${pair.pair}</h5>
-            <span class="badge bg-primary">${
-        formatCurrency(pair.currentRate)
-      }</span>
-          </div>
-          <div class="prediction-summary">
-            <div class="row">
-              <div class="col-6">
-                <small>Month (30d):</small><br>
-                <span class="prediction-change ${
-        monthlyChange !== null && monthlyChange >= 0 ? "positive" : "negative"
-      }">
-                  ${formatPercentage(monthlyChange)}
-                </span>
-              </div>
-              <div class="col-6">
-                <small>Quarter (90d):</small><br>
-                <span class="prediction-change ${
-        quarterlyChange !== null && quarterlyChange >= 0
-          ? "positive"
-          : "negative"
-      }">
-                  ${formatPercentage(quarterlyChange)}
-                </span>
-              </div>
-            </div>
-            <div class="row mt-1">
-              <div class="col-6">
-                <small>Half Year (180d):</small><br>
-                <span class="prediction-change ${
-        halfYearChange !== null && halfYearChange >= 0 ? "positive" : "negative"
-      }">
-                  ${formatPercentage(halfYearChange)}
-                </span>
-              </div>
-              <div class="col-6">
-                <small>3/4 Year (270d):</small><br>
-                <span class="prediction-change ${
-        threeQuarterChange !== null && threeQuarterChange >= 0
-          ? "positive"
-          : "negative"
-      }">
-                  ${formatPercentage(threeQuarterChange)}
-                </span>
-              </div>
-            </div>
-            <div class="row mt-1">
-              <div class="col-6">
-                <small>Year (365d):</small><br>
-                <span class="prediction-change ${
-        yearlyChange !== null && yearlyChange >= 0 ? "positive" : "negative"
-      }">
-                  ${formatPercentage(yearlyChange)}
-                </span>
-              </div>
-              <div class="col-6">
-                <small>Slope (per month):</small><br>
-                <span class="prediction-change ${
-        slope !== null && slope >= 0 ? "positive" : "negative"
-      }">
-                  ${
-        slope !== null ? `${slope >= 0 ? "+" : ""}${slope.toFixed(2)}%` : "N/A"
-      }
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-
+      // Use the shared safe-card builder so values originating from
+      // predictions.json are treated as text, never as HTML or JS source.
+      // See docs/safe-card.js and issue #12.
+      const col = buildFXPairCard(
+        pair,
+        document,
+        {
+          formatCurrency,
+          formatPercentage,
+          calculateBestFitSlope: (preds) => this.calculateBestFitSlope(preds),
+        },
+        (pairName) => this.selectFXPair(pairName),
+      );
       container.appendChild(col);
     }
   }
