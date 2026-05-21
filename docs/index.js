@@ -2460,14 +2460,10 @@ class GRQFXValidator {
     this.showElement("yahooDataError");
 
     const errorElement = document.getElementById("yahooDataError");
-    if (errorElement) {
-      errorElement.innerHTML = `
-        <small>
-          <i class="fas fa-exclamation-triangle me-1"></i>
-          ${message}
-        </small>
-      `;
-    }
+    // Delegate to the safe builder (issue #21 — see docs/safe-error-banner.js)
+    // so attacker-controllable values from `predictions.json` flowing into
+    // `message` are rendered as text rather than parsed as HTML.
+    renderYahooFinanceErrorBanner(errorElement, message, document);
   }
 
   showLoading() {
