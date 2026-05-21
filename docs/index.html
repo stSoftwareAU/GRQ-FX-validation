@@ -2,6 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
+
+    <!-- Content-Security-Policy (issue #23): defence-in-depth against DOM-XSS.
+         GitHub Pages cannot inject response headers, so the policy is delivered
+         via this meta tag. Keep this in sync with sw-register.js (extracted from
+         the previous inline registration block) and the connect-src list for
+         the Yahoo Finance proxies in docs/index.js. -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; img-src 'self' data:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://query1.finance.yahoo.com https://api.allorigins.win https://corsproxy.io https://thingproxy.freeboard.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- PWA Meta Tags -->
@@ -430,109 +438,8 @@
     <script src="safe-error-banner.js?v=1.0.103"></script>
     <script src="index.js?v=1.0.103"></script>
 
-    <!-- Service Worker Registration -->
-    <script>
-      // Register service worker
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("./sw.js?v=1.0.103")
-            .then((registration) => {
-              console.log("SW registered: ", registration);
-
-              // Force update check on every page load
-              registration.update();
-
-              // Check for updates
-              registration.addEventListener("updatefound", () => {
-                const newWorker = registration.installing;
-                newWorker.addEventListener("statechange", () => {
-                  if (newWorker.state === "installed") {
-                    if (navigator.serviceWorker.controller) {
-                      // New content is available, force immediate refresh
-                      console.log(
-                        "New version available, forcing refresh...",
-                      );
-
-                      // Force immediate update for all browsers
-                      navigator.serviceWorker.controller.postMessage({
-                        type: "FORCE_UPDATE",
-                      });
-                      // Force reload immediately
-                      window.location.reload(true);
-                    } else {
-                      // First time installation
-                      console.log(
-                        "Service worker installed for the first time",
-                      );
-                    }
-                  }
-                });
-              });
-
-              // Listen for messages from service worker
-              navigator.serviceWorker.addEventListener(
-                "message",
-                (event) => {
-                  if (
-                    event.data && event.data.type === "FORCE_RELOAD"
-                  ) {
-                    console.log(
-                      "Service worker requested force reload",
-                    );
-                    window.location.reload(true);
-                  }
-                  if (event.data && event.data.type === "SW_UPDATED") {
-                    console.log(
-                      "Service worker updated to version:",
-                      event.data.version,
-                    );
-                    // Force reload for all browsers when SW updates
-                    console.log("SW updated, forcing reload");
-                    window.location.reload(true);
-                  }
-                  if (
-                    event.data && event.data.type === "INDEX_UPDATED"
-                  ) {
-                    console.log("Index.json updated in background");
-                    showUpdateAvailableNotification();
-                  }
-                },
-              );
-
-              // Listen for messages from service worker controller
-              if (navigator.serviceWorker.controller) {
-                navigator.serviceWorker.controller.addEventListener(
-                  "message",
-                  (event) => {
-                    if (
-                      event.data && event.data.type === "SW_UPDATED" &&
-                      event.data.forceReload
-                    ) {
-                      console.log(
-                        "Force reload requested due to version update",
-                      );
-                      window.location.reload(true);
-                    }
-                  },
-                );
-              }
-
-              // Check for updates every 30 seconds
-              setInterval(() => {
-                registration.update();
-              }, 30000);
-            })
-            .catch((registrationError) => {
-              console.log(
-                "SW registration failed: ",
-                registrationError,
-              );
-            });
-        });
-      }
-
-      // PWA install prompt handling removed for iPhone compatibility
-      // Users can install via Safari's "Add to Home Screen" option
-    </script>
+    <!-- Service Worker Registration — extracted to a separate file so the
+         strict CSP (issue #23) can forbid 'unsafe-inline' on script-src. -->
+    <script src="sw-register.js?v=1.0.103"></script>
   </body>
 </html>

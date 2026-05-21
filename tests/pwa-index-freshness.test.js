@@ -60,13 +60,25 @@ test("Service worker treats `index.json` as network-first (pathname-based)", () 
   );
 });
 
-test("`docs/index.html` has a valid service worker registration call (no broken string)", () => {
+test("`docs/sw-register.js` has a valid service worker registration call (no broken string)", () => {
+  // Issue #23: the inline SW registration block was extracted out of
+  // docs/index.html into docs/sw-register.js so the page can ship a strict
+  // CSP without 'unsafe-inline' on script-src. The sanity check now runs
+  // against the extracted file. docs/index.html must still reference it.
   const htmlPath = path.join(DOCS_DIR, "index.html");
   const html = fs.readFileSync(htmlPath, "utf8");
+  assert.match(
+    html,
+    /<script[^>]*\bsrc\s*=\s*["']sw-register\.js[^"']*["']/i,
+    "Expected docs/index.html to reference sw-register.js via <script src=...>",
+  );
+
+  const swRegisterPath = path.join(DOCS_DIR, "sw-register.js");
+  const swRegister = fs.readFileSync(swRegisterPath, "utf8");
 
   // Basic sanity check to catch a missing quote/paren which prevents SW updates.
   assert.match(
-    html,
+    swRegister,
     /navigator\.serviceWorker\.register\(\s*['"]\.\/sw\.js\?v=[^'"]+['"]\s*\)\s*\.then\(/,
     "Expected a complete navigator.serviceWorker.register('./sw.js?v=...').then(...) call",
   );
