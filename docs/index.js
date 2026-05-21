@@ -276,22 +276,47 @@ function showUpdateAvailableNotification() {
 }
 
 function showValidationError(message) {
-  // Create a more prominent error indicator
+  // Build the indicator with DOM APIs and textContent so the message — and
+  // any future caller — cannot inject markup. The previous template-literal
+  // implementation embedded an inline `onclick` handler that would now be
+  // blocked by the page CSP (issue #23).
   const errorIndicator = document.createElement("div");
   errorIndicator.id = "validation-error";
   errorIndicator.className = "alert alert-danger position-fixed";
   errorIndicator.style.cssText =
     "top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; max-width: 500px; text-align: center;";
-  errorIndicator.innerHTML = `
-    <div class="d-flex flex-column align-items-center">
-      <i class="fas fa-exclamation-circle mb-3" style="font-size: 3rem; color: #dc3545;"></i>
-      <h4 class="text-danger mb-3">Validation Unavailable</h4>
-      <p class="mb-3">${message}</p>
-      <button class="btn btn-primary" onclick="this.parentElement.parentElement.remove()">
-        <i class="fas fa-refresh me-1"></i> Retry
-      </button>
-    </div>
-  `;
+
+  const inner = document.createElement("div");
+  inner.className = "d-flex flex-column align-items-center";
+
+  const icon = document.createElement("i");
+  icon.className = "fas fa-exclamation-circle mb-3";
+  icon.style.cssText = "font-size: 3rem; color: #dc3545;";
+  inner.appendChild(icon);
+
+  const heading = document.createElement("h4");
+  heading.className = "text-danger mb-3";
+  heading.textContent = "Validation Unavailable";
+  inner.appendChild(heading);
+
+  const paragraph = document.createElement("p");
+  paragraph.className = "mb-3";
+  paragraph.textContent = String(message);
+  inner.appendChild(paragraph);
+
+  const retry = document.createElement("button");
+  retry.className = "btn btn-primary";
+  retry.type = "button";
+  const retryIcon = document.createElement("i");
+  retryIcon.className = "fas fa-refresh me-1";
+  retry.appendChild(retryIcon);
+  retry.appendChild(document.createTextNode(" Retry"));
+  retry.addEventListener("click", () => {
+    errorIndicator.remove();
+  });
+  inner.appendChild(retry);
+
+  errorIndicator.appendChild(inner);
 
   // Remove any existing error indicator
   const existing = document.getElementById("validation-error");

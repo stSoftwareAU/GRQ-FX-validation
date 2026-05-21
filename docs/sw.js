@@ -11,6 +11,8 @@ const STATIC_ASSETS = [
   "./index.html",
   "./index.js",
   "./safe-card.js",
+  "./safe-error-banner.js",
+  "./sw-register.js",
   "./styles.css",
   "./manifest.json",
   "./logo.png",
