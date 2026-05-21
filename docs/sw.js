@@ -15,11 +15,13 @@ const STATIC_ASSETS = [
   "./manifest.json",
   "./logo.png",
   "./logo2.webp",
-  // Bootstrap and Chart.js CDN resources
-  "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css",
-  "https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js",
-  "https://cdn.jsdelivr.net/npm/chart.js",
-  "https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js",
+  // Bootstrap and Chart.js CDN resources — pinned with SRI from index.html
+  // (issue #13). Bump CACHE_NAME whenever these pins change so the
+  // service worker re-fetches and re-validates the integrity hashes.
+  "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css",
+  "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js",
+  "https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.min.js",
+  "https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js",
 ];
 
 // Files to cache on demand (dynamic content)
