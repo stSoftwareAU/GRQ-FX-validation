@@ -37,9 +37,9 @@ pinned URLs.
 | Asset | Pinned URL | sha384 (truncated) |
 | --- | --- | --- |
 | Bootstrap CSS | `bootstrap@5.3.3/dist/css/bootstrap.min.css` | `QWTKZyjp…ALEwIH` |
-| Bootstrap JS  | `bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js` | `YvpcrYf0…6jIeHz` |
-| Chart.js      | `chart.js@4.5.0/dist/chart.umd.min.js` | `XcdcwHqI…XLcA6Y` |
-| Date adapter  | `chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js` | `cVMg8E3Q…b1mxws` |
+| Bootstrap JS | `bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js` | `YvpcrYf0…6jIeHz` |
+| Chart.js | `chart.js@4.5.0/dist/chart.umd.min.js` | `XcdcwHqI…XLcA6Y` |
+| Date adapter | `chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js` | `cVMg8E3Q…b1mxws` |
 
 ## Test Plan
 
