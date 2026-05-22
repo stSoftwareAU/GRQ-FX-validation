@@ -26,7 +26,9 @@ Deno.test("sw.js matches CSV and dated predictions.json using pathname-based reg
 });
 
 Deno.test("sw.js does not treat predictions.json as a cache-first static JSON asset", () => {
-  if (!sw.includes("endsWith('.json') && !isNetworkFirst && !isDataFile")) {
+  // sw.js writes the guard with double-quoted ".json" — match that.
+  // Issue #30: the original single-quoted check never matched the source.
+  if (!sw.includes('endsWith(".json") && !isNetworkFirst && !isDataFile')) {
     throw new Error(
       "Expected sw.js to exclude data JSON from the static asset .json matcher",
     );

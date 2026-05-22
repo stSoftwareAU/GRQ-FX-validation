@@ -89,19 +89,24 @@ test("Service worker treats predictions.json and CSV data files as dynamic (path
   const sw = fs.readFileSync(swPath, "utf8");
 
   // These patterns must match URL.pathname, which starts with `/...`.
+  // Issue #30: the earlier assertions used JavaScript string escapes that
+  // collapsed every `\/` to `/`, so `sw.includes("/\/data\/.*\.csv$/")`
+  // was actually checking for `//data/.*.csv$/` — a substring that can
+  // never appear in a regex literal. Use raw strings (no `\`) so the
+  // check is what it looks like.
   assert.ok(
-    sw.includes("/\/data\/.*\.csv$/"),
-    "Expected sw.js to include pathname regex /\/data\/.*\.csv$/ for CSV data files",
+    sw.includes("/\\/data\\/.*\\.csv$/"),
+    String.raw`Expected sw.js to include pathname regex /\/data\/.*\.csv$/ for CSV data files`,
   );
   assert.ok(
-    sw.includes("/\/\d{4}-\d{2}-\d{2}\/predictions\.json$/"),
+    sw.includes("/\\/\\d{4}-\\d{2}-\\d{2}\\/predictions\\.json$/"),
     "Expected sw.js to include pathname regex for dated predictions.json files",
   );
 
   // Guard against the common broken form using `./...` which never matches pathname.
   assert.ok(
-    !sw.includes("\.\/data\/"),
-    "sw.js still appears to contain './data/' patterns which do not match URL.pathname",
+    !sw.includes("/\\.\\/data\\//"),
+    "sw.js still appears to contain './data/' regex patterns which do not match URL.pathname",
   );
 });
 
@@ -110,8 +115,65 @@ test("Service worker does not treat predictions.json as a static JSON asset", ()
   const sw = fs.readFileSync(swPath, "utf8");
 
   // Predictions JSON must not be captured by the cache-first static asset path.
+  // sw.js currently writes the guard with double-quoted ".json", so match that.
   assert.ok(
-    sw.includes("endsWith('.json') && !isNetworkFirst && !isDataFile"),
+    sw.includes('endsWith(".json") && !isNetworkFirst && !isDataFile'),
     "Expected sw.js to exclude dynamic data JSON from the static asset .json matcher",
+  );
+});
+
+// Issue #30 regression guard: the dashboard auto-selects the most recent
+// entry in index.json on load and immediately fetches its predictions.json.
+// If that file is missing, malformed, or empty the screen shows
+// "Failed to load prediction data" — exactly what the issue screenshot
+// captured. This test catches the deploy-time inconsistency.
+test("Every index.json entry resolves to a valid predictions.json with results", () => {
+  const indexPath = path.join(DOCS_DIR, "index.json");
+  const index = JSON.parse(fs.readFileSync(indexPath, "utf8"));
+
+  assert.ok(
+    index.entries && typeof index.entries === "object",
+    "index.json should contain an entries object",
+  );
+
+  const problems = [];
+  for (const [key, entry] of Object.entries(index.entries)) {
+    if (typeof entry.file !== "string" || entry.file.length === 0) {
+      problems.push(`${key}: missing 'file' property`);
+      continue;
+    }
+    const filePath = path.join(DOCS_DIR, entry.file);
+    if (!fs.existsSync(filePath)) {
+      problems.push(`${key}: file does not exist (${entry.file})`);
+      continue;
+    }
+    let parsed;
+    try {
+      parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    } catch (err) {
+      problems.push(`${key}: invalid JSON in ${entry.file} (${err.message})`);
+      continue;
+    }
+    if (!parsed || typeof parsed !== "object") {
+      problems.push(`${key}: ${entry.file} did not parse to an object`);
+      continue;
+    }
+    if (!Array.isArray(parsed.results) || parsed.results.length === 0) {
+      problems.push(`${key}: ${entry.file} has no non-empty 'results' array`);
+      continue;
+    }
+    if (typeof parsed.date !== "string" || parsed.date !== key) {
+      problems.push(
+        `${key}: ${entry.file} 'date' property (${parsed.date}) does not match the index key`,
+      );
+    }
+  }
+
+  assert.equal(
+    problems.length,
+    0,
+    `Found ${problems.length} broken index.json entries:\n  ${
+      problems.join("\n  ")
+    }`,
   );
 });

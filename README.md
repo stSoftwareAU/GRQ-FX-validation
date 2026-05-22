@@ -179,6 +179,23 @@ You can also run the regression guard tests locally:
 node --test tests/pwa-index-freshness.test.js
 ```
 
+## Quality Gate
+
+Run the full quality gate before raising a PR. The same script runs in CI
+(see `.github/workflows/ci.yml`) and must pass before a deploy job will
+publish to GitHub Pages — issue #30 added this gate after a regression
+that the existing tests should have caught was deployed.
+
+```bash
+./quality.sh < /dev/null
+```
+
+The gate runs the Node.js test suite (`tests/*.test.js`) and the Deno
+test suite (`tests/*.test.ts`). One of the guards is a deploy-time
+consistency check that every entry in `docs/index.json` resolves to a
+non-empty, parseable `predictions.json` — exactly the failure mode that
+produced the "Failed to load prediction data" screen.
+
 ## Browser Compatibility
 
 - Chrome 60+
