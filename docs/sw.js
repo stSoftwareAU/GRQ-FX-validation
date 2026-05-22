@@ -12,6 +12,7 @@ const STATIC_ASSETS = [
   "./index.js",
   "./safe-card.js",
   "./safe-error-banner.js",
+  "./yahoo-validate.js",
   "./sw-register.js",
   "./styles.css",
   "./manifest.json",

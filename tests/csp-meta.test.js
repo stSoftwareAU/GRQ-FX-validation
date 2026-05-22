@@ -141,12 +141,14 @@ test("connect-src allows every fetch origin used by docs/index.js", () => {
   const sources = csp["connect-src"] || [];
 
   // These are the proxy/data origins referenced from docs/index.js.
+  // `thingproxy.freeboard.io` was dropped in issue #24 — the abandoned
+  // proxy must NOT appear in this list, see the dedicated regression
+  // test in tests/yahoo-proxy-allowlist.test.js.
   const required = [
     "'self'",
     "https://query1.finance.yahoo.com",
     "https://api.allorigins.win",
     "https://corsproxy.io",
-    "https://thingproxy.freeboard.io",
   ];
   for (const src of required) {
     assert.ok(
@@ -228,5 +230,9 @@ test("docs/sw.js caches sw-register.js and safe-error-banner.js", () => {
   assert.ok(
     /["']\.\/safe-error-banner\.js["']/.test(sw),
     "sw.js STATIC_ASSETS must include './safe-error-banner.js' (defence-in-depth helper from issue #21)",
+  );
+  assert.ok(
+    /["']\.\/yahoo-validate\.js["']/.test(sw),
+    "sw.js STATIC_ASSETS must include './yahoo-validate.js' (Yahoo Finance response validator from issue #24)",
   );
 });

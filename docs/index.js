@@ -627,10 +627,16 @@ function initializeDarkModeToggle() {
 // Yahoo Finance API utilities
 class YahooFinanceAPI {
   constructor() {
+    // CORS proxies used to reach Yahoo Finance from a static page.
+    // `thingproxy.freeboard.io` was removed (issue #24): its source repo
+    // has been unmaintained since 2015, so a domain/Heroku-app takeover
+    // would let an attacker inject arbitrary JSON into every dashboard
+    // visit. The remaining proxies are still untrusted intermediaries —
+    // every parsed response is run through validateYahooFinanceResponse
+    // (see docs/yahoo-validate.js) before any field reaches a DOM sink.
     this.proxies = [
       "https://api.allorigins.win/raw?url=",
       "https://corsproxy.io/?",
-      "https://thingproxy.freeboard.io/fetch/",
     ];
   }
 
@@ -674,7 +680,18 @@ class YahooFinanceAPI {
 
           if (response.ok) {
             const data = await response.json();
-            if (data.chart && data.chart.result && data.chart.result[0]) {
+            // Validate the proxy-supplied payload before reading any field
+            // (issue #24). A malicious proxy could otherwise smuggle HTML
+            // markup into meta.shortName / meta.longName and have it flow
+            // into a DOM sink downstream.
+            const validation = (typeof validateYahooFinanceResponse ===
+                "function")
+              ? validateYahooFinanceResponse(data)
+              : { ok: true };
+            if (
+              validation.ok && data.chart && data.chart.result &&
+              data.chart.result[0]
+            ) {
               const result = data.chart.result[0];
 
               // Try to get description from Yahoo Finance meta data
@@ -737,7 +754,16 @@ class YahooFinanceAPI {
 
           if (response.ok) {
             const data = await response.json();
-            if (data.chart && data.chart.result && data.chart.result[0]) {
+            // Validate the proxy-supplied payload before reading any field
+            // (issue #24).
+            const validation = (typeof validateYahooFinanceResponse ===
+                "function")
+              ? validateYahooFinanceResponse(data)
+              : { ok: true };
+            if (
+              validation.ok && data.chart && data.chart.result &&
+              data.chart.result[0]
+            ) {
               const result = data.chart.result[0];
               // Check if we have valid data
               if (
@@ -812,6 +838,18 @@ class YahooFinanceAPI {
         }
 
         const data = JSON.parse(responseText);
+        // Validate the proxy-supplied payload (issue #24): a compromised
+        // proxy could otherwise inject non-numeric prices or HTML into
+        // meta.shortName that flows into downstream chart/DOM sinks.
+        const validation = (typeof validateYahooFinanceResponse ===
+            "function")
+          ? validateYahooFinanceResponse(data)
+          : { ok: true };
+        if (!validation.ok) {
+          throw new Error(
+            `${fxPair} response failed schema validation: ${validation.reason}`,
+          );
+        }
         console.log(`${fxPair} raw data (proxy ${i + 1}):`, data);
         return data;
       } catch (error) {
@@ -883,6 +921,16 @@ class YahooFinanceAPI {
         }
 
         const data = JSON.parse(responseText);
+        // Validate the proxy-supplied payload (issue #24).
+        const validation = (typeof validateYahooFinanceResponse ===
+            "function")
+          ? validateYahooFinanceResponse(data)
+          : { ok: true };
+        if (!validation.ok) {
+          throw new Error(
+            `${fxPair} optimized response failed schema validation: ${validation.reason}`,
+          );
+        }
         console.log(`${fxPair} optimized data (proxy ${i + 1}):`, data);
         return data;
       } catch (error) {

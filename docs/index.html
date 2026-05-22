@@ -8,7 +8,7 @@
          via this meta tag. Keep this in sync with sw-register.js (extracted from
          the previous inline registration block) and the connect-src list for
          the Yahoo Finance proxies in docs/index.js. -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; img-src 'self' data:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://query1.finance.yahoo.com https://api.allorigins.win https://corsproxy.io https://thingproxy.freeboard.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' https://cdn.jsdelivr.net 'unsafe-inline'; img-src 'self' data:; font-src 'self' https://cdn.jsdelivr.net; connect-src 'self' https://query1.finance.yahoo.com https://api.allorigins.win https://corsproxy.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -436,6 +436,8 @@
     <!-- Safe DOM builders (issue #12 + issue #21: XSS hardening) — must load before index.js -->
     <script src="safe-card.js?v=1.0.103"></script>
     <script src="safe-error-banner.js?v=1.0.103"></script>
+    <!-- Yahoo Finance proxy response validator (issue #24) — must load before index.js -->
+    <script src="yahoo-validate.js?v=1.0.103"></script>
     <script src="index.js?v=1.0.103"></script>
 
     <!-- Service Worker Registration — extracted to a separate file so the
