@@ -467,7 +467,7 @@ function initializeDarkModeToggle() {
     // Create the icon/text indicator
     toggleIcon = document.createElement("span");
     toggleIcon.id = "dark-mode-icon";
-    toggleIcon.textContent = "A"; // Default to Auto
+    toggleIcon.textContent = "🌓"; // Default to Auto (first-quarter moon)
     toggleIcon.style.cssText = `
       display: flex;
       align-items: center;
@@ -558,14 +558,14 @@ function initializeDarkModeToggle() {
     switch (preference) {
       case "light":
         document.body.classList.add("light-mode-forced");
-        toggleIcon.textContent = "L";
+        toggleIcon.textContent = "☀️";
         toggleButton.title = "Light Mode (Click for Dark Mode)";
         toggleButton.style.backgroundColor = "rgba(255, 255, 255, 0.9)";
         toggleButton.style.color = "#000";
         break;
       case "dark":
         document.body.classList.add("dark-mode-forced");
-        toggleIcon.textContent = "D";
+        toggleIcon.textContent = "🌙";
         toggleButton.title = "Dark Mode (Click for Auto Mode)";
         toggleButton.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
         toggleButton.style.color = "#fff";
@@ -573,7 +573,7 @@ function initializeDarkModeToggle() {
       case "auto":
       default:
         // No forced class - follows system preference
-        toggleIcon.textContent = "A";
+        toggleIcon.textContent = "🌓";
         toggleButton.title =
           "Auto Mode - Following System (Click for Light Mode)";
         toggleButton.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
