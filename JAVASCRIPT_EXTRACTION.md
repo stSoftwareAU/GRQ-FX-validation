@@ -1,6 +1,15 @@
 # JavaScript Extraction to External File
 
-The JavaScript code has been extracted from `index.html` into a separate `index.js` file for better maintainability and readability.
+> **Historical document.** This file records the one-off extraction of the
+> inline `<script>` block from `index.html` into `docs/index.js`. Since
+> then the front end has been split further into multiple modules
+> (`safe-card.js`, `safe-error-banner.js`, `yahoo-validate.js`,
+> `sw-register.js`) and the security model has gained a CSP meta tag and
+> SRI pins. The current architecture is described in
+> [`README.md`](README.md). This note is kept for historical context only.
+
+The JavaScript code has been extracted from `index.html` into a separate
+`index.js` file for better maintainability and readability.
 
 ## Changes Made
 

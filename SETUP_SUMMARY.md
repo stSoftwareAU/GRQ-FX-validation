@@ -1,6 +1,14 @@
 # GRQ FX Validation - Setup Summary
 
-This document summarizes what has been set up for the GRQ FX validation GitHub Pages project.
+> **Historical document.** This file describes the initial project scaffold
+> (separate `app.js`, `list.html`, `list.js`, `test_setup.html`, the 7/14/30/60/90-day
+> horizons) and has been superseded by later changes. The current
+> architecture is described in [`README.md`](README.md). This note is kept
+> for historical context only — do not rely on it as a description of the
+> live codebase.
+
+This document summarises what was originally set up for the GRQ FX
+validation GitHub Pages project.
 
 ## What Was Created
 

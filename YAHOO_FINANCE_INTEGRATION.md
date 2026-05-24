@@ -78,11 +78,14 @@ The system shows:
 
 ### CORS Proxies
 
-The system uses multiple proxy services for reliability:
+The system uses a small allowlist of CORS proxies for reliability. The
+allowlist was tightened in issue #24 — a previously-used third proxy was
+removed after its source repository became unmaintained. The current
+allowlist is also reflected in the `connect-src` directive of the
+Content-Security-Policy meta tag in `docs/index.html`:
 
 1. `api.allorigins.win`
 2. `corsproxy.io`
-3. `thingproxy.freeboard.io`
 
 ### Error Handling
 
