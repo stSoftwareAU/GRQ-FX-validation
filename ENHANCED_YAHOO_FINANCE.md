@@ -124,7 +124,8 @@ https://query1.finance.yahoo.com/v8/finance/chart/{SYMBOL}=X?interval={INTERVAL}
 
 ### **Data Processing**
 
-- **Multi-proxy fallback**: Uses 3 different CORS proxies for reliability
+- **Multi-proxy fallback**: Uses the CORS proxies listed below (originally
+  three; reduced to two in issue #24 after one upstream proxy was retired)
 - **Rate limiting protection**: Delays between requests to avoid limits
 - **Optimized intervals**: Uses weekly/monthly data for longer periods to reduce data size
 - **Dynamic format handling**: Automatically handles any FX pair format Yahoo Finance supports
@@ -137,9 +138,13 @@ https://query1.finance.yahoo.com/v8/finance/chart/{SYMBOL}=X?interval={INTERVAL}
 
 ### **CORS Proxies**
 
+The allowlist was tightened in issue #24 — a previously-used third proxy
+was removed after its source repository became unmaintained. The current
+set is also reflected in the `connect-src` directive of the
+Content-Security-Policy meta tag in `docs/index.html`:
+
 1. `api.allorigins.win`
 2. `corsproxy.io`
-3. `thingproxy.freeboard.io`
 
 ## Usage Examples
 

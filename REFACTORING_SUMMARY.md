@@ -1,6 +1,14 @@
 # GRQ FX Validation - Refactoring Summary
 
-This document summarizes the refactoring work done to separate HTML, JavaScript, and CSS into different files and add comprehensive Deno tests.
+> **Historical document.** This file describes a TypeScript / `src/`-based
+> refactor (`fx-validator.ts`, `fx-list.ts`, `build.ts`, `deno.json`,
+> `list.html`) that was later collapsed back into a single static-site
+> JAMstack layout. The current architecture is described in
+> [`README.md`](README.md). This note is kept for historical context only —
+> do not rely on it as a description of the live codebase.
+
+This document summarises the refactoring work done to separate HTML,
+JavaScript and CSS into different files and add comprehensive Deno tests.
 
 ## 🎯 Goals Achieved
 

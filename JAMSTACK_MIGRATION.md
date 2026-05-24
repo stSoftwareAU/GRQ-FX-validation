@@ -1,8 +1,18 @@
 # JAMstack Migration Summary
 
+> **Historical document.** This file records the one-off migration from a
+> build-based TypeScript layout to a pure JAMstack site. Several claims
+> (e.g. `tests/` and `helpers/` were "removed", `list.html` is part of the
+> live site) are no longer true — `tests/` and `helpers/` have since been
+> re-introduced and `list.html` has been retired. The current architecture
+> is described in [`README.md`](README.md). This note is kept for
+> historical context only.
+
 ## Overview
 
-Successfully migrated the GRQ FX Validation Dashboard from a build-based architecture to a pure JAMstack implementation with focus on time horizon analysis.
+Successfully migrated the GRQ FX Validation Dashboard from a build-based
+architecture to a pure JAMstack implementation with focus on time horizon
+analysis.
 
 ## What Was Removed
 
