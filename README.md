@@ -1,7 +1,7 @@
 # GRQ FX Validation Dashboard
 
 A JAMstack-based Progressive Web App (PWA) for validating AI FX predictions
-against actual rates over time.
+against actual rates over time
 
 ## Architecture
 
@@ -153,8 +153,9 @@ actual-rate CSVs that are not tied to a single prediction date live under
 2. **Select Date**: Choose a prediction date from the dropdown.
 3. **View Performance**: See charts and tables showing prediction accuracy.
 4. **Monitor Progress**: Track which actual rates are available vs pending.
-5. **Toggle Dark Mode**: Use the moon/sun button in the header to switch
-   themes; the preference is persisted in `localStorage`.
+5. **Toggle Theme**: Use the emoji button in the header (🌓 Auto · ☀️ Light ·
+   🌙 Dark) to cycle through the three modes; the preference is persisted in
+   `localStorage`.
 
 For local development with a one-line static server, run:
 

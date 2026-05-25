@@ -5,6 +5,8 @@ name: CI/CD Pipeline
 # content to the production GitHub Pages site through deploy-pages.
 
 on:
+  pull_request:
+    branches: ["Develop"]
   push:
     branches: ["Develop"]
 
