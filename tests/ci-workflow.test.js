@@ -32,6 +32,7 @@ test("ci workflow file exists", () => {
 test("ci workflow declares the expected name and trigger", () => {
   const yaml = readWorkflow();
   assert.match(yaml, /^name:\s*CI\/CD Pipeline\s*$/m);
+  assert.match(yaml, /pull_request:/);
   assert.match(yaml, /push:/);
 });
 
