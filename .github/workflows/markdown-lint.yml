@@ -19,6 +19,11 @@ permissions:
 jobs:
   markdownlint:
     runs-on: ubuntu-latest
+    # Issue #39: markdownlint-cli2 plus the optional Mermaid validator
+    # are bounded file scans that finish well under 5 minutes. 10
+    # minutes covers a slow `npm install -g markdownlint-cli2` without
+    # leaving a wedged runner billing for the 360-minute default.
+    timeout-minutes: 10
     steps:
       # actions/checkout@v4
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
