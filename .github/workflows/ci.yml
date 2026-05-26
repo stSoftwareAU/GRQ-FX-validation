@@ -10,6 +10,13 @@ on:
   push:
     branches: ["Develop"]
 
+# Issue #37: declare a minimal top-level GITHUB_TOKEN scope so the
+# check-changes and quality jobs cannot inherit GitHub's broad default
+# permissions. The deploy-pages job overrides this with the narrower
+# pages: write + id-token: write it actually needs.
+permissions:
+  contents: read
+
 env:
   CARGO_TERM_COLOR: always
 
