@@ -44,7 +44,16 @@ jobs:
 
       - name: Check for changes
         id: filter
+        # Issue #41: harden the multi-line bash with `set -euo pipefail`
+        # so an interim `git diff` failure (e.g. against a missing
+        # parent commit after a force-push) cannot silently produce an
+        # empty changed_files.txt and trick the Pages deploy gate into
+        # reporting docs-changed=false. `shell: bash` is implicit on
+        # ubuntu-latest but stating it explicitly is the documented
+        # hardening pattern.
+        shell: bash
         run: |
+          set -euo pipefail
           # Get list of changed files
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             # For PRs, compare with base branch using GitHub's merge-base

@@ -133,6 +133,54 @@ test("ci workflow setup-node step uses a supported LTS Node version (issue #38)"
   }
 });
 
+test("ci workflow 'Check for changes' step hardens bash with set -euo pipefail (issue #41)", () => {
+  // The multi-line `run:` block in the Check for changes step is the
+  // gate that decides whether the GitHub Pages deploy fires. Without
+  // `set -euo pipefail` an interim failure (e.g. a `git diff` against a
+  // missing parent commit after a force-push) silently produces an
+  // empty changed_files.txt and downstream `docs-changed` reports
+  // `false`. Issue #41 hardens the block with the documented
+  // `set -euo pipefail` guard and an explicit `shell: bash` so the
+  // shell flags are well-defined on every runner.
+  const yaml = readWorkflow();
+  const lines = yaml.split("\n");
+  const stepIdx = lines.findIndex((l) => /^\s*-\s*name:\s*Check for changes\s*$/.test(l));
+  assert.notEqual(stepIdx, -1, "expected a 'Check for changes' step in ci.yml");
+
+  // The step body ends at the next list item ("- name:") at the same or
+  // shallower indentation, or at the next job (column 2 key).
+  const nameIndent = lines[stepIdx].match(/^(\s*)-/)[1].length;
+  let endIdx = lines.length;
+  for (let i = stepIdx + 1; i < lines.length; i++) {
+    const m = lines[i].match(/^(\s*)-\s*name:/);
+    if (m && m[1].length <= nameIndent) {
+      endIdx = i;
+      break;
+    }
+  }
+  const stepBlock = lines.slice(stepIdx, endIdx).join("\n");
+
+  assert.match(
+    stepBlock,
+    /shell:\s*bash\b/,
+    "Check for changes step must declare `shell: bash` for explicit bash semantics",
+  );
+
+  // The first non-blank, non-comment line of the run: block must be
+  // `set -euo pipefail` so the hardening fires before any subsequent
+  // command can mask a failure.
+  const runStart = stepBlock.indexOf("run: |");
+  assert.notEqual(runStart, -1, "Check for changes step must use a literal `run: |` block");
+  const runBody = stepBlock.slice(runStart).split("\n").slice(1);
+  const firstCmd = runBody.find((l) => l.trim() !== "" && !/^\s*#/.test(l));
+  assert.ok(firstCmd, "Check for changes run block must have at least one command");
+  assert.match(
+    firstCmd,
+    /^\s+set -euo pipefail\s*$/,
+    `expected the first command of 'Check for changes' run block to be 'set -euo pipefail', saw '${firstCmd}'`,
+  );
+});
+
 test("ci workflow declares a top-level minimal permissions block (issue #37)", () => {
   // The default GITHUB_TOKEN scope is broad; the GitHub Actions
   // security-hardening guide recommends every workflow narrow it to the
