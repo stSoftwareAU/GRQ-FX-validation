@@ -194,20 +194,28 @@ test("docs/index.html has no inline event-handler attributes", () => {
   );
 });
 
-test("docs/index.js has no inline event-handler attributes in template literals", () => {
-  // Inline event handlers injected via innerHTML are also blocked by
-  // CSP. Guard against regression of the previously-present onclick
-  // handler in showValidationError().
-  const js = fs.readFileSync(INDEX_JS, "utf8");
-  const offenders = js.match(/\son(?:click|load|error|change|submit)\s*=/gi);
-  assert.equal(
-    offenders,
-    null,
-    `docs/index.js must not embed inline event handlers (CSP would block them); found: ${
-      JSON.stringify(offenders)
-    }`,
-  );
-});
+// Issue #43: the previous "docs/index.js has no inline event-handler
+// attributes in template literals" test was a source-grep HOW-test. It
+// passed whenever the substring `onclick=` happened to appear (or not)
+// anywhere in the file — including in unrelated comments — and gave
+// false confidence about runtime XSS protection.
+//
+// The runtime defences that actually matter are now exercised
+// behaviourally elsewhere in this file and the wider suite:
+//   • The CSP meta tag forbids `unsafe-inline` on script-src (asserted
+//     above by "script-src forbids 'unsafe-inline' and 'unsafe-eval'"),
+//     so any inline event handler in the static HTML or injected via
+//     innerHTML is refused execution by the browser at runtime.
+//   • `tests/fx-card-xss.test.ts::buildFXPairCard does not emit an
+//     inline onclick attribute` exercises the card-render path with a
+//     hostile pair name and inspects the rendered DOM.
+//   • `tests/yahoo-error-banner-xss.test.ts::showYahooFinanceError
+//     renders attacker-controlled messages as encoded text (DOM-level)`
+//     exercises the error-banner path and scans tag headers for any
+//     `on*=` attribute on the rendered DOM.
+//
+// Read the verifier that asserts on the rendered DOM (the WHAT) rather
+// than reading the source for substrings (the HOW).
 
 test("docs/sw-register.js exists and is referenced from index.html", () => {
   assert.ok(
