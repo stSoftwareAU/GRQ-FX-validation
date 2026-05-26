@@ -33,6 +33,10 @@ jobs:
   check-changes:
     name: Check for Changes
     runs-on: ubuntu-latest
+    # Issue #39: cap runner exposure. The change-detection step is
+    # entirely local git work — it never needs more than a minute or
+    # two, so 5 surfaces any hang well within free-tier budgets.
+    timeout-minutes: 5
     outputs:
       docs-changed: ${{ steps.filter.outputs.docs }}
     steps:
@@ -86,6 +90,11 @@ jobs:
     # entry point that runs every required check.
     name: Quality Gate
     runs-on: ubuntu-latest
+    # Issue #39: the Node + Deno test suites finish in well under five
+    # minutes today. 20 leaves headroom for additional test files
+    # without leaving a wedged runner billing for the 360-minute
+    # GitHub default.
+    timeout-minutes: 20
     steps:
       - name: Checkout code
         # actions/checkout@v4.3.1
@@ -113,6 +122,10 @@ jobs:
   deploy-pages:
     name: Deploy to GitHub Pages
     runs-on: ubuntu-latest
+    # Issue #39: the Pages deploy is upload + activation; in practice
+    # it completes in 1–3 minutes. 10 caps a stalled deploy without
+    # truncating a slow but legitimate upload.
+    timeout-minutes: 10
     needs: [check-changes, quality]
     if: |
       github.ref == 'refs/heads/Develop' &&

@@ -17,6 +17,10 @@ jobs:
   semgrep:
     name: Semgrep SAST Scan
     runs-on: ubuntu-latest
+    # Issue #39: `semgrep ci --config p/default` over this repo
+    # completes in a couple of minutes. 15 minutes leaves headroom for
+    # rule-pack growth without leaving a wedged scan churning all day.
+    timeout-minutes: 15
     container:
       # semgrep/semgrep:1.163.0 — pinned to an immutable sha256 digest
       # so a hijacked :latest tag cannot exfiltrate SEMGREP_APP_TOKEN or
