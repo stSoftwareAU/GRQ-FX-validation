@@ -107,6 +107,32 @@ test("ci workflow preserves least-privilege permissions for Pages deploy job", (
   assert.match(yaml, /id-token:\s*write/);
 });
 
+test("ci workflow setup-node step uses a supported LTS Node version (issue #38)", () => {
+  // Node.js 20 is flagged "EOL soon": GitHub-hosted runners are scheduled
+  // to force-upgrade `node-version: "20"` to Node 24 on 2026-06-02 and
+  // remove the node20 runtime on 2026-09-16. The quality job must pin a
+  // current LTS (Node 22 today; Node 24 once it reaches LTS) or
+  // `lts/*` to track LTS automatically.
+  const yaml = readWorkflow();
+  const setupNodeRefs = [
+    ...yaml.matchAll(
+      /uses:\s*actions\/setup-node@[0-9a-f]{40}[^\n]*\n(?:[^\n]*\n)*?\s+node-version:\s*"?([^"\n]+)"?/g,
+    ),
+  ];
+  assert.ok(
+    setupNodeRefs.length > 0,
+    "expected at least one actions/setup-node step with a node-version key",
+  );
+  const allowed = new Set(["22", "24", "lts/*"]);
+  for (const [, version] of setupNodeRefs) {
+    const v = version.trim();
+    assert.ok(
+      allowed.has(v),
+      `setup-node must target a supported LTS (one of ${[...allowed].join(", ")}), saw '${v}'`,
+    );
+  }
+});
+
 test("ci workflow declares a top-level minimal permissions block (issue #37)", () => {
   // The default GITHUB_TOKEN scope is broad; the GitHub Actions
   // security-hardening guide recommends every workflow narrow it to the

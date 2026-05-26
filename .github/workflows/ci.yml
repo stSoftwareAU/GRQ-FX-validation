@@ -75,9 +75,13 @@ jobs:
 
       - name: Setup Node.js
         # actions/setup-node@v4
+        # Issue #38: Node.js 20 is flagged "EOL soon"; the GitHub-hosted
+        # runner force-upgrade to Node 24 lands 2026-06-02 and the
+        # node20 runtime is removed 2026-09-16. Pin to Node 22 LTS so
+        # we migrate on our own schedule.
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
-          node-version: "20"
+          node-version: "22"
 
       - name: Setup Deno
         # denoland/setup-deno@v2
