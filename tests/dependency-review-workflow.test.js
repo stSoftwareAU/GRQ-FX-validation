@@ -1,68 +1,76 @@
 // Regression tests for the Dependency Review workflow (issue #14).
+//
 // Australian English: these tests verify that third-party actions
 // referenced from dependency-review.yml are pinned to 40-character
 // commit SHAs so a hijacked tag cannot influence the supply-chain
-// review running on every PR. Mirrors the pattern from
-// tests/gitleaks-workflow.test.js (Issue #1756).
+// review running on every PR.
+//
+// Issue #42: assertions previously regex-matched the raw YAML text;
+// they now parse the workflow into a JavaScript object and assert on
+// its structured fields.
 
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import path from "node:path";
+import {
+  collectActionRefs,
+  loadWorkflow,
+  workflowPath,
+} from "./_workflow-yaml.js";
 
-const REPO_ROOT = path.resolve(process.cwd());
-const WORKFLOW_PATH = path.join(
-  REPO_ROOT,
-  ".github",
-  "workflows",
-  "dependency-review.yml",
-);
-
-function readWorkflow() {
-  return fs.readFileSync(WORKFLOW_PATH, "utf8");
-}
+const WORKFLOW = "dependency-review.yml";
+const SHA_RE = /^[0-9a-f]{40}$/;
 
 test("dependency-review workflow file exists", () => {
   assert.ok(
-    fs.existsSync(WORKFLOW_PATH),
-    `Expected workflow at ${WORKFLOW_PATH}`,
+    fs.existsSync(workflowPath(WORKFLOW)),
+    `Expected workflow at ${workflowPath(WORKFLOW)}`,
   );
 });
 
 test("dependency-review workflow declares the expected name and trigger", () => {
-  const yaml = readWorkflow();
-  assert.match(yaml, /^name:\s*Dependency Review\s*$/m);
-  assert.match(yaml, /pull_request:/);
+  const wf = loadWorkflow(WORKFLOW);
+  assert.equal(wf.name, "Dependency Review");
+  assert.ok(
+    wf.on && "pull_request" in wf.on,
+    "workflow must run on pull_request events",
+  );
 });
 
 test("dependency-review workflow uses pinned commit SHA for actions/checkout", () => {
-  const yaml = readWorkflow();
+  const wf = loadWorkflow(WORKFLOW);
+  const step = wf.jobs["dependency-review"].steps.find(
+    (s) => typeof s.uses === "string" &&
+      s.uses.startsWith("actions/checkout@"),
+  );
+  assert.ok(step, "expected an actions/checkout step");
+  const ref = step.uses.split("@")[1];
   assert.match(
-    yaml,
-    /uses:\s*actions\/checkout@[0-9a-f]{40}/,
-    "actions/checkout must be pinned to a 40-character commit SHA",
+    ref,
+    SHA_RE,
+    `actions/checkout must be pinned to a 40-character commit SHA (saw '${ref}')`,
   );
 });
 
 test("dependency-review workflow uses pinned commit SHA for actions/dependency-review-action", () => {
-  const yaml = readWorkflow();
+  const wf = loadWorkflow(WORKFLOW);
+  const step = wf.jobs["dependency-review"].steps.find(
+    (s) => typeof s.uses === "string" &&
+      s.uses.startsWith("actions/dependency-review-action@"),
+  );
+  assert.ok(step, "expected an actions/dependency-review-action step");
+  const ref = step.uses.split("@")[1];
   assert.match(
-    yaml,
-    /uses:\s*actions\/dependency-review-action@[0-9a-f]{40}/,
-    "actions/dependency-review-action must be pinned to a 40-character commit SHA",
+    ref,
+    SHA_RE,
+    `actions/dependency-review-action must be pinned to a 40-character commit SHA (saw '${ref}')`,
   );
 });
 
 test("dependency-review workflow has no third-party action pinned by floating tag", () => {
-  const yaml = readWorkflow();
-  const stripped = yaml
-    .split("\n")
-    .map((line) => line.replace(/#.*$/, ""))
-    .join("\n");
-  const allRefs = [...stripped.matchAll(/uses:\s*([^\s#]+)@(\S+)/g)];
-  const floating = allRefs
-    .map(([, action, ref]) => ({ action, ref }))
-    .filter(({ ref }) => !/^[0-9a-f]{40}$/.test(ref));
+  const wf = loadWorkflow(WORKFLOW);
+  const refs = collectActionRefs(wf);
+  const floating = refs.filter(({ ref }) => !SHA_RE.test(ref));
   assert.deepEqual(
     floating,
     [],
@@ -71,6 +79,13 @@ test("dependency-review workflow has no third-party action pinned by floating ta
 });
 
 test("dependency-review workflow uses least-privilege permissions", () => {
-  const yaml = readWorkflow();
-  assert.match(yaml, /permissions:\s*\n\s*contents:\s*read/);
+  const wf = loadWorkflow(WORKFLOW);
+  const top = wf.permissions ?? {};
+  const job = wf.jobs["dependency-review"].permissions ?? {};
+  const contents = job.contents ?? top.contents;
+  assert.equal(
+    contents,
+    "read",
+    "contents permission must be 'read' for the dependency-review job",
+  );
 });
