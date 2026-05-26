@@ -1,96 +1,113 @@
 // Regression tests for the CI/CD Pipeline workflow (issue #14).
+//
 // Australian English: these tests verify that third-party actions
 // referenced from ci.yml are pinned to 40-character commit SHAs so a
 // hijacked tag cannot exfiltrate CI secrets or publish arbitrary
-// content to GitHub Pages. Mirrors the pattern from
-// tests/gitleaks-workflow.test.js (Issue #1756).
+// content to GitHub Pages.
+//
+// Issue #42: assertions previously regex-matched the raw YAML text;
+// they now parse the workflow into a JavaScript object and assert on
+// its structured fields (job permissions, step `uses` refs, container
+// images, env wiring). The parsed-object form survives benign
+// reformatting but still fails loudly if permissions are broadened, an
+// action is unpinned, or the bash-hardening guard is dropped.
 
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import path from "node:path";
+import {
+  collectActionRefs,
+  loadWorkflow,
+  workflowPath,
+} from "./_workflow-yaml.js";
 
-const REPO_ROOT = path.resolve(process.cwd());
-const WORKFLOW_PATH = path.join(
-  REPO_ROOT,
-  ".github",
-  "workflows",
-  "ci.yml",
-);
-
-function readWorkflow() {
-  return fs.readFileSync(WORKFLOW_PATH, "utf8");
-}
+const WORKFLOW = "ci.yml";
+const SHA_RE = /^[0-9a-f]{40}$/;
 
 test("ci workflow file exists", () => {
   assert.ok(
-    fs.existsSync(WORKFLOW_PATH),
-    `Expected workflow at ${WORKFLOW_PATH}`,
+    fs.existsSync(workflowPath(WORKFLOW)),
+    `Expected workflow at ${workflowPath(WORKFLOW)}`,
   );
 });
 
 test("ci workflow declares the expected name and trigger", () => {
-  const yaml = readWorkflow();
-  assert.match(yaml, /^name:\s*CI\/CD Pipeline\s*$/m);
-  assert.match(yaml, /pull_request:/);
-  assert.match(yaml, /push:/);
+  const wf = loadWorkflow(WORKFLOW);
+  assert.equal(wf.name, "CI/CD Pipeline");
+  assert.ok(wf.on, "workflow must declare an `on:` block");
+  assert.ok(
+    "pull_request" in wf.on,
+    "workflow must run on pull_request events",
+  );
+  assert.ok("push" in wf.on, "workflow must run on push events");
 });
 
 test("ci workflow uses pinned commit SHA for actions/checkout", () => {
-  const yaml = readWorkflow();
   // Every actions/checkout reference must be pinned to a 40-character
   // commit SHA — no floating @v4 / @main / @release tags allowed.
-  const referenceRe = /uses:\s*actions\/checkout@(\S+)/g;
-  const refs = [...yaml.matchAll(referenceRe)];
+  const wf = loadWorkflow(WORKFLOW);
+  const refs = collectActionRefs(wf).filter(
+    ({ action }) => action === "actions/checkout",
+  );
   assert.ok(refs.length > 0, "expected at least one actions/checkout usage");
-  for (const [, ref] of refs) {
+  for (const { ref } of refs) {
     assert.match(
       ref,
-      /^[0-9a-f]{40}$/,
+      SHA_RE,
       `actions/checkout must be pinned to a 40-character commit SHA (saw '${ref}')`,
     );
   }
 });
 
 test("ci workflow uses pinned commit SHA for actions/configure-pages", () => {
-  const yaml = readWorkflow();
-  assert.match(
-    yaml,
-    /uses:\s*actions\/configure-pages@[0-9a-f]{40}/,
-    "actions/configure-pages must be pinned to a 40-character commit SHA",
+  const wf = loadWorkflow(WORKFLOW);
+  const refs = collectActionRefs(wf).filter(
+    ({ action }) => action === "actions/configure-pages",
   );
+  assert.ok(refs.length > 0, "expected an actions/configure-pages usage");
+  for (const { ref } of refs) {
+    assert.match(
+      ref,
+      SHA_RE,
+      `actions/configure-pages must be pinned to a 40-character commit SHA (saw '${ref}')`,
+    );
+  }
 });
 
 test("ci workflow uses pinned commit SHA for actions/upload-pages-artifact", () => {
-  const yaml = readWorkflow();
-  assert.match(
-    yaml,
-    /uses:\s*actions\/upload-pages-artifact@[0-9a-f]{40}/,
-    "actions/upload-pages-artifact must be pinned to a 40-character commit SHA",
+  const wf = loadWorkflow(WORKFLOW);
+  const refs = collectActionRefs(wf).filter(
+    ({ action }) => action === "actions/upload-pages-artifact",
   );
+  assert.ok(refs.length > 0, "expected an actions/upload-pages-artifact usage");
+  for (const { ref } of refs) {
+    assert.match(
+      ref,
+      SHA_RE,
+      `actions/upload-pages-artifact must be pinned to a 40-character commit SHA (saw '${ref}')`,
+    );
+  }
 });
 
 test("ci workflow uses pinned commit SHA for actions/deploy-pages", () => {
-  const yaml = readWorkflow();
-  assert.match(
-    yaml,
-    /uses:\s*actions\/deploy-pages@[0-9a-f]{40}/,
-    "actions/deploy-pages must be pinned to a 40-character commit SHA",
+  const wf = loadWorkflow(WORKFLOW);
+  const refs = collectActionRefs(wf).filter(
+    ({ action }) => action === "actions/deploy-pages",
   );
+  assert.ok(refs.length > 0, "expected an actions/deploy-pages usage");
+  for (const { ref } of refs) {
+    assert.match(
+      ref,
+      SHA_RE,
+      `actions/deploy-pages must be pinned to a 40-character commit SHA (saw '${ref}')`,
+    );
+  }
 });
 
 test("ci workflow has no third-party action pinned by floating tag", () => {
-  const yaml = readWorkflow();
-  // Strip comments so the `# actions/foo@vX.Y.Z` annotation lines are
-  // not flagged as `uses:` references.
-  const stripped = yaml
-    .split("\n")
-    .map((line) => line.replace(/#.*$/, ""))
-    .join("\n");
-  const allRefs = [...stripped.matchAll(/uses:\s*([^\s#]+)@(\S+)/g)];
-  const floating = allRefs
-    .map(([, action, ref]) => ({ action, ref }))
-    .filter(({ ref }) => !/^[0-9a-f]{40}$/.test(ref));
+  const wf = loadWorkflow(WORKFLOW);
+  const refs = collectActionRefs(wf);
+  const floating = refs.filter(({ ref }) => !SHA_RE.test(ref));
   assert.deepEqual(
     floating,
     [],
@@ -99,12 +116,13 @@ test("ci workflow has no third-party action pinned by floating tag", () => {
 });
 
 test("ci workflow preserves least-privilege permissions for Pages deploy job", () => {
-  const yaml = readWorkflow();
   // The deploy-pages job needs pages: write and id-token: write — those
   // are the elevated permissions the issue calls out. Confirm both are
   // still present so a regression cannot silently drop them.
-  assert.match(yaml, /pages:\s*write/);
-  assert.match(yaml, /id-token:\s*write/);
+  const wf = loadWorkflow(WORKFLOW);
+  const perms = wf.jobs["deploy-pages"].permissions ?? {};
+  assert.equal(perms.pages, "write");
+  assert.equal(perms["id-token"], "write");
 });
 
 test("ci workflow setup-node step uses a supported LTS Node version (issue #38)", () => {
@@ -113,71 +131,61 @@ test("ci workflow setup-node step uses a supported LTS Node version (issue #38)"
   // remove the node20 runtime on 2026-09-16. The quality job must pin a
   // current LTS (Node 22 today; Node 24 once it reaches LTS) or
   // `lts/*` to track LTS automatically.
-  const yaml = readWorkflow();
-  const setupNodeRefs = [
-    ...yaml.matchAll(
-      /uses:\s*actions\/setup-node@[0-9a-f]{40}[^\n]*\n(?:[^\n]*\n)*?\s+node-version:\s*"?([^"\n]+)"?/g,
-    ),
-  ];
-  assert.ok(
-    setupNodeRefs.length > 0,
-    "expected at least one actions/setup-node step with a node-version key",
-  );
+  const wf = loadWorkflow(WORKFLOW);
   const allowed = new Set(["22", "24", "lts/*"]);
-  for (const [, version] of setupNodeRefs) {
-    const v = version.trim();
-    assert.ok(
-      allowed.has(v),
-      `setup-node must target a supported LTS (one of ${[...allowed].join(", ")}), saw '${v}'`,
-    );
+  let found = 0;
+  for (const job of Object.values(wf.jobs)) {
+    for (const step of job.steps ?? []) {
+      if (
+        typeof step.uses === "string" &&
+        step.uses.startsWith("actions/setup-node@")
+      ) {
+        const version = String(step.with?.["node-version"] ?? "").trim();
+        found++;
+        assert.ok(
+          allowed.has(version),
+          `setup-node must target a supported LTS (one of ${[...allowed].join(", ")}), saw '${version}'`,
+        );
+      }
+    }
   }
+  assert.ok(found > 0, "expected at least one actions/setup-node step");
 });
 
 test("ci workflow 'Check for changes' step hardens bash with set -euo pipefail (issue #41)", () => {
   // The multi-line `run:` block in the Check for changes step is the
   // gate that decides whether the GitHub Pages deploy fires. Without
-  // `set -euo pipefail` an interim failure (e.g. a `git diff` against a
-  // missing parent commit after a force-push) silently produces an
-  // empty changed_files.txt and downstream `docs-changed` reports
-  // `false`. Issue #41 hardens the block with the documented
-  // `set -euo pipefail` guard and an explicit `shell: bash` so the
-  // shell flags are well-defined on every runner.
-  const yaml = readWorkflow();
-  const lines = yaml.split("\n");
-  const stepIdx = lines.findIndex((l) => /^\s*-\s*name:\s*Check for changes\s*$/.test(l));
-  assert.notEqual(stepIdx, -1, "expected a 'Check for changes' step in ci.yml");
-
-  // The step body ends at the next list item ("- name:") at the same or
-  // shallower indentation, or at the next job (column 2 key).
-  const nameIndent = lines[stepIdx].match(/^(\s*)-/)[1].length;
-  let endIdx = lines.length;
-  for (let i = stepIdx + 1; i < lines.length; i++) {
-    const m = lines[i].match(/^(\s*)-\s*name:/);
-    if (m && m[1].length <= nameIndent) {
-      endIdx = i;
-      break;
-    }
-  }
-  const stepBlock = lines.slice(stepIdx, endIdx).join("\n");
-
-  assert.match(
-    stepBlock,
-    /shell:\s*bash\b/,
+  // `set -euo pipefail` an interim failure silently produces an empty
+  // changed_files.txt and downstream `docs-changed` reports `false`.
+  // Issue #41 hardens the block with the documented `set -euo pipefail`
+  // guard and an explicit `shell: bash` so the shell flags are
+  // well-defined on every runner.
+  const wf = loadWorkflow(WORKFLOW);
+  const job = wf.jobs["check-changes"];
+  assert.ok(job, "expected a 'check-changes' job in ci.yml");
+  const step = job.steps.find((s) => s.name === "Check for changes");
+  assert.ok(step, "expected a 'Check for changes' step in ci.yml");
+  assert.equal(
+    step.shell,
+    "bash",
     "Check for changes step must declare `shell: bash` for explicit bash semantics",
   );
 
-  // The first non-blank, non-comment line of the run: block must be
+  assert.ok(
+    typeof step.run === "string" && step.run.length > 0,
+    "Check for changes step must use a run: block",
+  );
+  // The first non-blank, non-comment line of the run block must be
   // `set -euo pipefail` so the hardening fires before any subsequent
   // command can mask a failure.
-  const runStart = stepBlock.indexOf("run: |");
-  assert.notEqual(runStart, -1, "Check for changes step must use a literal `run: |` block");
-  const runBody = stepBlock.slice(runStart).split("\n").slice(1);
-  const firstCmd = runBody.find((l) => l.trim() !== "" && !/^\s*#/.test(l));
+  const firstCmd = step.run
+    .split("\n")
+    .find((l) => l.trim() !== "" && !/^\s*#/.test(l));
   assert.ok(firstCmd, "Check for changes run block must have at least one command");
-  assert.match(
-    firstCmd,
-    /^\s+set -euo pipefail\s*$/,
-    `expected the first command of 'Check for changes' run block to be 'set -euo pipefail', saw '${firstCmd}'`,
+  assert.equal(
+    firstCmd.trim(),
+    "set -euo pipefail",
+    `expected first command to be 'set -euo pipefail', saw '${firstCmd}'`,
   );
 });
 
@@ -189,24 +197,14 @@ test("ci workflow declares a top-level minimal permissions block (issue #37)", (
   // check-changes and quality jobs cannot inherit write access they do
   // not need. The deploy-pages job's per-job permissions override this
   // safely.
-  const yaml = readWorkflow();
-  const lines = yaml.split("\n");
-  // Find the first top-level (column-0) `permissions:` key.
-  const topLevelIdx = lines.findIndex((line) => /^permissions:\s*$/.test(line));
-  assert.notEqual(
-    topLevelIdx,
-    -1,
+  const wf = loadWorkflow(WORKFLOW);
+  assert.ok(
+    wf.permissions && typeof wf.permissions === "object",
     "expected a top-level `permissions:` block in ci.yml",
   );
-  // The next non-blank, non-comment line should declare `contents: read`
-  // indented under the top-level key.
-  const next = lines
-    .slice(topLevelIdx + 1)
-    .find((line) => line.trim() !== "" && !/^\s*#/.test(line));
-  assert.ok(next, "expected at least one key under top-level permissions");
-  assert.match(
-    next,
-    /^\s+contents:\s*read\s*$/,
-    `expected 'contents: read' under top-level permissions, saw '${next}'`,
+  assert.equal(
+    wf.permissions.contents,
+    "read",
+    `expected top-level contents: read, saw '${wf.permissions.contents}'`,
   );
 });
