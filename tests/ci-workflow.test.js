@@ -106,3 +106,33 @@ test("ci workflow preserves least-privilege permissions for Pages deploy job", (
   assert.match(yaml, /pages:\s*write/);
   assert.match(yaml, /id-token:\s*write/);
 });
+
+test("ci workflow declares a top-level minimal permissions block (issue #37)", () => {
+  // The default GITHUB_TOKEN scope is broad; the GitHub Actions
+  // security-hardening guide recommends every workflow narrow it to the
+  // minimum required at the top level. Issue #37 mandates
+  // `permissions: contents: read` at the workflow scope so the
+  // check-changes and quality jobs cannot inherit write access they do
+  // not need. The deploy-pages job's per-job permissions override this
+  // safely.
+  const yaml = readWorkflow();
+  const lines = yaml.split("\n");
+  // Find the first top-level (column-0) `permissions:` key.
+  const topLevelIdx = lines.findIndex((line) => /^permissions:\s*$/.test(line));
+  assert.notEqual(
+    topLevelIdx,
+    -1,
+    "expected a top-level `permissions:` block in ci.yml",
+  );
+  // The next non-blank, non-comment line should declare `contents: read`
+  // indented under the top-level key.
+  const next = lines
+    .slice(topLevelIdx + 1)
+    .find((line) => line.trim() !== "" && !/^\s*#/.test(line));
+  assert.ok(next, "expected at least one key under top-level permissions");
+  assert.match(
+    next,
+    /^\s+contents:\s*read\s*$/,
+    `expected 'contents: read' under top-level permissions, saw '${next}'`,
+  );
+});
