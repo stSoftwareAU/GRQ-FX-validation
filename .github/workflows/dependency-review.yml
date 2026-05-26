@@ -8,6 +8,12 @@ on:
   pull_request:
     branches: ["*"]
 
+# Issue #40: cancel superseded PR runs so a force-push does not leave
+# the previous dependency-review run churning while the new one starts.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 

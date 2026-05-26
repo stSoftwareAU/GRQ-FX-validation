@@ -6,6 +6,13 @@ on:
   push:
     branches: [main, master]
 
+# Issue #40: cancel superseded runs so a force-push or rapid pushes do
+# not leave the previous markdownlint job churning while the new one
+# starts.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
