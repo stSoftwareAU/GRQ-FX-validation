@@ -10,6 +10,15 @@ on:
   push:
     branches: ["Develop"]
 
+# Issue #40: cancel superseded runs on the same ref so a force-push or
+# rapid back-to-back commits on Develop do not leave stale CI/CD runs
+# churning. The deploy-pages job overrides this with a separate
+# `pages` group (cancel-in-progress: false) so an in-flight Pages
+# deploy is allowed to finish, per GitHub's Pages guidance.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 # Issue #37: declare a minimal top-level GITHUB_TOKEN scope so the
 # check-changes and quality jobs cannot inherit GitHub's broad default
 # permissions. The deploy-pages job overrides this with the narrower
@@ -99,6 +108,13 @@ jobs:
     if: |
       github.ref == 'refs/heads/Develop' &&
       needs.check-changes.outputs.docs-changed == 'true'
+    # Issue #40: per GitHub's Pages-deployment guidance, an in-flight
+    # Pages deploy must be allowed to finish even when a newer Develop
+    # commit lands, so this job opts out of the workflow-level
+    # cancel-in-progress and uses a dedicated `pages` group instead.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     permissions:
       pages: write
       id-token: write
