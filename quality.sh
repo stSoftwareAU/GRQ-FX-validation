@@ -23,7 +23,11 @@ node --test tests/*.test.js
 
 if command -v deno >/dev/null 2>&1; then
   echo "[quality] Deno test suite (tests/*.test.ts)"
-  deno test --allow-read --allow-net=127.0.0.1 tests/*.test.ts
+  # Issue #57: --frozen makes deno.lock drift a CI failure so URL
+  # imports (helpers/server.ts, tests/*.test.ts) are integrity-pinned.
+  # Without it the build silently re-fetches std modules and a hijack
+  # of deno.land/std could swap implementation bytes between runs.
+  deno test --frozen --allow-read --allow-net=127.0.0.1 tests/*.test.ts
 else
   echo "[quality] WARNING: Deno not installed, skipping tests/*.test.ts" >&2
 fi
