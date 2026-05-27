@@ -1296,11 +1296,18 @@ input, select, textarea {
   }
 }
 
-/* Dark mode toggle button - ensure it's always visible */
+/* Theme toggle button — colours follow the active theme (issue #45).
+ *
+ * Default (auto + system-light) keeps the translucent white-on-purple
+ * look that sits against the brand-purple header gradient. The
+ * theme-state overrides below swap colours for light-forced,
+ * dark-forced and auto + system-dark, mirroring the header pattern
+ * established in issue #44. The 40x40 minimum touch target and flex
+ * centring are shared across every state. */
 #dark-mode-toggle {
-  border: 2px solid rgba(255,255,255,0.8) !important;
-  background-color: rgba(255,255,255,0.1) !important;
-  color: white !important;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
   min-width: 40px;
   min-height: 40px;
   display: flex !important;
@@ -1309,12 +1316,53 @@ input, select, textarea {
 }
 
 #dark-mode-toggle:hover {
-  background-color: rgba(255,255,255,0.2) !important;
-  border-color: rgba(255,255,255,1) !important;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 1);
 }
 
 #dark-mode-toggle i {
   font-size: 1.1rem;
+}
+
+/* Light forced — dark border/text on a soft light background so the
+ * toggle stays readable against the light header gradient. */
+body.light-mode-forced #dark-mode-toggle {
+  border: 2px solid rgba(33, 37, 41, 0.6) !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #212529 !important;
+}
+
+body.light-mode-forced #dark-mode-toggle:hover {
+  background-color: rgba(255, 255, 255, 1) !important;
+  border-color: rgba(33, 37, 41, 0.9) !important;
+}
+
+/* Dark forced — light border/text on a deep background. */
+body.dark-mode-forced #dark-mode-toggle {
+  border: 2px solid rgba(240, 246, 252, 0.7) !important;
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  color: #f0f6fc !important;
+}
+
+body.dark-mode-forced #dark-mode-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.8) !important;
+  border-color: rgba(240, 246, 252, 1) !important;
+}
+
+/* Auto + system-dark — same treatment as dark-forced so the toggle
+ * stays readable when the system is dark and the user has not forced
+ * a theme. */
+@media (prefers-color-scheme: dark) {
+  body:not(.dark-mode-forced) #dark-mode-toggle {
+    border: 2px solid rgba(240, 246, 252, 0.7) !important;
+    background-color: rgba(0, 0, 0, 0.6) !important;
+    color: #f0f6fc !important;
+  }
+
+  body:not(.dark-mode-forced) #dark-mode-toggle:hover {
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    border-color: rgba(240, 246, 252, 1) !important;
+  }
 }
 
 /* Manual light mode override (when user clicks toggle) */
