@@ -555,20 +555,26 @@ function initializeDarkModeToggle() {
     // Remove all mode classes
     document.body.classList.remove("dark-mode-forced", "light-mode-forced");
 
+    // Reset theme-toggle state classes so the cascade in styles.css —
+    // not inline .style writes — drives the button's colours (issue #45).
+    toggleButton.classList.remove(
+      "theme-toggle-light",
+      "theme-toggle-dark",
+      "theme-toggle-auto",
+    );
+
     switch (preference) {
       case "light":
         document.body.classList.add("light-mode-forced");
         toggleIcon.textContent = "☀️";
         toggleButton.title = "Light Mode (Click for Dark Mode)";
-        toggleButton.style.backgroundColor = "rgba(255, 255, 255, 0.9)";
-        toggleButton.style.color = "#000";
+        toggleButton.classList.add("theme-toggle-light");
         break;
       case "dark":
         document.body.classList.add("dark-mode-forced");
         toggleIcon.textContent = "🌙";
         toggleButton.title = "Dark Mode (Click for Auto Mode)";
-        toggleButton.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-        toggleButton.style.color = "#fff";
+        toggleButton.classList.add("theme-toggle-dark");
         break;
       case "auto":
       default:
@@ -576,8 +582,7 @@ function initializeDarkModeToggle() {
         toggleIcon.textContent = "🌓";
         toggleButton.title =
           "Auto Mode - Following System (Click for Light Mode)";
-        toggleButton.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
-        toggleButton.style.color = "white";
+        toggleButton.classList.add("theme-toggle-auto");
         break;
     }
   }
