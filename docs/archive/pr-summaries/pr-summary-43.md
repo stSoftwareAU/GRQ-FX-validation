@@ -31,7 +31,7 @@ flowchart LR
 ### Tests rewritten as runtime behaviour checks
 
 | File / lines (before) | Old assertion | New assertion |
-|---|---|---|
+| --- | --- | --- |
 | `tests/sw-pathname-guards.test.ts` (whole file) | `sw.includes("/\\/data\\/.*\\.csv$/")` etc. | Load sw.js into a mock SW scope, dispatch fetch events for `/data/*.csv`, `/<date>/predictions.json`, `/index.json`, `/index.js`, `/manifest.json`, cross-origin, POST; assert the observable strategy (network-only, network-first, cache-first, ignored). |
 | `tests/yahoo-error-banner-xss.test.ts:211-234` | Slice 800 chars around `showYahooFinanceError`, regex for `errorElement.innerHTML =`. | Extract the method body, evaluate against a mock DOM with a malicious `<img src=x onerror=alert(1)>` message, assert the rendered DOM contains no raw `<img` tag and no `on*=` attribute in any tag header. |
 | `tests/server-path-traversal.test.ts:83-94` | Read `helpers/server.ts` and regex for `hostname: "127.0.0.1"`. | Call `handleRequest` with traversal URLs, assert 404 + no file contents leaked. Spin up `Deno.serve` on `127.0.0.1`, assert the bound address is loopback, send a traversal URL over the wire, and assert the same 404. |
@@ -40,7 +40,7 @@ flowchart LR
 ### Tests deleted with documented runtime replacement
 
 | File / lines | Why deleted | Runtime coverage instead |
-|---|---|---|
+| --- | --- | --- |
 | `tests/pwa-index-freshness.test.js:47-61, 87-123` | Source-grep guards for SW pathname regexes. | The `tests/sw-pathname-guards.test.ts` behavioural suite (added above) dispatches real fetch events. A new stub test asserts that file exists and dispatches fetch events, so a careless `git rm` cannot silently drop runtime coverage. |
 | `tests/csp-meta.test.js:197-210` | Source-grep guard for inline event handlers in `docs/index.js`. | The CSP meta tag itself (asserted above in the same file) forbids `unsafe-inline` on `script-src`, so the browser refuses to execute any inline event handler at runtime. `tests/fx-card-xss.test.ts::buildFXPairCard does not emit an inline onclick attribute` and `tests/yahoo-error-banner-xss.test.ts::showYahooFinanceError renders attacker-controlled messages as encoded text (DOM-level)` exercise the rendering paths and scan tag headers for `on*=`. |
 
