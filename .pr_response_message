@@ -1,7 +1,9 @@
-Fixed the **markdownlint** failure (MD060 — `table-column-style`).
+## Quality Gate fix — timer leak in `YahooFinanceAPI`
 
-**Root cause:** `docs/archive/pr-summaries/pr-summary-43.md` lines 34 and 43 had table separator rows written as `|---|---|---|`, which lacks the spaces required by the compact column-style rule.
+**Failing test:** `Every YahooFinanceAPI fetch path rejects payloads the validator marks invalid` (`tests/yahoo-response-validation.test.ts:245`)
 
-**Fix:** Changed both separators to `| --- | --- | --- |` (commit `804b356` on `milestone/audit-issues`).
+**Root cause:** All four `YahooFinanceAPI` fetch methods (`getFXPairDescription`, `validateFXPair`, `fetchFXData`, `fetchOptimizedFXData`) use `Promise.race([fetch(…), new Promise(…setTimeout…)])` for request timeouts, but never called `clearTimeout` when `fetch` won the race. The test stubs `fetch` to resolve immediately with a hostile payload the validator rejects, so both proxies are attempted for each of the four methods — producing 8 leaked timers (2 proxies × 4 methods).
 
-No other files were modified. The markdownlint check should now pass.
+**Fix:** In `docs/index.js`, each `Promise.race` block was updated to capture the timer ID (`let timeoutId`) and call `clearTimeout(timeoutId)` in both the success path (immediately after `await Promise.race`) and the `catch` block.
+
+**Verification:** `quality.sh` now reports `ok | 44 passed | 0 failed` with no leaks detected.
