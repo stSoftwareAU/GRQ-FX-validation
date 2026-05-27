@@ -44,19 +44,38 @@ test("`docs/index.json` includes the latest prediction date folder", () => {
   );
 });
 
-test("Service worker treats `index.json` as network-first (pathname-based)", () => {
-  const swPath = path.join(DOCS_DIR, "sw.js");
-  const sw = fs.readFileSync(swPath, "utf8");
-
-  // We want pathname matching, e.g. `/GRQ-FX-validation/index.json` → match.
-  // A common bug is matching `./index.json`, which never matches URL.pathname.
-  assert.ok(
-    sw.includes("/\\/index\\.json$/"),
-    "Expected sw.js to include pathname regex /\\/index\\.json$/ for index.json",
+// Issue #43: the previous source-grep guards for SW pathname matching
+// (network-first index.json, CSV data, dated predictions.json,
+// static-asset .json exclusion) were HOW-tests — they passed when the
+// regex literal happened to appear in `docs/sw.js`, regardless of
+// whether the SW actually routed requests correctly. They have been
+// replaced by `tests/sw-pathname-guards.test.ts`, which loads sw.js
+// into a mocked Service Worker scope, dispatches synthetic fetch
+// events, and asserts on the observable strategy (network-only,
+// network-first, cache-first) each request receives.
+//
+// Run the behavioural suite with:
+//
+//   deno test --allow-read tests/sw-pathname-guards.test.ts
+//
+// This test verifies the behavioural suite exists so a careless
+// `git rm` cannot silently drop the runtime coverage.
+test("Service worker runtime behaviour is covered by sw-pathname-guards.test.ts", () => {
+  const behaviouralPath = path.join(
+    REPO_ROOT,
+    "tests",
+    "sw-pathname-guards.test.ts",
   );
   assert.ok(
-    !sw.includes("\\.\\/index\\.json$"),
-    "sw.js still appears to match './index.json' which does not match URL.pathname",
+    fs.existsSync(behaviouralPath),
+    `Expected ${behaviouralPath} to exist as the runtime replacement for the deleted source-grep tests`,
+  );
+  const src = fs.readFileSync(behaviouralPath, "utf8");
+  // The harness must actually dispatch synthetic fetch events — that is
+  // the distinguishing trait of a WHAT-test in this file.
+  assert.ok(
+    /dispatchFetch\s*\(/.test(src),
+    "sw-pathname-guards.test.ts must dispatch synthetic fetch events (runtime behaviour, not source grep)",
   );
 });
 
@@ -84,43 +103,15 @@ test("`docs/sw-register.js` has a valid service worker registration call (no bro
   );
 });
 
-test("Service worker treats predictions.json and CSV data files as dynamic (pathname-based)", () => {
-  const swPath = path.join(DOCS_DIR, "sw.js");
-  const sw = fs.readFileSync(swPath, "utf8");
-
-  // These patterns must match URL.pathname, which starts with `/...`.
-  // Issue #30: the earlier assertions used JavaScript string escapes that
-  // collapsed every `\/` to `/`, so `sw.includes("/\/data\/.*\.csv$/")`
-  // was actually checking for `//data/.*.csv$/` — a substring that can
-  // never appear in a regex literal. Use raw strings (no `\`) so the
-  // check is what it looks like.
-  assert.ok(
-    sw.includes("/\\/data\\/.*\\.csv$/"),
-    String.raw`Expected sw.js to include pathname regex /\/data\/.*\.csv$/ for CSV data files`,
-  );
-  assert.ok(
-    sw.includes("/\\/\\d{4}-\\d{2}-\\d{2}\\/predictions\\.json$/"),
-    "Expected sw.js to include pathname regex for dated predictions.json files",
-  );
-
-  // Guard against the common broken form using `./...` which never matches pathname.
-  assert.ok(
-    !sw.includes("/\\.\\/data\\//"),
-    "sw.js still appears to contain './data/' regex patterns which do not match URL.pathname",
-  );
-});
-
-test("Service worker does not treat predictions.json as a static JSON asset", () => {
-  const swPath = path.join(DOCS_DIR, "sw.js");
-  const sw = fs.readFileSync(swPath, "utf8");
-
-  // Predictions JSON must not be captured by the cache-first static asset path.
-  // sw.js currently writes the guard with double-quoted ".json", so match that.
-  assert.ok(
-    sw.includes('endsWith(".json") && !isNetworkFirst && !isDataFile'),
-    "Expected sw.js to exclude dynamic data JSON from the static asset .json matcher",
-  );
-});
+// Issue #43: the previous "predictions.json / CSV dynamic" and "static
+// .json exclusion" assertions were source-grep HOW-tests. The runtime
+// equivalents now live in `tests/sw-pathname-guards.test.ts` —
+// specifically the tests:
+//   • "sw.js routes CSV data files under /data/ to network-only ..."
+//   • "sw.js routes dated predictions.json to network-only ..."
+//   • "sw.js routes static .json assets ... cache-first, not network-only"
+// which dispatch real fetch events and observe the strategy used,
+// rather than asserting on the source text of `docs/sw.js`.
 
 // Issue #30 regression guard: the dashboard auto-selects the most recent
 // entry in index.json on load and immediately fetches its predictions.json.
