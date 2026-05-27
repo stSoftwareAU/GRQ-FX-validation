@@ -1,15 +1,7 @@
-Fixed the markdownlint CI failure on PR #27.
+Fixed the **markdownlint** failure (MD060 — `table-column-style`).
 
-**Root cause:** `docs/pr-summary-13.md` lines 40–42 contained trailing spaces
-inside table cells to visually align columns (e.g. `Bootstrap JS  |`,
-`Chart.js      |`, `Date adapter  |`). The markdownlint rule MD060
-(table-column-style) enforces compact table style, which disallows extra
-whitespace before the closing pipe character.
+**Root cause:** `docs/archive/pr-summaries/pr-summary-43.md` lines 34 and 43 had table separator rows written as `|---|---|---|`, which lacks the spaces required by the compact column-style rule.
 
-**Fix:** Removed the trailing alignment spaces from the three affected rows so
-each cell is written in compact form (`Bootstrap JS |`, `Chart.js |`,
-`Date adapter |`). No rule suppression was applied — the underlying violation
-was corrected directly.
+**Fix:** Changed both separators to `| --- | --- | --- |` (commit `804b356` on `milestone/audit-issues`).
 
-**Verification:** `markdownlint-cli2` now reports `Summary: 0 error(s)` across
-all 22 markdown files in the repository.
+No other files were modified. The markdownlint check should now pass.
