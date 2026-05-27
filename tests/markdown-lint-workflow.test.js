@@ -1,69 +1,92 @@
 // Regression tests for the Markdown Lint workflow (issue #4).
+//
 // Australian English: these tests verify the workflow file and the
 // markdownlint-cli2 configuration are present and well-formed so the
 // CI gate cannot regress silently.
+//
+// Issue #42: assertions previously regex-matched the raw YAML text;
+// they now parse the workflow into a JavaScript object and assert on
+// its structured fields.
 
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import { loadWorkflow, workflowPath } from "./_workflow-yaml.js";
 
-const REPO_ROOT = path.resolve(process.cwd());
-const WORKFLOW_PATH = path.join(
-  REPO_ROOT,
-  ".github",
-  "workflows",
-  "markdown-lint.yml",
+const WORKFLOW = "markdown-lint.yml";
+const SHA_RE = /^[0-9a-f]{40}$/;
+const CONFIG_PATH = path.join(
+  path.resolve(process.cwd()),
+  ".markdownlint-cli2.jsonc",
 );
-const CONFIG_PATH = path.join(REPO_ROOT, ".markdownlint-cli2.jsonc");
-
-function readWorkflow() {
-  return fs.readFileSync(WORKFLOW_PATH, "utf8");
-}
 
 test("markdown-lint workflow file exists", () => {
   assert.ok(
-    fs.existsSync(WORKFLOW_PATH),
-    `Expected workflow at ${WORKFLOW_PATH}`,
+    fs.existsSync(workflowPath(WORKFLOW)),
+    `Expected workflow at ${workflowPath(WORKFLOW)}`,
   );
 });
 
 test("workflow declares the expected name and triggers", () => {
-  const yaml = readWorkflow();
-  assert.match(yaml, /^name:\s*Markdown Lint\s*$/m);
-  assert.match(yaml, /pull_request:/);
-  assert.match(yaml, /push:/);
+  const wf = loadWorkflow(WORKFLOW);
+  assert.equal(wf.name, "Markdown Lint");
+  assert.ok(wf.on, "workflow must declare an `on:` block");
+  assert.ok(
+    "pull_request" in wf.on,
+    "workflow must run on pull_request events",
+  );
+  assert.ok("push" in wf.on, "workflow must run on push events");
 });
 
 test("workflow uses pinned commit SHAs for third-party actions", () => {
-  const yaml = readWorkflow();
-  // actions/checkout pinned to a 40-character commit SHA
-  assert.match(
-    yaml,
-    /uses:\s*actions\/checkout@[0-9a-f]{40}/,
-    "actions/checkout must be pinned to a 40-character commit SHA",
-  );
-  assert.match(
-    yaml,
-    /uses:\s*actions\/setup-node@[0-9a-f]{40}/,
-    "actions/setup-node must be pinned to a 40-character commit SHA",
-  );
-  assert.match(
-    yaml,
-    /uses:\s*denoland\/setup-deno@[0-9a-f]{40}/,
-    "denoland/setup-deno must be pinned to a 40-character commit SHA",
-  );
+  const wf = loadWorkflow(WORKFLOW);
+  const steps = wf.jobs.markdownlint.steps;
+  const required = [
+    "actions/checkout",
+    "actions/setup-node",
+    "denoland/setup-deno",
+  ];
+  for (const action of required) {
+    const step = steps.find(
+      (s) =>
+        typeof s.uses === "string" && s.uses.startsWith(`${action}@`),
+    );
+    assert.ok(step, `expected a step that uses ${action}`);
+    const ref = step.uses.split("@")[1];
+    assert.match(
+      ref,
+      SHA_RE,
+      `${action} must be pinned to a 40-character commit SHA (saw '${ref}')`,
+    );
+  }
 });
 
 test("workflow installs and runs markdownlint-cli2", () => {
-  const yaml = readWorkflow();
-  assert.match(yaml, /npm install -g markdownlint-cli2/);
-  assert.match(yaml, /run:\s*markdownlint-cli2/);
+  const wf = loadWorkflow(WORKFLOW);
+  const steps = wf.jobs.markdownlint.steps;
+  const install = steps.find(
+    (s) => typeof s.run === "string" &&
+      /npm install -g markdownlint-cli2/.test(s.run),
+  );
+  assert.ok(install, "expected a step that installs markdownlint-cli2");
+  const run = steps.find(
+    (s) => typeof s.run === "string" &&
+      /^\s*markdownlint-cli2\b/.test(s.run),
+  );
+  assert.ok(run, "expected a step that runs markdownlint-cli2");
 });
 
 test("workflow uses least-privilege permissions", () => {
-  const yaml = readWorkflow();
-  assert.match(yaml, /permissions:\s*\n\s*contents:\s*read/);
+  const wf = loadWorkflow(WORKFLOW);
+  const top = wf.permissions ?? {};
+  const job = wf.jobs.markdownlint.permissions ?? {};
+  const contents = job.contents ?? top.contents;
+  assert.equal(
+    contents,
+    "read",
+    "contents permission must be 'read' for the markdownlint job",
+  );
 });
 
 test("markdownlint-cli2 config is present and parses as JSONC", () => {

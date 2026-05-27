@@ -233,19 +233,171 @@ Deno.test("validateYahooFinanceResponse allows null entries in price arrays (Yah
   }
 });
 
-Deno.test("docs/index.js wires validateYahooFinanceResponse into every Yahoo Finance fetch path", async () => {
-  // Regression guard: every call site that JSON.parses a proxy response
-  // must funnel the parsed value through validateYahooFinanceResponse
-  // before reading any field. Without the guard, an attacker controlling
-  // a proxy could craft responses that flow into DOM sinks.
+// Issue #43: the previous "count occurrences >= 4" test was a brittle
+// HOW-test — combining the four fetch paths into a single helper would
+// have failed the test while *improving* the code, and adding an
+// unrelated comment containing `validateYahooFinanceResponse(` could
+// pad the count. Rewritten as a WHAT-test: load the YahooFinanceAPI
+// class with `fetch` stubbed to return a hostile payload that the
+// validator would reject, exercise each of the four Yahoo fetch
+// methods, and assert that none of them leak the hostile content into
+// their return values.
+Deno.test("Every YahooFinanceAPI fetch path rejects payloads the validator marks invalid", async () => {
   const src = await Deno.readTextFile(
     new URL("../docs/index.js", import.meta.url),
   );
-  const occurrences = (src.match(/validateYahooFinanceResponse\s*\(/g) || [])
-    .length;
-  if (occurrences < 4) {
+  const classStart = src.indexOf("class YahooFinanceAPI {");
+  if (classStart === -1) {
+    throw new Error("Could not locate class YahooFinanceAPI in docs/index.js");
+  }
+  // Walk balanced braces from the class open brace to its matching close.
+  const bodyStart = src.indexOf("{", classStart);
+  let depth = 0;
+  let classEnd = -1;
+  for (let i = bodyStart; i < src.length; i++) {
+    if (src[i] === "{") depth++;
+    else if (src[i] === "}") {
+      depth--;
+      if (depth === 0) {
+        classEnd = i;
+        break;
+      }
+    }
+  }
+  if (classEnd === -1) {
+    throw new Error("Could not locate the closing brace of YahooFinanceAPI");
+  }
+  const classSrc = src.slice(classStart, classEnd + 1);
+
+  // Load the real validator so the methods' guards see authentic
+  // accept/reject decisions.
+  const validatorSrc = await Deno.readTextFile(
+    new URL("../docs/yahoo-validate.js", import.meta.url),
+  );
+  // deno-lint-ignore no-explicit-any
+  const scope: any = {};
+  const loadValidator = new Function(
+    "globalThis",
+    "window",
+    validatorSrc + "\nreturn globalThis.validateYahooFinanceResponse;",
+  );
+  const validateYahooFinanceResponse = loadValidator(scope, scope);
+
+  // Hostile response with a clearly-identifiable sentinel. Symbols
+  // containing HTML markup are rejected by the validator (see the
+  // "rejects responses whose meta.symbol is not a valid FX symbol"
+  // tests above), so this payload will be marked invalid and must not
+  // surface in any return value.
+  const SENTINEL = "POWNED-XSS-MARKER-2026";
+  const hostileResponse = {
+    chart: {
+      result: [
+        {
+          meta: {
+            // Invalid symbol — validator rejects.
+            symbol: `<img src=x onerror=alert(${SENTINEL})>=X`,
+            shortName: SENTINEL,
+            longName: SENTINEL,
+          },
+          timestamp: [1716336000],
+          indicators: {
+            quote: [{
+              open: [0.5],
+              high: [0.6],
+              low: [0.4],
+              close: [0.55],
+            }],
+          },
+        },
+      ],
+    },
+  };
+
+  // Sanity check: the validator does reject this shape.
+  const verdict = validateYahooFinanceResponse(hostileResponse);
+  if (verdict.ok) {
     throw new Error(
-      `Expected validateYahooFinanceResponse to be called from all 4 Yahoo fetch paths; found ${occurrences} call(s)`,
+      "Test setup error: hostile response was unexpectedly accepted by the validator",
+    );
+  }
+
+  // Stub `fetch` to return the hostile payload for every call. Each
+  // proxy attempt receives the same data; the methods must each refuse
+  // to extract from it.
+  const stubFetch = (_url: string, _init?: RequestInit) =>
+    Promise.resolve(
+      new Response(JSON.stringify(hostileResponse), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+  // Evaluate the class inside a fresh scope where the only fetch is
+  // ours and the validator is the real one.
+  const factory = new Function(
+    "fetch",
+    "validateYahooFinanceResponse",
+    "console",
+    classSrc + "\nreturn YahooFinanceAPI;",
+  );
+  const YahooFinanceAPI = factory(
+    stubFetch,
+    validateYahooFinanceResponse,
+    { log: () => {}, warn: () => {}, error: () => {} },
+  );
+
+  const api = new YahooFinanceAPI();
+
+  // Helper: deep-search the result for the sentinel string. Any match
+  // means the hostile payload bypassed the validator and reached the
+  // caller.
+  const containsSentinel = (v: unknown): boolean => {
+    if (typeof v === "string") return v.includes(SENTINEL);
+    if (Array.isArray(v)) return v.some(containsSentinel);
+    if (v && typeof v === "object") {
+      return Object.values(v as Record<string, unknown>).some(containsSentinel);
+    }
+    return false;
+  };
+
+  // Each method is one of the four fetch paths that must funnel through
+  // the validator. We run them all and assert the sentinel does not
+  // appear anywhere in their return value.
+  const description = await api.getFXPairDescription("AUDUSD");
+  if (description && String(description).includes(SENTINEL)) {
+    throw new Error(
+      `getFXPairDescription leaked hostile data: ${description}`,
+    );
+  }
+
+  const validatePairResult = await api.validateFXPair("AUDUSD");
+  if (containsSentinel(validatePairResult)) {
+    throw new Error(
+      `validateFXPair leaked hostile data: ${
+        JSON.stringify(validatePairResult)
+      }`,
+    );
+  }
+
+  const today = new Date();
+  const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const fetchResult = await api.fetchFXData("AUDUSD", monthAgo, today);
+  if (containsSentinel(fetchResult)) {
+    throw new Error(
+      `fetchFXData leaked hostile data: ${JSON.stringify(fetchResult)}`,
+    );
+  }
+
+  const optimisedResult = await api.fetchOptimizedFXData(
+    "AUDUSD",
+    monthAgo,
+    today,
+  );
+  if (containsSentinel(optimisedResult)) {
+    throw new Error(
+      `fetchOptimizedFXData leaked hostile data: ${
+        JSON.stringify(optimisedResult)
+      }`,
     );
   }
 });

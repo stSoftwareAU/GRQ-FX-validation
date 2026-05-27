@@ -669,14 +669,19 @@ class YahooFinanceAPI {
         `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
 
       for (let i = 0; i < this.proxies.length; i++) {
+        let timeoutId;
         try {
           const proxyUrl = this.proxies[i] + encodeURIComponent(yahooUrl);
           const response = await Promise.race([
             fetch(proxyUrl, { method: "GET" }),
-            new Promise((_, reject) =>
-              setTimeout(() => reject(new Error("Request timeout")), 5000)
-            ),
+            new Promise((_, reject) => {
+              timeoutId = setTimeout(
+                () => reject(new Error("Request timeout")),
+                5000,
+              );
+            }),
           ]);
+          clearTimeout(timeoutId);
 
           if (response.ok) {
             const data = await response.json();
@@ -715,6 +720,7 @@ class YahooFinanceAPI {
             }
           }
         } catch (error) {
+          clearTimeout(timeoutId);
           console.warn(`Failed to get description with proxy ${i + 1}:`, error);
           if (i === this.proxies.length - 1) {
             break;
@@ -743,14 +749,19 @@ class YahooFinanceAPI {
         `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1d`;
 
       for (let i = 0; i < this.proxies.length; i++) {
+        let timeoutId;
         try {
           const proxyUrl = this.proxies[i] + encodeURIComponent(yahooUrl);
           const response = await Promise.race([
             fetch(proxyUrl, { method: "GET" }),
-            new Promise((_, reject) =>
-              setTimeout(() => reject(new Error("Request timeout")), 5000)
-            ),
+            new Promise((_, reject) => {
+              timeoutId = setTimeout(
+                () => reject(new Error("Request timeout")),
+                5000,
+              );
+            }),
           ]);
+          clearTimeout(timeoutId);
 
           if (response.ok) {
             const data = await response.json();
@@ -775,6 +786,7 @@ class YahooFinanceAPI {
             }
           }
         } catch (error) {
+          clearTimeout(timeoutId);
           console.warn(
             `Failed to validate ${fxPair} with proxy ${i + 1}:`,
             error,
@@ -805,6 +817,7 @@ class YahooFinanceAPI {
     );
 
     for (let i = 0; i < this.proxies.length; i++) {
+      let timeoutId;
       try {
         console.log(
           `Attempting ${fxPair} fetch with proxy ${
@@ -815,13 +828,14 @@ class YahooFinanceAPI {
 
         const response = await Promise.race([
           fetch(proxyUrl, { method: "GET" }),
-          new Promise((_, reject) =>
-            setTimeout(
+          new Promise((_, reject) => {
+            timeoutId = setTimeout(
               () => reject(new Error(`${fxPair} request timeout`)),
               8000,
-            )
-          ),
+            );
+          }),
         ]);
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
           throw new Error(
@@ -853,6 +867,7 @@ class YahooFinanceAPI {
         console.log(`${fxPair} raw data (proxy ${i + 1}):`, data);
         return data;
       } catch (error) {
+        clearTimeout(timeoutId);
         console.warn(`${fxPair} fetch failed with proxy ${i + 1}:`, error);
         if (i === this.proxies.length - 1) {
           console.warn(`${fxPair} fetch failed with all proxies`);
@@ -888,6 +903,7 @@ class YahooFinanceAPI {
     );
 
     for (let i = 0; i < this.proxies.length; i++) {
+      let timeoutId;
       try {
         console.log(
           `Attempting ${fxPair} optimized fetch with proxy ${
@@ -898,13 +914,14 @@ class YahooFinanceAPI {
 
         const response = await Promise.race([
           fetch(proxyUrl, { method: "GET" }),
-          new Promise((_, reject) =>
-            setTimeout(
+          new Promise((_, reject) => {
+            timeoutId = setTimeout(
               () => reject(new Error(`${fxPair} request timeout`)),
               8000,
-            )
-          ),
+            );
+          }),
         ]);
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
           throw new Error(
@@ -934,6 +951,7 @@ class YahooFinanceAPI {
         console.log(`${fxPair} optimized data (proxy ${i + 1}):`, data);
         return data;
       } catch (error) {
+        clearTimeout(timeoutId);
         console.warn(
           `${fxPair} optimized fetch failed with proxy ${i + 1}:`,
           error,

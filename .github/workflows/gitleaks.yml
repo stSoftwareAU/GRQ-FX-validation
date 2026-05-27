@@ -11,12 +11,22 @@ on:
   pull_request:
     branches: ["*"]
 
+# Issue #40: cancel superseded PR runs so a force-push does not leave
+# the previous gitleaks scan churning while the new one starts.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
   gitleaks:
     runs-on: ubuntu-latest
+    # Issue #39: gitleaks scans a bounded commit range and completes in
+    # under a minute on this repo. 10 minutes is a comfortable cap for
+    # large rebases without leaving a wedged runner billing all day.
+    timeout-minutes: 10
     steps:
       # actions/checkout@v4.2.2
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683

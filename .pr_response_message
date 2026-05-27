@@ -1,15 +1,9 @@
-Fixed the markdownlint CI failure on PR #27.
+## Quality Gate fix — timer leak in `YahooFinanceAPI`
 
-**Root cause:** `docs/pr-summary-13.md` lines 40–42 contained trailing spaces
-inside table cells to visually align columns (e.g. `Bootstrap JS  |`,
-`Chart.js      |`, `Date adapter  |`). The markdownlint rule MD060
-(table-column-style) enforces compact table style, which disallows extra
-whitespace before the closing pipe character.
+**Failing test:** `Every YahooFinanceAPI fetch path rejects payloads the validator marks invalid` (`tests/yahoo-response-validation.test.ts:245`)
 
-**Fix:** Removed the trailing alignment spaces from the three affected rows so
-each cell is written in compact form (`Bootstrap JS |`, `Chart.js |`,
-`Date adapter |`). No rule suppression was applied — the underlying violation
-was corrected directly.
+**Root cause:** All four `YahooFinanceAPI` fetch methods (`getFXPairDescription`, `validateFXPair`, `fetchFXData`, `fetchOptimizedFXData`) use `Promise.race([fetch(…), new Promise(…setTimeout…)])` for request timeouts, but never called `clearTimeout` when `fetch` won the race. The test stubs `fetch` to resolve immediately with a hostile payload the validator rejects, so both proxies are attempted for each of the four methods — producing 8 leaked timers (2 proxies × 4 methods).
 
-**Verification:** `markdownlint-cli2` now reports `Summary: 0 error(s)` across
-all 22 markdown files in the repository.
+**Fix:** In `docs/index.js`, each `Promise.race` block was updated to capture the timer ID (`let timeoutId`) and call `clearTimeout(timeoutId)` in both the success path (immediately after `await Promise.race`) and the `catch` block.
+
+**Verification:** `quality.sh` now reports `ok | 44 passed | 0 failed` with no leaks detected.

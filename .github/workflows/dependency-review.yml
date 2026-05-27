@@ -8,12 +8,22 @@ on:
   pull_request:
     branches: ["*"]
 
+# Issue #40: cancel superseded PR runs so a force-push does not leave
+# the previous dependency-review run churning while the new one starts.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
 jobs:
   dependency-review:
     runs-on: ubuntu-latest
+    # Issue #39: dependency-review-action is a single API-driven scan
+    # that normally finishes in under a minute. 5 minutes caps a stuck
+    # runner without truncating a slow but legitimate scan.
+    timeout-minutes: 5
     steps:
       # actions/checkout@v4.3.1
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5

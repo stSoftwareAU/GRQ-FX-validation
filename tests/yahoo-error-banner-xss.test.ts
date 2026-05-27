@@ -208,28 +208,113 @@ Deno.test("renderYahooFinanceErrorBanner tolerates a null container", async () =
   render(null as any, "ignored", mockDocument);
 });
 
-Deno.test("showYahooFinanceError in docs/index.js uses the safe banner renderer", async () => {
-  // Source-level guard against regression: the old implementation
-  // string-interpolated `message` into an innerHTML template literal. This
-  // test ensures the unsafe pattern does not return.
+// Issue #43: the previous guard for `showYahooFinanceError` was a
+// source-level grep that asserted `errorElement.innerHTML =` did not
+// appear and `renderYahooFinanceErrorBanner(` did. That is a HOW-test:
+// a maintainer who replaced `innerHTML` with `insertAdjacentHTML`
+// (still XSS-vulnerable) would pass it, while a maintainer who kept
+// the safe implementation but added an unrelated comment containing
+// `innerHTML =` would fail it. Rewritten as a WHAT-test: extract the
+// method body, evaluate it against a mock DOM with a malicious
+// message, and verify the rendered DOM contains no raw HTML.
+Deno.test("showYahooFinanceError renders attacker-controlled messages as encoded text (DOM-level)", async () => {
   const src = await Deno.readTextFile(
     new URL("../docs/index.js", import.meta.url),
   );
-  const idx = src.indexOf("showYahooFinanceError(message)");
-  if (idx === -1) {
-    throw new Error("Could not find showYahooFinanceError in docs/index.js");
+  // Extract just the method body of showYahooFinanceError. The method
+  // sits inside a class and is small enough to extract verbatim:
+  //
+  //   showYahooFinanceError(message) { … }
+  //
+  // We capture from the open brace to its matching close brace.
+  const methodIdx = src.indexOf("showYahooFinanceError(message) {");
+  if (methodIdx === -1) {
+    throw new Error("Could not locate showYahooFinanceError method header");
   }
-  // Read enough of the method body to cover its implementation.
-  const slice = src.slice(idx, idx + 800);
-  if (/errorElement\.innerHTML\s*=/.test(slice)) {
+  const bodyStart = src.indexOf("{", methodIdx);
+  let depth = 0;
+  let bodyEnd = -1;
+  for (let i = bodyStart; i < src.length; i++) {
+    if (src[i] === "{") depth++;
+    else if (src[i] === "}") {
+      depth--;
+      if (depth === 0) {
+        bodyEnd = i;
+        break;
+      }
+    }
+  }
+  if (bodyEnd === -1) {
+    throw new Error("Could not find the closing brace for showYahooFinanceError");
+  }
+  const methodBody = src.slice(bodyStart + 1, bodyEnd);
+
+  // Build a tiny DOM with the elements the method touches.
+  const errorElement = createElement("div");
+  const loading = createElement("div");
+  const content = createElement("div");
+  const elements: Record<string, MockNode> = {
+    yahooDataError: errorElement,
+    yahooDataLoading: loading,
+    yahooDataContent: content,
+  };
+
+  // Load the safe-error-banner first so its global is available to the
+  // method body when we eval it.
+  const banner = await loadRenderBanner();
+
+  // Bind `this.hideElement`, `this.showElement` as no-ops, and `document`
+  // / `renderYahooFinanceErrorBanner` to the mocks/loaded globals. The
+  // method body references `this`, `document`, and the banner builder.
+  const fakeDocument = {
+    createElement,
+    createTextNode,
+    getElementById: (id: string) => elements[id] ?? null,
+  };
+  const ctx = {
+    hideElement: (_: string) => {},
+    showElement: (_: string) => {},
+  };
+
+  // deno-lint-ignore no-explicit-any
+  const fn = new Function(
+    "message",
+    "document",
+    "renderYahooFinanceErrorBanner",
+    methodBody,
+  ) as (
+    this: typeof ctx,
+    msg: string,
+    doc: typeof fakeDocument,
+    render: typeof banner,
+  ) => void;
+
+  const malicious = "<img src=x onerror=alert(1)>";
+  fn.call(ctx, malicious, fakeDocument, banner);
+
+  const html = errorElement.outerHTML;
+  if (html.includes("<img")) {
     throw new Error(
-      "showYahooFinanceError still assigns to innerHTML (XSS regression)",
+      "showYahooFinanceError must render the message as encoded text, never raw HTML",
     );
   }
-  if (!slice.includes("renderYahooFinanceErrorBanner(")) {
+  if (!html.includes("&lt;img src=x onerror=alert(1)&gt;")) {
     throw new Error(
-      "showYahooFinanceError should delegate to renderYahooFinanceErrorBanner",
+      `Expected the malicious message to appear HTML-encoded; got: ${html}`,
     );
+  }
+  // Scan attribute positions only (between `<` and the closing `>`) for
+  // any inline event handler — the encoded text content legitimately
+  // contains the literal characters `onerror=` and must not trip the
+  // check. We strip the encoded body, then sweep the remaining tag
+  // headers for on*= attributes.
+  const tagHeaders = html.match(/<[a-z][^>]*>/gi) ?? [];
+  for (const header of tagHeaders) {
+    if (/\son[a-z]+\s*=/i.test(header)) {
+      throw new Error(
+        `Rendered DOM tag contains an inline event handler: ${header}`,
+      );
+    }
   }
 });
 

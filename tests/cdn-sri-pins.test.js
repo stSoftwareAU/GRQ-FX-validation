@@ -7,6 +7,16 @@
 // Without these guards a malicious release of `chart.js` (or a
 // CDN/edge compromise) would be served and trusted automatically by
 // every visitor, then locked into the service worker cache offline.
+//
+// Issue #43 note: these assertions inspect the deployed HTML artefact
+// (the actual file that gets served by GitHub Pages) rather than the
+// runtime behaviour of any function. That is deliberate: the SRI
+// guarantee is enforced by the browser at fetch time from the
+// `integrity` attribute in the static markup. The HTML *is* the
+// security control here, and asserting on its shape is the same as
+// asserting that a CSP meta tag declares the right directives — what
+// the issue describes as a "honest" static check, not a HOW-test
+// pretending to verify runtime XSS-safety.
 
 import test from "node:test";
 import assert from "node:assert/strict";
