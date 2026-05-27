@@ -274,19 +274,21 @@ html, body {
   margin-bottom: 1rem;
 }
 
-/* Header gradient - fix the white on white issue */
+/* Header gradient — default (auto + system light) keeps the purple identity.
+ * Theme-aware overrides for light-forced, dark-forced and auto+system-dark
+ * live below (issue #44). */
 .header-gradient {
   background: linear-gradient(
     to bottom,
     var(--primary-color) 0%,
     var(--secondary-color) 100%
-  ) !important;
+  );
   background-image: linear-gradient(
     to bottom,
     var(--primary-color) 0%,
     var(--secondary-color) 100%
-  ) !important;
-  color: white !important;
+  );
+  color: white;
   /* Ensure header extends to edges on mobile PWA */
   margin-left: calc(-1 * max(1rem, env(safe-area-inset-left, 1rem)));
   margin-right: calc(-1 * max(1rem, env(safe-area-inset-right, 1rem)));
@@ -298,7 +300,82 @@ html, body {
 
 .header-gradient h1,
 .header-gradient p {
-  color: white !important;
+  color: white;
+}
+
+/* Theme-aware header overrides (issue #44).
+ *
+ * The header banner used to hard-code a purple gradient and white text
+ * with !important, so it stayed purple regardless of the active theme.
+ * The three blocks below let the toggle (auto / light / dark) drive the
+ * header colour in step with the rest of the page.
+ *
+ * Auto + system-light is intentionally left to the default rule above so
+ * the brand purple is preserved when no theme is forced. */
+
+/* Light forced — soft neutral background with dark text. */
+body.light-mode-forced .header-gradient {
+  background: linear-gradient(
+    to bottom,
+    #f8f9fa 0%,
+    #e9ecef 100%
+  ) !important;
+  background-image: linear-gradient(
+    to bottom,
+    #f8f9fa 0%,
+    #e9ecef 100%
+  ) !important;
+  color: #212529 !important;
+  border-bottom: 1px solid #dee2e6;
+}
+
+body.light-mode-forced .header-gradient h1,
+body.light-mode-forced .header-gradient p {
+  color: #212529 !important;
+}
+
+/* Dark forced — deep background with light text. */
+body.dark-mode-forced .header-gradient {
+  background: linear-gradient(
+    to bottom,
+    #0d1117 0%,
+    #161b22 100%
+  ) !important;
+  background-image: linear-gradient(
+    to bottom,
+    #0d1117 0%,
+    #161b22 100%
+  ) !important;
+  color: #f0f6fc !important;
+  border-bottom: 1px solid #30363d;
+}
+
+body.dark-mode-forced .header-gradient h1,
+body.dark-mode-forced .header-gradient p {
+  color: #f0f6fc !important;
+}
+
+/* Auto + system-dark — same treatment as dark-forced. */
+@media (prefers-color-scheme: dark) {
+  body:not(.dark-mode-forced) .header-gradient {
+    background: linear-gradient(
+      to bottom,
+      #0d1117 0%,
+      #161b22 100%
+    ) !important;
+    background-image: linear-gradient(
+      to bottom,
+      #0d1117 0%,
+      #161b22 100%
+    ) !important;
+    color: #f0f6fc !important;
+    border-bottom: 1px solid #30363d;
+  }
+
+  body:not(.dark-mode-forced) .header-gradient h1,
+  body:not(.dark-mode-forced) .header-gradient p {
+    color: #f0f6fc !important;
+  }
 }
 
 /* Chart container - make it much taller and more prominent */
