@@ -245,7 +245,9 @@ Deno.test("showYahooFinanceError renders attacker-controlled messages as encoded
     }
   }
   if (bodyEnd === -1) {
-    throw new Error("Could not find the closing brace for showYahooFinanceError");
+    throw new Error(
+      "Could not find the closing brace for showYahooFinanceError",
+    );
   }
   const methodBody = src.slice(bodyStart + 1, bodyEnd);
 
@@ -276,7 +278,6 @@ Deno.test("showYahooFinanceError renders attacker-controlled messages as encoded
     showElement: (_: string) => {},
   };
 
-  // deno-lint-ignore no-explicit-any
   const fn = new Function(
     "message",
     "document",

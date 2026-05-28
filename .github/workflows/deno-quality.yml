@@ -1,0 +1,71 @@
+name: Deno Quality
+
+# Issue #62: Deno-native lint, format and type checks for the
+# helpers/ + tests/ Deno code. Third-party actions are pinned to
+# 40-character commit SHAs so a hijacked tag cannot tamper with this
+# repository's CI gates (matches the policy in ci.yml, Issue #14).
+
+on:
+  pull_request:
+    branches: ["*"]
+
+# Issue #40: cancel superseded runs so a force-push or rapid pushes do
+# not leave the previous deno-quality job churning while a new one
+# starts.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Deno Lint, Format and Type Check
+    runs-on: ubuntu-latest
+    # Issue #39: deno lint/fmt/check over helpers/ + tests/*.ts finish
+    # in seconds. 10 leaves headroom for Deno's first-run module fetch
+    # without leaving a wedged runner billing for the 360-minute
+    # GitHub default.
+    timeout-minutes: 10
+    steps:
+      # actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      # denoland/setup-deno@v2
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.x
+
+      - name: deno lint
+        run: deno lint
+
+      - name: deno fmt --check
+        run: deno fmt --check
+
+      # The repo has no mod.ts entry point; helpers/server.ts and the
+      # Deno tests are the typecheckable surface. deno.json's lint/fmt
+      # include lists already scope to these paths.
+      - name: deno check
+        run: deno check helpers/server.ts tests/*.test.ts
+
+      # Run tests with coverage and upload to Codecov (Issue #1636).
+      # The codecov-action is a no-op when no test files are found.
+      # --frozen mirrors quality.sh so URL imports remain integrity
+      # pinned via deno.lock (Issue #57).
+      - name: deno test (with coverage)
+        run: >-
+          deno test --frozen
+          --allow-read --allow-env --allow-net=127.0.0.1
+          --coverage=cov_profile
+          tests/*.test.ts
+
+      - name: deno coverage
+        run: deno coverage cov_profile --lcov --output=coverage.lcov
+
+      # codecov/codecov-action@v4
+      - uses: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238
+        with:
+          files: coverage.lcov
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false

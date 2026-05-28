@@ -128,8 +128,7 @@ Deno.test("validateYahooFinanceResponse rejects HTML markup in meta.shortName / 
   for (const field of ["shortName", "longName"]) {
     const data = goodResponse();
     // deno-lint-ignore no-explicit-any
-    (data.chart.result[0].meta as any)[field] =
-      "<script>alert(1)</script>EVIL";
+    (data.chart.result[0].meta as any)[field] = "<script>alert(1)</script>EVIL";
     const res = validate(data);
     if (res.ok) {
       throw new Error(
@@ -221,10 +220,22 @@ Deno.test("validateYahooFinanceResponse allows null entries in price arrays (Yah
   const data = goodResponse();
   // Yahoo Finance emits null for missing samples; the dashboard already
   // filters these out before plotting, so they must be allowed through.
-  data.chart.result[0].indicators.quote[0].open = [0.5, null] as unknown as number[];
-  data.chart.result[0].indicators.quote[0].high = [0.6, null] as unknown as number[];
-  data.chart.result[0].indicators.quote[0].low = [0.4, null] as unknown as number[];
-  data.chart.result[0].indicators.quote[0].close = [0.55, null] as unknown as number[];
+  data.chart.result[0].indicators.quote[0].open = [
+    0.5,
+    null,
+  ] as unknown as number[];
+  data.chart.result[0].indicators.quote[0].high = [
+    0.6,
+    null,
+  ] as unknown as number[];
+  data.chart.result[0].indicators.quote[0].low = [
+    0.4,
+    null,
+  ] as unknown as number[];
+  data.chart.result[0].indicators.quote[0].close = [
+    0.55,
+    null,
+  ] as unknown as number[];
   const res = validate(data);
   if (!res.ok) {
     throw new Error(
