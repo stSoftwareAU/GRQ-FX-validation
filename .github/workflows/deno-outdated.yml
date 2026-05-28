@@ -1,0 +1,60 @@
+name: Deno Dependency Updates
+
+# Issue #61: weekly Deno dependency refresh. `deno outdated --update
+# --latest` rewrites deno.json + deno.lock against the newest published
+# versions and peter-evans/create-pull-request opens a chore PR for
+# review. Third-party actions are pinned to 40-character commit SHAs so
+# a hijacked tag cannot tamper with this repository's dependency
+# pipeline (matches the policy in ci.yml, Issue #14).
+
+on:
+  schedule:
+    # Monday 06:00 UTC - early in the working week so a maintainer can
+    # triage the resulting PR without weekend backlog.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+# create-pull-request needs contents: write to push the branch and
+# pull-requests: write to open the PR. Scope is restricted to this
+# workflow's job - no other workflow inherits these grants.
+permissions:
+  contents: write
+  pull-requests: write
+
+# Issue #40: cancel superseded runs so a manual workflow_dispatch on top
+# of an in-flight scheduled run does not race two PR openings.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  outdated:
+    name: Update Deno Dependencies
+    runs-on: ubuntu-latest
+    # Issue #39: deno outdated + a single PR open finish in a couple of
+    # minutes. 15 leaves headroom for first-run module fetch without
+    # leaving a wedged runner billing for the 360-minute GitHub default.
+    timeout-minutes: 15
+    steps:
+      # actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      # denoland/setup-deno@v2
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.x
+
+      - name: deno outdated --update --latest
+        run: deno outdated --update --latest
+
+      # peter-evans/create-pull-request@v7
+      # Org-level PAT (Issue #1636); falls back to GITHUB_TOKEN when
+      # the secret is unset. Using the PAT ensures downstream PR
+      # workflows fire on the resulting pull request.
+      - uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676
+        with:
+          token: ${{ secrets.ACTIONS_PUSH || secrets.GITHUB_TOKEN }}
+          commit-message: "chore: update Deno dependencies"
+          title: "chore: update Deno dependencies"
+          branch: chore/deno-outdated
+          body: "Automated Deno dependency update via deno outdated."
