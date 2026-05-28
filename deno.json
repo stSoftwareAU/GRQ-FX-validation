@@ -1,4 +1,18 @@
 {
   "$schema": "https://deno.land/x/deno/cli/schemas/config-file.v1.json",
-  "lock": true
+  "lock": true,
+  "lint": {
+    "include": ["helpers/", "tests/"],
+    "exclude": ["tests/**/*.js", "docs/", "scripts/"],
+    "rules": {
+      "exclude": [
+        "require-await",
+        "no-import-prefix"
+      ]
+    }
+  },
+  "fmt": {
+    "include": ["helpers/", "tests/"],
+    "exclude": ["tests/**/*.js", "docs/", "scripts/"]
+  }
 }

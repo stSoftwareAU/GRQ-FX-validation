@@ -45,7 +45,9 @@ async function loadFetchHandler(): Promise<
   // deno-lint-ignore no-explicit-any
   (ev: any) => void
 > {
-  const src = await Deno.readTextFile(new URL("../docs/sw.js", import.meta.url));
+  const src = await Deno.readTextFile(
+    new URL("../docs/sw.js", import.meta.url),
+  );
 
   // deno-lint-ignore no-explicit-any
   const handlers: Record<string, Array<(ev: any) => void>> = {};
@@ -123,7 +125,9 @@ async function dispatchFetch(
   // The SW closure captures the `caches`, `fetch`, and `location`
   // references it was loaded with, so we re-load it per dispatch with
   // mocks that record the calls we want to observe.
-  const src = await Deno.readTextFile(new URL("../docs/sw.js", import.meta.url));
+  const src = await Deno.readTextFile(
+    new URL("../docs/sw.js", import.meta.url),
+  );
 
   const fetchCalls: FetchCall[] = [];
   const cacheMatchUrls: string[] = [];
