@@ -19,6 +19,44 @@ This project uses an automated version incrementing system similar to the one in
 - `docs/index.js` - Contains VERSION constant and all JavaScript functionality
 - `docs/index.html` - HTML structure with version display
 - `setup-hooks.sh` - Script to install git hooks
+- `helpers/version_check.ts` - Pure logic behind the CI version-bump guard
+- `scripts/check-version-bump.ts` - Fail-only CI wrapper invoked by `ci.yml`
+
+## CI Version-Bump Guard (issue #65)
+
+The pre-commit hook only runs for contributors who have installed it, so an
+app-shell change could otherwise be merged without a version bump — leaving
+the deployed PWA serving stale cached assets. A **fail-only** CI job
+(`version-guard` in `.github/workflows/ci.yml`) closes that gap on every
+pull request.
+
+The guard considers a file part of the **app shell** when it is a root-level
+`docs/` asset that is cache-busted on deploy: `index.html`, `index.js`,
+`sw.js`, `sw-register.js`, `styles.css`, `safe-card.js`,
+`safe-error-banner.js`, `yahoo-validate.js`. Dated daily-data directories
+(`docs/YYYY-MM-DD/…`) and data/config files are excluded.
+
+It enforces two things:
+
+1. **Consistency** — every version reference must agree: the `VERSION`
+   constant in `index.js`, the `?v=` query strings and version span in
+   `index.html`, the `sw.js?v=` string in `sw-register.js`, and all
+   `grq-fx-*` cache names in `sw.js`. Bumping one without the others fails.
+2. **Bump-on-change** — if any app-shell file changed versus the PR base
+   branch, the version must differ from the base. If not, the job prints a
+   clear remediation message and exits non-zero. It never auto-bumps or
+   commits — the developer (or the pre-commit hook) performs the bump.
+
+```mermaid
+flowchart TD
+    A[PR opened/updated] --> B{App-shell file<br/>changed vs base?}
+    B -- No --> P[PASS]
+    B -- Yes --> C{All version refs<br/>mutually consistent?}
+    C -- No --> F[FAIL: inconsistent versions]
+    C -- Yes --> D{Version differs<br/>from base branch?}
+    D -- No --> G[FAIL: bump the version]
+    D -- Yes --> P
+```
 
 ## Usage
 
