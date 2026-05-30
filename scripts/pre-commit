@@ -16,33 +16,31 @@ if git diff --cached --name-only | grep -E "^docs/" > /dev/null; then
     NEW_VERSION="$major.$minor.$NEW_PATCH"
     echo "New version: $NEW_VERSION"
     
-    # Update version in all files (macOS/BSD sed compatible)
+    # Update version in all files (macOS/BSD sed compatible). Issue #65:
+    # every version reference must move in lock-step or the CI version-bump
+    # guard fails, so these patterns are generic — they cover every
+    # cache-bust query string, all three sw.js cache names and the
+    # sw-register.js registration string, not just a hand-picked subset.
     echo "Updating version numbers in all files..."
-    
-    # Update index.js
+
+    # Update index.js - VERSION constant
     sed -i '' "s/const VERSION = \"[^\"]*\"/const VERSION = \"$NEW_VERSION\"/" docs/index.js
-    
-    # Update index.html - CSS link
-    sed -i '' "s/styles\.css?v=[^\"]*/styles.css?v=$NEW_VERSION/" docs/index.html
-    
-    # Update index.html - version display
-    sed -i '' "s/v<span id=\"version\">[^<]*<\/span>/v<span id=\"version\">$NEW_VERSION<\/span>/" docs/index.html
-    
-    # Update index.html - JS link
-    sed -i '' "s/index\.js?v=[^\"]*/index.js?v=$NEW_VERSION/" docs/index.html
 
-    # Update index.html - safe-card JS link (issue #12 XSS hardening)
-    sed -i '' "s/safe-card\.js?v=[^\"]*/safe-card.js?v=$NEW_VERSION/" docs/index.html
+    # Update index.html - every *.js?v= / *.css?v= cache-bust query string
+    sed -i '' -E "s/\.(js|css)\?v=[0-9]+\.[0-9]+\.[0-9]+/.\1?v=$NEW_VERSION/g" docs/index.html
 
-    # Update index.html - service worker registration
-    sed -i '' "s/sw\.js?v=[^\"]*/sw.js?v=$NEW_VERSION/" docs/index.html
-    
-    # Update sw.js - comment and cache names
-    sed -i '' "s/Version [0-9]*\.[0-9]*\.[0-9]*/Version $NEW_VERSION/" docs/sw.js
-    sed -i '' "s/grq-fx-v[0-9]*\.[0-9]*\.[0-9]*/grq-fx-v$NEW_VERSION/g" docs/sw.js
-    
+    # Update index.html - version display span
+    sed -i '' -E "s/(<span id=\"version\">)v?[0-9]+\.[0-9]+\.[0-9]+(<\/span>)/\1$NEW_VERSION\2/" docs/index.html
+
+    # Update sw.js - comment and all grq-fx-* cache names (default/static/dynamic)
+    sed -i '' -E "s/Version [0-9]+\.[0-9]+\.[0-9]+/Version $NEW_VERSION/" docs/sw.js
+    sed -i '' -E "s/(grq-fx-([a-z]+-)?v)[0-9]+\.[0-9]+\.[0-9]+/\1$NEW_VERSION/g" docs/sw.js
+
+    # Update sw-register.js - service worker registration query string
+    sed -i '' -E "s/(sw\.js\?v=)[0-9]+\.[0-9]+\.[0-9]+/\1$NEW_VERSION/g" docs/sw-register.js
+
     # Add all updated files to the commit
-    git add docs/index.js docs/index.html docs/sw.js
-    
-    echo "Version auto-incremented to $NEW_VERSION in all files (index.js, index.html, sw.js)"
+    git add docs/index.js docs/index.html docs/sw.js docs/sw-register.js
+
+    echo "Version auto-incremented to $NEW_VERSION in all files (index.js, index.html, sw.js, sw-register.js)"
 fi 
