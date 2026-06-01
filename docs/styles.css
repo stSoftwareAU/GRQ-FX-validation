@@ -355,9 +355,14 @@ body.dark-mode-forced .header-gradient p {
   color: #f0f6fc !important;
 }
 
-/* Auto + system-dark — same treatment as dark-forced. */
+/* Auto + system-dark — same treatment as dark-forced. The
+ * :not(.light-mode-forced) guard (issue #67) stops this rule from
+ * matching when the user has *forced* light mode while their OS is dark:
+ * without it the rule tied on specificity/!important with the
+ * light-mode-forced block above and, being later in source order, won —
+ * pinning the header dark in light mode. */
 @media (prefers-color-scheme: dark) {
-  body:not(.dark-mode-forced) .header-gradient {
+  body:not(.dark-mode-forced):not(.light-mode-forced) .header-gradient {
     background: linear-gradient(
       to bottom,
       #0d1117 0%,
@@ -372,8 +377,8 @@ body.dark-mode-forced .header-gradient p {
     border-bottom: 1px solid #30363d;
   }
 
-  body:not(.dark-mode-forced) .header-gradient h1,
-  body:not(.dark-mode-forced) .header-gradient p {
+  body:not(.dark-mode-forced):not(.light-mode-forced) .header-gradient h1,
+  body:not(.dark-mode-forced):not(.light-mode-forced) .header-gradient p {
     color: #f0f6fc !important;
   }
 }
@@ -1351,15 +1356,16 @@ body.dark-mode-forced #dark-mode-toggle:hover {
 
 /* Auto + system-dark — same treatment as dark-forced so the toggle
  * stays readable when the system is dark and the user has not forced
- * a theme. */
+ * a theme. The :not(.light-mode-forced) guard (issue #67) keeps this
+ * from overriding the light-forced toggle styling when the OS is dark. */
 @media (prefers-color-scheme: dark) {
-  body:not(.dark-mode-forced) #dark-mode-toggle {
+  body:not(.dark-mode-forced):not(.light-mode-forced) #dark-mode-toggle {
     border: 2px solid rgba(240, 246, 252, 0.7) !important;
     background-color: rgba(0, 0, 0, 0.6) !important;
     color: #f0f6fc !important;
   }
 
-  body:not(.dark-mode-forced) #dark-mode-toggle:hover {
+  body:not(.dark-mode-forced):not(.light-mode-forced) #dark-mode-toggle:hover {
     background-color: rgba(0, 0, 0, 0.8) !important;
     border-color: rgba(240, 246, 252, 1) !important;
   }
