@@ -1,23 +1,31 @@
-// Theme toggle button styling tests (issue #45).
+// Theme toggle button styling tests (issues #45, #70).
 //
 // Issue #44 moved the header banner onto theme-aware CSS overrides.
-// Issue #45 does the same for the toggle button itself: the inline
+// Issue #45 did the same for the toggle button itself: the inline
 // `style=` attribute on `#dark-mode-toggle` and the per-case
 // `.style.backgroundColor` / `.style.color` writes inside
-// `updateDarkMode()` are replaced with CSS classes
-// (`theme-toggle-light`, `theme-toggle-dark`, `theme-toggle-auto`)
-// and theme-aware CSS rules.
+// `updateDarkMode()` were replaced with CSS classes and theme-aware
+// CSS rules.
 //
-// These tests guard the three observable outcomes:
+// Issue #70 rewrites the guards below. They used to grep *source text*
+// (which property `updateDarkMode()` assigns; the exact selector
+// spelling and the `min-width: 40px` literal in `styles.css`). Those
+// HOW-tests dictated the mechanism rather than the outcome: a
+// behaviour-preserving refactor (set the colour a different way, express
+// the same touch target with `width`/`rem`, restructure the cascade)
+// broke them with no rendered regression, while a wrong-colour change
+// using the "approved" mechanism passed. They asserted the wrong thing
+// in both directions.
 //
-//   1. No inline `style=` attribute on `#dark-mode-toggle` in
-//      `docs/index.html`.
-//   2. `updateDarkMode()` in `docs/index.js` does not write
-//      `.style.backgroundColor` or `.style.color` on the toggle
-//      button.
-//   3. `docs/styles.css` ships `#dark-mode-toggle` rules under each
-//      of the three theme-state selectors (light-forced, dark-forced,
-//      auto + system dark).
+// They are now WHAT-tests. Using the shared CSS cascade resolver
+// (`tests/_css_cascade.js`, first written for issue #67) we compute the
+// declaration that actually WINS for the toggle in each theme state and
+// assert the rendered colour / touch-target the user sees. The toggle's
+// colour is driven by the *body* theme class plus the OS colour-scheme;
+// `updateDarkMode()` sets that body class (and a cosmetic
+// `theme-toggle-*` marker), so these computed-outcome assertions describe
+// exactly "the toggle ends up the right colour for the active theme" —
+// independent of how the implementation gets there.
 //
 // Australian English: behaviour, colour, organisation.
 
@@ -25,10 +33,10 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import { bodyWith, parseRules, resolve } from "./_css_cascade.js";
 
 const REPO_ROOT = path.resolve(process.cwd());
 const INDEX_HTML = path.join(REPO_ROOT, "docs", "index.html");
-const INDEX_JS = path.join(REPO_ROOT, "docs", "index.js");
 const STYLES_CSS = path.join(REPO_ROOT, "docs", "styles.css");
 
 function read(file) {
@@ -41,25 +49,26 @@ function extractToggleTag(html) {
   return m ? m[0] : null;
 }
 
-// Extract the body of the first function `name` declared in `src`.
-// Walks braces so nested blocks (e.g. switch / case) are captured.
-function extractFunctionBody(src, name) {
-  const re = new RegExp(`function\\s+${name}\\s*\\([^)]*\\)\\s*\\{`);
-  const m = src.match(re);
-  if (!m) return null;
-  let i = src.indexOf("{", m.index + m[0].length - 1);
-  if (i === -1) return null;
-  const start = i;
-  let depth = 0;
-  for (; i < src.length; i++) {
-    const ch = src[i];
-    if (ch === "{") depth++;
-    else if (ch === "}") {
-      depth--;
-      if (depth === 0) return src.slice(start + 1, i);
-    }
-  }
-  return null;
+const RULES = parseRules(read(STYLES_CSS));
+
+// The toggle element model. `theme-toggle-*` is the cosmetic state marker
+// `updateDarkMode()` adds; the colour cascade keys off the body class, so
+// the marker is supplied for realism but does not change resolution.
+const toggle = (...cls) => ({
+  tag: "button",
+  id: "dark-mode-toggle",
+  classes: new Set(["btn", "btn-outline-light", ...cls]),
+});
+
+// Resolve a property's winning value on the toggle for a theme scenario.
+function toggleStyle(bodyClasses, prefersDark, prop, toggleClasses = []) {
+  return resolve(
+    RULES,
+    toggle(...toggleClasses),
+    bodyWith(...bodyClasses),
+    prefersDark,
+    prop,
+  );
 }
 
 test("index.html: #dark-mode-toggle has no inline style attribute", () => {
@@ -73,84 +82,154 @@ test("index.html: #dark-mode-toggle has no inline style attribute", () => {
   );
 });
 
-test("index.js: updateDarkMode() does not write toggleButton.style.backgroundColor or .style.color", () => {
-  const js = read(INDEX_JS);
-  const body = extractFunctionBody(js, "updateDarkMode");
-  assert.ok(body, "expected to find updateDarkMode() in docs/index.js");
-  assert.doesNotMatch(
-    body,
-    /toggleButton\.style\.backgroundColor/,
-    "updateDarkMode() must not assign toggleButton.style.backgroundColor — use classList instead",
-  );
-  assert.doesNotMatch(
-    body,
-    /toggleButton\.style\.color\b/,
-    "updateDarkMode() must not assign toggleButton.style.color — use classList instead",
-  );
+// --- Rendered colour per theme state (replaces the JS/CSS source greps) ---
+
+test("toggle renders the LIGHT-forced colours (computed cascade)", () => {
+  // OS scheme should not matter once the user forces light (issue #67).
+  for (const prefersDark of [false, true]) {
+    const bg = toggleStyle(
+      ["light-mode-forced"],
+      prefersDark,
+      "background-color",
+      ["theme-toggle-light"],
+    );
+    const fg = toggleStyle(["light-mode-forced"], prefersDark, "color", [
+      "theme-toggle-light",
+    ]);
+    assert.match(
+      bg,
+      /255,\s*255,\s*255/,
+      `light-forced toggle should render a light background (OS dark=${prefersDark}), got: ${bg}`,
+    );
+    assert.equal(
+      fg.toLowerCase(),
+      "#212529",
+      `light-forced toggle text should be dark-on-light (OS dark=${prefersDark}), got: ${fg}`,
+    );
+  }
 });
 
-test("index.js: updateDarkMode() drives the toggle via classList", () => {
-  const js = read(INDEX_JS);
-  const body = extractFunctionBody(js, "updateDarkMode");
-  assert.ok(body, "expected to find updateDarkMode() in docs/index.js");
+test("toggle renders the DARK-forced colours (computed cascade)", () => {
+  for (const prefersDark of [false, true]) {
+    const bg = toggleStyle(
+      ["dark-mode-forced"],
+      prefersDark,
+      "background-color",
+      ["theme-toggle-dark"],
+    );
+    const fg = toggleStyle(["dark-mode-forced"], prefersDark, "color", [
+      "theme-toggle-dark",
+    ]);
+    assert.match(
+      bg,
+      /0,\s*0,\s*0/,
+      `dark-forced toggle should render a dark background (OS dark=${prefersDark}), got: ${bg}`,
+    );
+    assert.equal(
+      fg.toLowerCase(),
+      "#f0f6fc",
+      `dark-forced toggle text should be light-on-dark (OS dark=${prefersDark}), got: ${fg}`,
+    );
+  }
+});
+
+test("toggle renders the AUTO + system-DARK colours (computed cascade)", () => {
+  const bg = toggleStyle([], true, "background-color", ["theme-toggle-auto"]);
+  const fg = toggleStyle([], true, "color", ["theme-toggle-auto"]);
   assert.match(
-    body,
-    /toggleButton\.classList/,
-    "updateDarkMode() must mutate toggleButton.classList for theme-driven colours",
+    bg,
+    /0,\s*0,\s*0/,
+    `auto + system-dark toggle should render a dark background, got: ${bg}`,
+  );
+  assert.equal(
+    fg.toLowerCase(),
+    "#f0f6fc",
+    `auto + system-dark toggle text should be light-on-dark, got: ${fg}`,
   );
 });
 
-test("styles.css: #dark-mode-toggle has a light-mode-forced override", () => {
-  const css = read(STYLES_CSS);
+test("toggle renders the AUTO + system-LIGHT default colours (computed cascade)", () => {
+  const bg = toggleStyle([], false, "background-color", ["theme-toggle-auto"]);
+  const fg = toggleStyle([], false, "color", ["theme-toggle-auto"]);
   assert.match(
-    css,
-    /body\.light-mode-forced\s+#dark-mode-toggle\s*\{/,
-    "expected a `body.light-mode-forced #dark-mode-toggle` rule",
+    bg,
+    /255,\s*255,\s*255/,
+    `auto + system-light toggle should keep the translucent white background, got: ${bg}`,
+  );
+  assert.equal(
+    (fg || "").toLowerCase(),
+    "white",
+    `auto + system-light toggle text should be white, got: ${fg}`,
   );
 });
 
-test("styles.css: #dark-mode-toggle has a dark-mode-forced override", () => {
-  const css = read(STYLES_CSS);
+test("toggle light-forced and dark-forced render different backgrounds", () => {
+  // The states must not collapse onto the same rendered colour — guards
+  // against a cascade change that accidentally ties the two themes.
+  const light = toggleStyle(["light-mode-forced"], false, "background-color");
+  const dark = toggleStyle(["dark-mode-forced"], false, "background-color");
+  assert.notEqual(
+    light,
+    dark,
+    `light- and dark-forced toggles must render different backgrounds (light=${light}, dark=${dark})`,
+  );
+});
+
+// --- Touch target geometry (replaces the min-width/height source grep) ---
+
+// Convert a CSS length to pixels (16px root). Returns NaN for non-length
+// values so the caller can ignore `auto`, percentages, etc.
+function toPx(value) {
+  if (!value) return NaN;
+  const m = value.trim().match(/^(-?\d*\.?\d+)\s*(px|rem|em)?$/i);
+  if (!m) return NaN;
+  const n = parseFloat(m[1]);
+  const unit = (m[2] || "px").toLowerCase();
+  return unit === "px" ? n : n * 16; // rem/em against the 16px default root
+}
+
+// The guaranteed minimum rendered size along an axis: the largest of any
+// fixed lower bound the cascade sets (`min-<axis>` or an explicit
+// `<axis>`), unit-normalised. This is behaviour, not spelling — a refactor
+// to `width: 2.5rem` or `height: 40px` yields the same touch target and
+// still passes, while shrinking the box below 40px fails.
+function effectiveMinPx(bodyClasses, prefersDark, axis) {
+  const bounds = [
+    toPx(toggleStyle(bodyClasses, prefersDark, `min-${axis}`)),
+    toPx(toggleStyle(bodyClasses, prefersDark, axis)),
+  ].filter((n) => !Number.isNaN(n));
+  return bounds.length ? Math.max(...bounds) : NaN;
+}
+
+test("toggle keeps a >= 40px touch target in every theme state", () => {
+  const scenarios = [
+    { label: "auto + system-light", body: [], dark: false },
+    { label: "auto + system-dark", body: [], dark: true },
+    { label: "light-forced", body: ["light-mode-forced"], dark: false },
+    { label: "dark-forced", body: ["dark-mode-forced"], dark: true },
+  ];
+  for (const s of scenarios) {
+    const w = effectiveMinPx(s.body, s.dark, "width");
+    const h = effectiveMinPx(s.body, s.dark, "height");
+    assert.ok(
+      w >= 40,
+      `${s.label}: toggle width must guarantee a >= 40px touch target, got ${w}px`,
+    );
+    assert.ok(
+      h >= 40,
+      `${s.label}: toggle height must guarantee a >= 40px touch target, got ${h}px`,
+    );
+  }
+});
+
+test("toggle stays centred via flex so the icon sits in the touch target", () => {
+  // The centring is what makes the 40x40 box a usable target; assert the
+  // resolved display rather than the source spelling.
+  const display = toggleStyle([], false, "display");
   assert.match(
-    css,
-    /body\.dark-mode-forced\s+#dark-mode-toggle\s*\{/,
-    "expected a `body.dark-mode-forced #dark-mode-toggle` rule",
-  );
-});
-
-test("styles.css: #dark-mode-toggle has an auto + system-dark override via @media", () => {
-  const css = read(STYLES_CSS);
-  // Issue #67 added a `:not(.light-mode-forced)` guard so this rule does not
-  // override the light-forced toggle styling when the OS is dark; allow that
-  // optional extra `:not(…)` qualifier here.
-  const re =
-    /@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)\s*\{[\s\S]*?body:not\(\.dark-mode-forced\)(?::not\([^)]*\))?\s+#dark-mode-toggle\s*\{/;
-  assert.match(
-    css,
-    re,
-    "expected an @media (prefers-color-scheme: dark) override targeting body:not(.dark-mode-forced) #dark-mode-toggle",
-  );
-});
-
-test("styles.css: default #dark-mode-toggle rule keeps the 40x40 touch target", () => {
-  const css = read(STYLES_CSS);
-  // Find the default (un-prefixed) rule and confirm min-width/min-height
-  // remain at least 40px so the touch target sizing is preserved.
-  const re = /(^|\n)#dark-mode-toggle\s*\{([\s\S]*?)\}/;
-  const m = css.match(re);
-  assert.ok(m, "expected a default `#dark-mode-toggle {` rule");
-  const body = m[2];
-  const w = body.match(/min-width\s*:\s*(\d+)px/);
-  const h = body.match(/min-height\s*:\s*(\d+)px/);
-  assert.ok(w, "default #dark-mode-toggle rule should set min-width");
-  assert.ok(h, "default #dark-mode-toggle rule should set min-height");
-  assert.ok(
-    parseInt(w[1], 10) >= 40,
-    `min-width must be >= 40px (touch target), got ${w[1]}`,
-  );
-  assert.ok(
-    parseInt(h[1], 10) >= 40,
-    `min-height must be >= 40px (touch target), got ${h[1]}`,
+    display || "",
+    /flex/,
+    `toggle should resolve to a flex box for icon centring, got: ${display}`,
   );
 });
 
