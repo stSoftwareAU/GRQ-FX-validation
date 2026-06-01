@@ -108,13 +108,18 @@ test("header-gradient: dark-mode-forced overrides h1 and p text colour", () => {
   assert.match(body, /color\s*:/i, "dark h1/p rule must set a colour");
 });
 
+// Issue #67 added a `:not(.light-mode-forced)` guard to the auto+system-dark
+// selectors so they no longer match when the user has forced LIGHT mode.
+// The regexes below allow that optional extra `:not(…)` qualifier.
+const NOT_DARK = String.raw`body:not\(\.dark-mode-forced\)(?::not\([^)]*\))?`;
+
 test("header-gradient: auto+system-dark override exists", () => {
   const src = readStyles();
   // Match an @media (prefers-color-scheme: dark) block that targets
-  // body:not(.dark-mode-forced) .header-gradient. Allow whitespace and
-  // formatting variations.
-  const re =
-    /@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)\s*\{[\s\S]*?body:not\(\.dark-mode-forced\)\s+\.header-gradient\s*\{/;
+  // body:not(.dark-mode-forced)[:not(.light-mode-forced)] .header-gradient.
+  const re = new RegExp(
+    String.raw`@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)\s*\{[\s\S]*?${NOT_DARK}\s+\.header-gradient\s*\{`,
+  );
   assert.match(
     src,
     re,
@@ -124,8 +129,9 @@ test("header-gradient: auto+system-dark override exists", () => {
 
 test("header-gradient: auto+system-dark also overrides h1 and p text colour", () => {
   const src = readStyles();
-  const re =
-    /@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)\s*\{[\s\S]*?body:not\(\.dark-mode-forced\)\s+\.header-gradient\s+h1\s*,\s*body:not\(\.dark-mode-forced\)\s+\.header-gradient\s+p\s*\{/;
+  const re = new RegExp(
+    String.raw`@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)\s*\{[\s\S]*?${NOT_DARK}\s+\.header-gradient\s+h1\s*,\s*${NOT_DARK}\s+\.header-gradient\s+p\s*\{`,
+  );
   assert.match(
     src,
     re,

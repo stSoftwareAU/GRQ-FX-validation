@@ -120,8 +120,11 @@ test("styles.css: #dark-mode-toggle has a dark-mode-forced override", () => {
 
 test("styles.css: #dark-mode-toggle has an auto + system-dark override via @media", () => {
   const css = read(STYLES_CSS);
+  // Issue #67 added a `:not(.light-mode-forced)` guard so this rule does not
+  // override the light-forced toggle styling when the OS is dark; allow that
+  // optional extra `:not(…)` qualifier here.
   const re =
-    /@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)\s*\{[\s\S]*?body:not\(\.dark-mode-forced\)\s+#dark-mode-toggle\s*\{/;
+    /@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)\s*\{[\s\S]*?body:not\(\.dark-mode-forced\)(?::not\([^)]*\))?\s+#dark-mode-toggle\s*\{/;
   assert.match(
     css,
     re,
