@@ -1,18 +1,33 @@
-// Header banner theme-aware tests (issue #44).
+// Header banner theme-aware tests (issues #44, #72).
 //
 // The top `.card-header.header-gradient` previously hard-coded a purple
 // gradient and `color: white !important`, so it stayed purple regardless
 // of the active theme. Issue #44 asks for the header to respond to the
 // three theme states the toggle drives:
 //
-//   * light forced  → body.light-mode-forced
-//   * dark forced   → body.dark-mode-forced
-//   * auto + system dark → @media (prefers-color-scheme: dark)
-//                          body:not(.dark-mode-forced)
+//   * light forced       → body.light-mode-forced
+//   * dark forced         → body.dark-mode-forced
+//   * auto + system dark  → @media (prefers-color-scheme: dark)
+//                           body:not(.dark-mode-forced):not(.light-mode-forced)
 //
-// These tests load docs/styles.css and assert that each of the three
-// states ships a `.header-gradient` override block. They mirror the
-// shape of tests/dark-mode-emoji.test.js.
+// Issue #72 rewrites these guards. They used to read docs/styles.css as a
+// raw string, slice out a selector's declaration block with a regex, and
+// assert only that the block existed and contained the word `background`
+// or a `color:` declaration. Those were HOW-tests: a behaviour-preserving
+// refactor (consolidating selectors, switching to a shared theme class,
+// moving to CSS custom properties) changed the source text and broke every
+// assertion while the header rendered identically — and a rule that merely
+// contained the word `background` but resolved to the wrong colour still
+// passed. They asserted how the stylesheet was spelled, not what colour the
+// user sees.
+//
+// They are now WHAT-tests. Using the shared CSS cascade resolver
+// (`tests/_css_cascade.js`, first written for issue #67) we compute the
+// declaration that actually WINS for the header banner — and its h1/p
+// text — in each theme state, and assert the rendered colour the user
+// sees. The assertions therefore survive any fix strategy (extra :not(),
+// reordering, dropping !important, custom properties) and fail if the
+// header ever resolves to the wrong colour.
 //
 // Australian English: behaviour, colour, organisation.
 
@@ -20,142 +35,129 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import { bodyWith, parseRules, resolve } from "./_css_cascade.js";
 
 const REPO_ROOT = path.resolve(process.cwd());
 const STYLES_CSS = path.join(REPO_ROOT, "docs", "styles.css");
 const INDEX_HTML = path.join(REPO_ROOT, "docs", "index.html");
 
-function readStyles() {
-  return fs.readFileSync(STYLES_CSS, "utf8");
-}
+const RULES = parseRules(fs.readFileSync(STYLES_CSS, "utf8"));
 
-// Find a CSS rule whose selector matches `selectorRe` and return the
-// body of the first matching declaration block. Brace-walks so nested
-// blocks (e.g. inside an @media) are captured correctly.
-function extractBlock(src, selectorRe) {
-  const m = src.match(selectorRe);
-  if (!m) return null;
-  let i = src.indexOf("{", m.index + m[0].length - 1);
-  if (i === -1) return null;
-  let depth = 0;
-  const start = i;
-  for (; i < src.length; i++) {
-    const ch = src[i];
-    if (ch === "{") depth++;
-    else if (ch === "}") {
-      depth--;
-      if (depth === 0) return src.slice(start + 1, i);
-    }
+// The header banner element as it appears in docs/index.html.
+const header = {
+  tag: "div",
+  id: null,
+  classes: new Set(["card-header", "header-gradient", "text-white"]),
+};
+
+// The resolver matches every non-rightmost compound of a descendant
+// selector against a single ancestor model. The h1/p rules are written
+// `body.<theme> .header-gradient h1` (three compounds), so the ancestor
+// must satisfy both `body.<theme>` and `.header-gradient`. We therefore
+// fold the header-gradient class onto the body ancestor for h1/p lookups;
+// this still computes the genuine cascade winner for the text colour.
+function headerAncestor(...cls) {
+  return bodyWith(...cls, "header-gradient");
+}
+const h1 = { tag: "h1", id: null, classes: new Set() };
+const p = { tag: "p", id: null, classes: new Set() };
+
+// Expected per-theme colours, taken from the rendered design (issue #44).
+const LIGHT_BG = /#f8f9fa/i; // soft neutral background
+const LIGHT_TEXT = "#212529"; // dark-on-light text
+const DARK_BG = /#0d1117/i; // deep background
+const DARK_TEXT = "#f0f6fc"; // light-on-dark text
+
+// --- Header banner background --------------------------------------------
+
+test("header background resolves to the light gradient when LIGHT is forced", () => {
+  // OS is dark to prove the *selection* wins over the system preference.
+  const bg = resolve(RULES, header, bodyWith("light-mode-forced"), true, "background");
+  assert.ok(bg, "expected a winning background for the header");
+  assert.match(bg, LIGHT_BG, `light selection should give a light header, got: ${bg}`);
+  assert.doesNotMatch(bg, DARK_BG, `header must not stay dark in light mode, got: ${bg}`);
+});
+
+test("header background resolves to the dark gradient when DARK is forced", () => {
+  // OS is light to prove the selection wins over the system preference.
+  const bg = resolve(RULES, header, bodyWith("dark-mode-forced"), false, "background");
+  assert.ok(bg, "expected a winning background for the header");
+  assert.match(bg, DARK_BG, `dark selection should give a dark header, got: ${bg}`);
+});
+
+test("header background resolves to dark in AUTO mode when the OS is dark", () => {
+  const bg = resolve(RULES, header, bodyWith(), true, "background");
+  assert.match(bg, DARK_BG, `auto + system-dark should be dark, got: ${bg}`);
+});
+
+test("header keeps the brand-purple gradient in AUTO mode when the OS is light", () => {
+  const bg = resolve(RULES, header, bodyWith(), false, "background");
+  assert.ok(bg, "expected a winning background for the header");
+  assert.match(
+    bg,
+    /var\(--primary-color\)/,
+    `auto + system-light must keep the purple identity, got: ${bg}`,
+  );
+  assert.match(
+    bg,
+    /var\(--secondary-color\)/,
+    `auto + system-light must keep the purple identity, got: ${bg}`,
+  );
+});
+
+// --- Header banner text colour -------------------------------------------
+
+test("header text colour resolves dark-on-light when LIGHT is forced", () => {
+  const col = resolve(RULES, header, bodyWith("light-mode-forced"), true, "color");
+  assert.equal(col.toLowerCase(), LIGHT_TEXT, `header text should be dark-on-light, got: ${col}`);
+});
+
+test("header text colour resolves light-on-dark when DARK is forced", () => {
+  const col = resolve(RULES, header, bodyWith("dark-mode-forced"), false, "color");
+  assert.equal(col.toLowerCase(), DARK_TEXT, `header text should be light-on-dark, got: ${col}`);
+});
+
+test("header text colour resolves light-on-dark in AUTO mode when the OS is dark", () => {
+  const col = resolve(RULES, header, bodyWith(), true, "color");
+  assert.equal(col.toLowerCase(), DARK_TEXT, `auto + system-dark text should be light, got: ${col}`);
+});
+
+// --- h1 / p text colour follow the same three states --------------------
+
+test("header h1 and p text follow LIGHT selection (dark-on-light)", () => {
+  for (const el of [h1, p]) {
+    const col = resolve(RULES, el, headerAncestor("light-mode-forced"), true, "color");
+    assert.equal(
+      col.toLowerCase(),
+      LIGHT_TEXT,
+      `${el.tag} should be dark-on-light in light mode, got: ${col}`,
+    );
   }
-  return null;
-}
-
-test("header-gradient: light-mode-forced override exists with theme colours", () => {
-  const src = readStyles();
-  const body = extractBlock(
-    src,
-    /body\.light-mode-forced\s+\.header-gradient\s*\{/,
-  );
-  assert.ok(
-    body,
-    "expected a `body.light-mode-forced .header-gradient` override block",
-  );
-  assert.match(
-    body,
-    /background/i,
-    "light override should set a background",
-  );
-  assert.match(body, /color\s*:/i, "light override should set a text colour");
 });
 
-test("header-gradient: light-mode-forced overrides h1 and p text colour", () => {
-  const src = readStyles();
-  const body = extractBlock(
-    src,
-    /body\.light-mode-forced\s+\.header-gradient\s+h1\s*,\s*body\.light-mode-forced\s+\.header-gradient\s+p\s*\{/,
-  );
-  assert.ok(
-    body,
-    "expected light-mode `.header-gradient h1, .header-gradient p` rule",
-  );
-  assert.match(body, /color\s*:/i, "light h1/p rule must set a colour");
+test("header h1 and p text follow DARK selection (light-on-dark)", () => {
+  for (const el of [h1, p]) {
+    const col = resolve(RULES, el, headerAncestor("dark-mode-forced"), false, "color");
+    assert.equal(
+      col.toLowerCase(),
+      DARK_TEXT,
+      `${el.tag} should be light-on-dark in dark mode, got: ${col}`,
+    );
+  }
 });
 
-test("header-gradient: dark-mode-forced override exists with theme colours", () => {
-  const src = readStyles();
-  const body = extractBlock(
-    src,
-    /body\.dark-mode-forced\s+\.header-gradient\s*\{/,
-  );
-  assert.ok(
-    body,
-    "expected a `body.dark-mode-forced .header-gradient` override block",
-  );
-  assert.match(body, /background/i, "dark override should set a background");
-  assert.match(body, /color\s*:/i, "dark override should set a text colour");
+test("header h1 and p text are light-on-dark in AUTO mode when the OS is dark", () => {
+  for (const el of [h1, p]) {
+    const col = resolve(RULES, el, headerAncestor(), true, "color");
+    assert.equal(
+      col.toLowerCase(),
+      DARK_TEXT,
+      `${el.tag} should be light-on-dark for auto + system-dark, got: ${col}`,
+    );
+  }
 });
 
-test("header-gradient: dark-mode-forced overrides h1 and p text colour", () => {
-  const src = readStyles();
-  const body = extractBlock(
-    src,
-    /body\.dark-mode-forced\s+\.header-gradient\s+h1\s*,\s*body\.dark-mode-forced\s+\.header-gradient\s+p\s*\{/,
-  );
-  assert.ok(
-    body,
-    "expected dark-mode `.header-gradient h1, .header-gradient p` rule",
-  );
-  assert.match(body, /color\s*:/i, "dark h1/p rule must set a colour");
-});
-
-// Issue #67 added a `:not(.light-mode-forced)` guard to the auto+system-dark
-// selectors so they no longer match when the user has forced LIGHT mode.
-// The regexes below allow that optional extra `:not(…)` qualifier.
-const NOT_DARK = String.raw`body:not\(\.dark-mode-forced\)(?::not\([^)]*\))?`;
-
-test("header-gradient: auto+system-dark override exists", () => {
-  const src = readStyles();
-  // Match an @media (prefers-color-scheme: dark) block that targets
-  // body:not(.dark-mode-forced)[:not(.light-mode-forced)] .header-gradient.
-  const re = new RegExp(
-    String.raw`@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)\s*\{[\s\S]*?${NOT_DARK}\s+\.header-gradient\s*\{`,
-  );
-  assert.match(
-    src,
-    re,
-    "expected an @media (prefers-color-scheme: dark) override targeting body:not(.dark-mode-forced) .header-gradient",
-  );
-});
-
-test("header-gradient: auto+system-dark also overrides h1 and p text colour", () => {
-  const src = readStyles();
-  const re = new RegExp(
-    String.raw`@media\s*\(\s*prefers-color-scheme\s*:\s*dark\s*\)\s*\{[\s\S]*?${NOT_DARK}\s+\.header-gradient\s+h1\s*,\s*${NOT_DARK}\s+\.header-gradient\s+p\s*\{`,
-  );
-  assert.match(
-    src,
-    re,
-    "expected auto+system-dark override for `.header-gradient h1, .header-gradient p`",
-  );
-});
-
-test("header-gradient: default rule keeps the purple identity for auto-light", () => {
-  const src = readStyles();
-  // The default `.header-gradient {` block must still reference the
-  // primary/secondary colour vars so auto-light keeps its purple look.
-  const body = extractBlock(src, /^\.header-gradient\s*\{/m);
-  assert.ok(body, "expected a default `.header-gradient` block");
-  assert.match(
-    body,
-    /--primary-color/,
-    "default header-gradient must keep its primary-colour gradient stop",
-  );
-  assert.match(
-    body,
-    /--secondary-color/,
-    "default header-gradient must keep its secondary-colour gradient stop",
-  );
-});
+// --- Cache-busting query (unchanged from issue #44) ----------------------
 
 test("index.html bumps the styles.css cache-busting query", () => {
   const html = fs.readFileSync(INDEX_HTML, "utf8");
