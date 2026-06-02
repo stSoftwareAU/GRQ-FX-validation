@@ -5,7 +5,7 @@
 `tests/theme-toggle-styling.test.js` guarded the dark-mode toggle by
 grepping **source text** (anti-pattern #2): which property
 `updateDarkMode()` assigns (`assert.doesNotMatch(body, /…style.backgroundColor/)`
-+ `assert.match(body, /classList/)`), the exact CSS selector spelling for
+plus `assert.match(body, /classList/)`), the exact CSS selector spelling for
 each theme override, and the `min-width`/`min-height: 40px` literals.
 Those HOW-tests dictated the *mechanism*, not the *outcome*: a
 behaviour-preserving refactor (set the colour another way, express the
