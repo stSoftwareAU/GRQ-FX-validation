@@ -430,13 +430,105 @@ Deno.test("docs/index.html loads yahoo-validate.js before index.js", async () =>
   }
 });
 
-Deno.test("docs/sw.js caches yahoo-validate.js as a static asset", async () => {
-  const sw = await Deno.readTextFile(
+// Issue #73: this guard previously grep'd docs/sw.js for the quoted
+// literal `"./yahoo-validate.js"` — a HOW-test (anti-pattern #2) that
+// passes if the string appears anywhere (a comment, a console.log) and
+// breaks on benign refactors of how STATIC_ASSETS is built, without ever
+// exercising the offline guarantee. Rewritten to load sw.js into a mocked
+// Service Worker scope, dispatch the real `install` event with a stubbed
+// Cache API, and assert that an entry handed to cache.addAll resolves to
+// yahoo-validate.js — so the validator is genuinely cached for offline use.
+Deno.test("docs/sw.js install handler pre-caches yahoo-validate.js for offline use", async () => {
+  const src = await Deno.readTextFile(
     new URL("../docs/sw.js", import.meta.url),
   );
-  if (!/["']\.\/yahoo-validate\.js["']/.test(sw)) {
+  const SCOPE_BASE = "https://example.test/app/sw.js";
+
+  // deno-lint-ignore no-explicit-any
+  const handlers: Record<string, Array<(ev: any) => void>> = {};
+  const addAllCalls: string[][] = [];
+
+  const fakeCache = {
+    addAll: async (assets: string[]) => {
+      addAllCalls.push(assets);
+    },
+    put: async () => {},
+    match: async () => undefined,
+    keys: async () => [],
+  };
+  const fakeCaches = {
+    open: async () => fakeCache,
+    keys: async () => [],
+    match: async () => undefined,
+    delete: async () => true,
+  };
+  const fakeSelf = {
+    // deno-lint-ignore no-explicit-any
+    addEventListener: (type: string, fn: (ev: any) => void) => {
+      (handlers[type] ||= []).push(fn);
+    },
+    skipWaiting: () => Promise.resolve(),
+    clients: { claim: () => Promise.resolve(), matchAll: async () => [] },
+    registration: { showNotification: () => Promise.resolve() },
+  };
+  const fakeLocation = { origin: "https://example.test" };
+  const fakeConsole = { log: () => {}, warn: () => {}, error: () => {} };
+
+  const factory = new Function(
+    "self",
+    "caches",
+    "fetch",
+    "location",
+    "console",
+    "Request",
+    "Response",
+    "Headers",
+    "URL",
+    src,
+  );
+  factory(
+    fakeSelf,
+    fakeCaches,
+    () => Promise.resolve(new Response("")),
+    fakeLocation,
+    fakeConsole,
+    Request,
+    Response,
+    Headers,
+    URL,
+  );
+
+  const installHandlers = handlers["install"] ?? [];
+  if (installHandlers.length === 0) {
+    throw new Error("sw.js must register an install event listener");
+  }
+
+  const waited: Array<Promise<unknown>> = [];
+  const event = {
+    waitUntil: (p: Promise<unknown>) => {
+      waited.push(Promise.resolve(p));
+    },
+  };
+  for (const fn of installHandlers) fn(event);
+  await Promise.all(waited);
+
+  // Resolve each cached entry against the SW scope so the assertion is
+  // about the asset the entry points at, not the literal source string.
+  const cachedPaths = addAllCalls
+    .flat()
+    .map((entry) => new URL(entry, SCOPE_BASE).pathname);
+
+  if (cachedPaths.length === 0) {
     throw new Error(
-      "sw.js STATIC_ASSETS must include './yahoo-validate.js' so the validator is available offline",
+      "install handler must pass assets to cache.addAll so they are available offline",
+    );
+  }
+  if (!cachedPaths.some((p) => p.endsWith("/yahoo-validate.js"))) {
+    throw new Error(
+      "install handler must cache an entry resolving to yahoo-validate.js " +
+        `so the validator is available offline; cached: ${
+          cachedPaths.join(", ")
+        }`,
     );
   }
 });
