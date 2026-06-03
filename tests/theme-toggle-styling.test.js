@@ -148,18 +148,23 @@ test("toggle renders the AUTO + system-DARK colours (computed cascade)", () => {
   );
 });
 
-test("toggle renders the AUTO + system-LIGHT default colours (computed cascade)", () => {
+test("toggle renders the AUTO + system-LIGHT colours (computed cascade)", () => {
+  // Issue #96 (business-logic change): auto follows the OS, so when the
+  // system is light the toggle mirrors the light-forced colours
+  // (dark-on-light) rather than keeping the translucent-white-on-purple
+  // default that matched neither theme. Supersedes the issue-#45
+  // "auto + system-light keeps the translucent white" assertion.
   const bg = toggleStyle([], false, "background-color", ["theme-toggle-auto"]);
   const fg = toggleStyle([], false, "color", ["theme-toggle-auto"]);
   assert.match(
     bg,
     /255,\s*255,\s*255/,
-    `auto + system-light toggle should keep the translucent white background, got: ${bg}`,
+    `auto + system-light toggle should render a light background, got: ${bg}`,
   );
   assert.equal(
     (fg || "").toLowerCase(),
-    "white",
-    `auto + system-light toggle text should be white, got: ${fg}`,
+    "#212529",
+    `auto + system-light toggle text should be dark-on-light, got: ${fg}`,
   );
 });
 

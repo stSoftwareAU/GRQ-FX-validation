@@ -83,9 +83,14 @@ test("header is dark in AUTO mode when the OS is dark", () => {
   assert.match(bg, /#0d1117/i, `auto + system-dark should be dark, got: ${bg}`);
 });
 
-test("header keeps the brand purple in AUTO mode when the OS is light", () => {
+test("header is light in AUTO mode when the OS is light", () => {
+  // Issue #96 (business-logic change): auto follows the OS, so when the
+  // system is light the header mirrors the light theme instead of keeping
+  // a unique brand-purple look. Supersedes the issue-#44 "auto keeps the
+  // purple identity" assertion.
   const bg = resolve(RULES, header, bodyWith(), false, "background");
-  assert.match(bg, /--primary-color/, `auto + system-light should keep the purple identity, got: ${bg}`);
+  assert.match(bg, /#f8f9fa/i, `auto + system-light should be light, got: ${bg}`);
+  assert.doesNotMatch(bg, /--primary-color|--secondary-color/, `auto + system-light must not keep the purple identity, got: ${bg}`);
 });
 
 test("header is light in LIGHT mode when the OS is also light", () => {

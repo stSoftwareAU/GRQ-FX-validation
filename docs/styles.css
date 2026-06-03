@@ -307,11 +307,15 @@ html, body {
  *
  * The header banner used to hard-code a purple gradient and white text
  * with !important, so it stayed purple regardless of the active theme.
- * The three blocks below let the toggle (auto / light / dark) drive the
- * header colour in step with the rest of the page.
+ * The blocks below let the toggle (auto / light / dark) drive the header
+ * colour in step with the rest of the page.
  *
- * Auto + system-light is intentionally left to the default rule above so
- * the brand purple is preserved when no theme is forced. */
+ * Auto follows the OS (issue #96): the @media (prefers-color-scheme: dark)
+ * and @media (prefers-color-scheme: light) blocks below mirror the
+ * dark-forced and light-forced headers respectively, so auto no longer
+ * renders the brand purple as a third look that matched neither theme. The
+ * brand-purple base `.header-gradient` rule now only shows in legacy
+ * browsers that report no colour-scheme preference at all. */
 
 /* Light forced — soft neutral background with dark text. */
 body.light-mode-forced .header-gradient {
@@ -380,6 +384,37 @@ body.dark-mode-forced .header-gradient p {
   body:not(.dark-mode-forced):not(.light-mode-forced) .header-gradient h1,
   body:not(.dark-mode-forced):not(.light-mode-forced) .header-gradient p {
     color: #f0f6fc !important;
+  }
+}
+
+/* Auto + system-light — mirror the light-forced header (issue #96).
+ *
+ * The base `.header-gradient` rule keeps the brand-purple identity, which
+ * made "auto" render a third look that matched neither the light nor the
+ * dark theme. Auto is meant to follow the OS, so when the system is light
+ * and no theme is forced the header now takes the same soft-neutral
+ * gradient and dark text as body.light-mode-forced. The
+ * :not(.light-mode-forced):not(.dark-mode-forced) guard keeps this from
+ * touching either forced state (mirrors the auto + system-dark block). */
+@media (prefers-color-scheme: light) {
+  body:not(.dark-mode-forced):not(.light-mode-forced) .header-gradient {
+    background: linear-gradient(
+      to bottom,
+      #f8f9fa 0%,
+      #e9ecef 100%
+    ) !important;
+    background-image: linear-gradient(
+      to bottom,
+      #f8f9fa 0%,
+      #e9ecef 100%
+    ) !important;
+    color: #212529 !important;
+    border-bottom: 1px solid #dee2e6;
+  }
+
+  body:not(.dark-mode-forced):not(.light-mode-forced) .header-gradient h1,
+  body:not(.dark-mode-forced):not(.light-mode-forced) .header-gradient p {
+    color: #212529 !important;
   }
 }
 
@@ -1368,6 +1403,23 @@ body.dark-mode-forced #dark-mode-toggle:hover {
   body:not(.dark-mode-forced):not(.light-mode-forced) #dark-mode-toggle:hover {
     background-color: rgba(0, 0, 0, 0.8) !important;
     border-color: rgba(240, 246, 252, 1) !important;
+  }
+}
+
+/* Auto + system-light — mirror the light-forced toggle (issue #96) so the
+ * toggle follows the OS instead of keeping the translucent-white-on-purple
+ * default. Same dark-on-light treatment as body.light-mode-forced; the
+ * :not() guards keep it off both forced states. */
+@media (prefers-color-scheme: light) {
+  body:not(.dark-mode-forced):not(.light-mode-forced) #dark-mode-toggle {
+    border: 2px solid rgba(33, 37, 41, 0.6) !important;
+    background-color: rgba(255, 255, 255, 0.9) !important;
+    color: #212529 !important;
+  }
+
+  body:not(.dark-mode-forced):not(.light-mode-forced) #dark-mode-toggle:hover {
+    background-color: rgba(255, 255, 255, 1) !important;
+    border-color: rgba(33, 37, 41, 0.9) !important;
   }
 }
 
