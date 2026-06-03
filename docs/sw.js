@@ -1,15 +1,16 @@
 // Service Worker for GRQ FX Validation Dashboard
-// Version 1.0.107 - Correct pathname matching for data files (CSV + predictions.json)
+// Version 1.0.108 - Correct pathname matching for data files (CSV + predictions.json)
 
-const CACHE_NAME = "grq-fx-v1.0.107";
-const STATIC_CACHE_NAME = "grq-fx-static-v1.0.107";
-const DYNAMIC_CACHE_NAME = "grq-fx-dynamic-v1.0.107";
+const CACHE_NAME = "grq-fx-v1.0.108";
+const STATIC_CACHE_NAME = "grq-fx-static-v1.0.108";
+const DYNAMIC_CACHE_NAME = "grq-fx-dynamic-v1.0.108";
 
 // Files to cache immediately (static assets)
 const STATIC_ASSETS = [
   "./",
   "./index.html",
   "./index.js",
+  "./safe-html.js",
   "./safe-card.js",
   "./safe-error-banner.js",
   "./yahoo-validate.js",
