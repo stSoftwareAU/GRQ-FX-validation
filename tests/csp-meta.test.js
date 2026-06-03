@@ -229,18 +229,130 @@ test("docs/sw-register.js exists and is referenced from index.html", () => {
   );
 });
 
-test("docs/sw.js caches sw-register.js and safe-error-banner.js", () => {
-  const sw = fs.readFileSync(SW_JS, "utf8");
-  assert.ok(
-    /["']\.\/sw-register\.js["']/.test(sw),
-    "sw.js STATIC_ASSETS must include './sw-register.js' so the registrar is available offline",
+// Issue #73: the previous guard read docs/sw.js as text and grep'd for
+// quoted filename literals (`/["']\.\/sw-register\.js["']/`). That is a
+// HOW-test — anti-pattern #2 — that asserts a string appears *somewhere*
+// in source: a comment, a console.log, or a NETWORK_FIRST entry would
+// satisfy it, while building STATIC_ASSETS from a manifest, spreading a
+// constant, or computing the path would break it with no behavioural
+// change. The offline guarantee (WHAT — the asset is actually cached on
+// install) was never exercised.
+//
+// Rewritten to load sw.js into a mocked Service Worker scope, dispatch
+// the real `install` event with a stubbed Cache API, and assert that the
+// entries handed to `cache.addAll` resolve to each required asset. This
+// exercises the offline-availability guarantee itself and survives any
+// refactor of how STATIC_ASSETS is constructed.
+
+// Load docs/sw.js inside an isolated worker scope, dispatch its `install`
+// handler, and return every (cacheName, asset URL) pair passed to
+// `cache.addAll`. Mirrors the harness in tests/sw-pathname-guards.test.ts.
+async function dispatchInstall() {
+  const src = fs.readFileSync(SW_JS, "utf8");
+  const SCOPE_BASE = "https://example.test/app/sw.js";
+
+  const handlers = {};
+  const addAllCalls = [];
+
+  const fakeCache = {
+    addAll: async (assets) => {
+      addAllCalls.push(assets);
+    },
+    put: async () => {},
+    match: async () => undefined,
+    keys: async () => [],
+  };
+  const fakeCaches = {
+    open: async () => fakeCache,
+    keys: async () => [],
+    match: async () => undefined,
+    delete: async () => true,
+  };
+  const fakeSelf = {
+    addEventListener: (type, fn) => {
+      (handlers[type] ||= []).push(fn);
+    },
+    skipWaiting: () => Promise.resolve(),
+    clients: { claim: () => Promise.resolve(), matchAll: async () => [] },
+    registration: { showNotification: () => Promise.resolve() },
+  };
+  const fakeLocation = { origin: "https://example.test" };
+  const fakeConsole = { log: () => {}, warn: () => {}, error: () => {} };
+
+  const factory = new Function(
+    "self",
+    "caches",
+    "fetch",
+    "location",
+    "console",
+    "Request",
+    "Response",
+    "Headers",
+    "URL",
+    src,
   );
-  assert.ok(
-    /["']\.\/safe-error-banner\.js["']/.test(sw),
-    "sw.js STATIC_ASSETS must include './safe-error-banner.js' (defence-in-depth helper from issue #21)",
+  factory(
+    fakeSelf,
+    fakeCaches,
+    () => Promise.resolve(new Response("")),
+    fakeLocation,
+    fakeConsole,
+    Request,
+    Response,
+    Headers,
+    URL,
   );
+
+  const installHandlers = handlers["install"] ?? [];
   assert.ok(
-    /["']\.\/yahoo-validate\.js["']/.test(sw),
-    "sw.js STATIC_ASSETS must include './yahoo-validate.js' (Yahoo Finance response validator from issue #24)",
+    installHandlers.length > 0,
+    "sw.js must register an install event listener",
   );
+
+  const waited = [];
+  const event = {
+    waitUntil: (p) => {
+      waited.push(Promise.resolve(p));
+    },
+  };
+  for (const fn of installHandlers) fn(event);
+  await Promise.all(waited);
+
+  // Resolve every cached entry against the SW scope so the assertion is
+  // about the asset each entry *points at*, not the literal source string.
+  const cachedPaths = addAllCalls
+    .flat()
+    .map((entry) => new URL(entry, SCOPE_BASE).pathname);
+  return cachedPaths;
+}
+
+test("docs/sw.js install handler pre-caches the offline helper assets", async () => {
+  const cachedPaths = await dispatchInstall();
+  assert.ok(
+    cachedPaths.length > 0,
+    "install handler must pass assets to cache.addAll so they are available offline",
+  );
+
+  const required = [
+    {
+      name: "sw-register.js",
+      why: "the service worker registrar must be available offline",
+    },
+    {
+      name: "safe-error-banner.js",
+      why: "defence-in-depth helper from issue #21",
+    },
+    {
+      name: "yahoo-validate.js",
+      why: "Yahoo Finance response validator from issue #24",
+    },
+  ];
+
+  for (const { name, why } of required) {
+    assert.ok(
+      cachedPaths.some((p) => p.endsWith(`/${name}`)),
+      `install handler must cache an entry resolving to ${name} (${why}); ` +
+        `cached: ${cachedPaths.join(", ")}`,
+    );
+  }
 });
