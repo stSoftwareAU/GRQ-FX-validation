@@ -9,7 +9,8 @@ This project follows JAMstack principles and ships as a static site that runs
 entirely in the browser — no build step, no server-side code.
 
 - **JavaScript**: Client-side modules (`docs/index.js`, `docs/safe-card.js`,
-  `docs/safe-error-banner.js`, `docs/yahoo-validate.js`) drive the dashboard.
+  `docs/safe-error-banner.js`, `docs/safe-html.js`, `docs/yahoo-validate.js`)
+  drive the dashboard.
 - **APIs**: Static JSON files (`docs/index.json`, `docs/<date>/predictions.json`)
   are served as the data API. Yahoo Finance is consulted at runtime via a
   small allowlist of public CORS proxies.
@@ -48,7 +49,10 @@ flowchart LR
 - **Hardened Front-End**: Content-Security-Policy meta tag, Subresource
   Integrity (SRI) pins on all CDN scripts, and Yahoo-response schema
   validation defend against XSS and malicious proxy injection (issues #13,
-  #23, #24).
+  #23, #24). Untrusted `predictions.json` values are rendered via
+  `textContent` builders or contextually HTML-encoded with
+  `docs/safe-html.js` before reaching any `innerHTML` sink (issues #12, #21,
+  #86).
 - **Responsive Design**: Works on desktop and mobile devices.
 
 ## Time Horizons

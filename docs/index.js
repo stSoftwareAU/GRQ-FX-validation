@@ -1,5 +1,5 @@
 // Version constant - this will be updated by the git hook
-const VERSION = "1.0.107";
+const VERSION = "1.0.108";
 
 // Set page title with version
 document.title = `GRQ FX Validation Dashboard v${VERSION}`;
@@ -2225,7 +2225,9 @@ class GRQFXValidator {
         <div class="alert alert-warning">
           <small>
             <i class="fas fa-exclamation-triangle me-1"></i>
-            Could not load full CSV data for validation: ${error.message}
+            Could not load full CSV data for validation: ${
+        escapeHtml(error.message)
+      }
           </small>
         </div>
       `;
