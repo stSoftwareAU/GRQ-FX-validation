@@ -31,3 +31,10 @@ target
 *.json.bak
 *.json.orig
 *.json.tmp
+
+# Transient worker runtime-state files (issue #89) — per-run heartbeat
+# timestamps, comment-refresh markers, and leftover PR-response drafts.
+# Generated state, not source; must never be committed.
+.heartbeat_*
+.heartbeat-marker_*
+.pr_response_message
