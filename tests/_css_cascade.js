@@ -26,7 +26,8 @@ function stripComments(s) {
 
 // Flatten the stylesheet into a list of style rules, each tagged with the
 // stack of at-rule contexts it lives inside ('dark' for
-// prefers-color-scheme: dark, 'other' for anything else).
+// prefers-color-scheme: dark, 'light' for prefers-color-scheme: light,
+// 'other' for anything else).
 export function parseRules(css) {
   css = stripComments(css);
   const rules = [];
@@ -47,6 +48,11 @@ export function parseRules(css) {
           /prefers-color-scheme\s*:\s*dark/i.test(prelude)
         ) {
           kind = "dark";
+        } else if (
+          /^@media/i.test(prelude) &&
+          /prefers-color-scheme\s*:\s*light/i.test(prelude)
+        ) {
+          kind = "light";
         }
         stack.push(kind);
         i++;
@@ -90,6 +96,7 @@ function mediaMatches(stack, prefersDark) {
   for (const frame of stack) {
     if (frame === "other") return false;
     if (frame === "dark" && !prefersDark) return false;
+    if (frame === "light" && prefersDark) return false;
   }
   return true;
 }
