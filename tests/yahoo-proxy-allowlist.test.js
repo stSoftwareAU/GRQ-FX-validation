@@ -1,13 +1,28 @@
-// Regression tests for the Yahoo Finance proxy allowlist (issue #24).
+// Regression tests for the Yahoo Finance proxy allowlist (issues #24, #74).
 //
 // Australian English: the dashboard fans Yahoo Finance requests out through
-// a hard-coded list of third-party CORS proxies. The abandoned
+// a list of third-party CORS proxies. The abandoned
 // `thingproxy.freeboard.io` proxy must not appear in that list — its source
 // project has been unmaintained since 2015 and a domain takeover would
 // allow an attacker to inject arbitrary JSON into every dashboard visit.
 //
 // The CSP `connect-src` directive must also be kept in sync so the
 // browser does not re-enable the dropped origin.
+//
+// Issue #74 rewrites the proxy-list checks. They used to regex the literal
+// `this.proxies = [ … ]` array out of docs/index.js *source text* and assert
+// on the extracted strings. Those HOW-tests broke on any behaviour-preserving
+// refactor (building the list from config/env, spreading a shared constant,
+// renaming `proxies`, changing quote style) even though the resolved proxy
+// set was unchanged, and the count check conflated "inline string literals in
+// source" with "operational proxies".
+//
+// They are now WHAT-tests. Following the repo's existing pattern
+// (tests/dark-mode-emoji.test.js) we load the real YahooFinanceAPI class out
+// of docs/index.js, instantiate it, and observe its behaviour: the resolved
+// proxy list and — with `fetch` stubbed — the request URLs it actually issues.
+// This survives any reimplementation of how the list is constructed and fails
+// only on a real regression that re-enables the abandoned proxy.
 //
 // Date: 22-May-2026
 
@@ -20,6 +35,9 @@ const REPO_ROOT = path.resolve(process.cwd());
 const INDEX_JS = path.join(REPO_ROOT, "docs", "index.js");
 const INDEX_HTML = path.join(REPO_ROOT, "docs", "index.html");
 
+const BANNED_PROXY_HOST = "thingproxy.freeboard.io";
+const bannedHostRe = new RegExp(BANNED_PROXY_HOST.replace(/\./g, "\\."), "i");
+
 function readIndexJs() {
   return fs.readFileSync(INDEX_JS, "utf8");
 }
@@ -28,44 +46,113 @@ function readIndexHtml() {
   return fs.readFileSync(INDEX_HTML, "utf8");
 }
 
-// Pull the `this.proxies = [ ... ]` literal out of the YahooFinanceAPI
-// constructor and return it as an array of strings.
-function extractProxiesArray(js) {
-  const m = js.match(/this\.proxies\s*=\s*\[([\s\S]*?)\]/);
-  if (!m) return null;
-  const body = m[1];
-  return Array.from(body.matchAll(/["']([^"']+)["']/g)).map((x) => x[1]);
+// Extract the full `class YahooFinanceAPI { … }` declaration from the source
+// so it can be instantiated in isolation. Brace-walks from the class header's
+// first `{` to its matching `}`. This is harness code that LOCATES the
+// production class to run — the assertions below are on the instantiated
+// object's behaviour, not on this text.
+function extractYahooFinanceAPIClass(src) {
+  const start = src.indexOf("class YahooFinanceAPI");
+  assert.notEqual(start, -1, "YahooFinanceAPI class not found in docs/index.js");
+  let i = src.indexOf("{", start);
+  assert.notEqual(i, -1, "YahooFinanceAPI opening brace not found");
+  let depth = 0;
+  for (; i < src.length; i++) {
+    const ch = src[i];
+    if (ch === "{") depth++;
+    else if (ch === "}") {
+      depth--;
+      if (depth === 0) return src.slice(start, i + 1);
+    }
+  }
+  throw new Error("YahooFinanceAPI closing brace not found");
 }
 
-test("YahooFinanceAPI proxies list omits the abandoned thingproxy.freeboard.io", () => {
-  const proxies = extractProxiesArray(readIndexJs());
-  assert.ok(proxies, "Expected to find the YahooFinanceAPI.proxies array");
-  for (const url of proxies) {
+// Build a runnable copy of the production YahooFinanceAPI class, injecting a
+// `fetch` and `console` stub so request behaviour can be observed without
+// touching the network. Executes the REAL source — not a regex over it.
+function loadYahooFinanceAPI({ fetch, console: consoleStub } = {}) {
+  const classText = extractYahooFinanceAPIClass(readIndexJs());
+  const factory = new Function(
+    "fetch",
+    "console",
+    `${classText}\nreturn YahooFinanceAPI;`,
+  );
+  const noopConsole = { log() {}, warn() {}, error() {}, info() {} };
+  return factory(fetch, consoleStub ?? noopConsole);
+}
+
+test("YahooFinanceAPI resolved proxy list omits the abandoned thingproxy.freeboard.io", () => {
+  const YahooFinanceAPI = loadYahooFinanceAPI();
+  const api = new YahooFinanceAPI();
+  assert.ok(
+    Array.isArray(api.proxies),
+    "Expected the instantiated YahooFinanceAPI to expose a proxies array",
+  );
+  for (const url of api.proxies) {
     assert.ok(
-      !/thingproxy\.freeboard\.io/i.test(url),
-      `proxy list must not contain thingproxy.freeboard.io — got: ${url}`,
+      !bannedHostRe.test(url),
+      `resolved proxy list must not contain ${BANNED_PROXY_HOST} — got: ${url}`,
     );
   }
 });
 
-test("YahooFinanceAPI proxies list keeps at least one operational proxy", () => {
-  const proxies = extractProxiesArray(readIndexJs());
-  assert.ok(proxies && proxies.length >= 1, "Expected at least one proxy URL");
-  // We deliberately keep allorigins + corsproxy as the two maintained options.
-  // Asserting >=1 lets a future operator collapse to a self-hosted proxy
-  // without forcing this test to be rewritten in lock-step.
+test("YahooFinanceAPI keeps at least one operational proxy", () => {
+  const YahooFinanceAPI = loadYahooFinanceAPI();
+  const api = new YahooFinanceAPI();
+  assert.ok(
+    Array.isArray(api.proxies) && api.proxies.length >= 1,
+    "Expected the instantiated YahooFinanceAPI to resolve at least one proxy",
+  );
 });
 
-test("docs/index.js contains no surviving thingproxy.freeboard.io fetch references", () => {
-  // The proxy array body must not mention thingproxy; a comment elsewhere
-  // in the file documenting why it was removed is allowed (and helpful).
-  const proxies = extractProxiesArray(readIndexJs());
-  assert.ok(proxies, "Expected to find the YahooFinanceAPI.proxies array");
-  const joined = proxies.join("\n");
+test("YahooFinanceAPI never issues a request to thingproxy.freeboard.io", async () => {
+  // Stub fetch to record every request URL and reject so the method fans out
+  // through all configured proxies. We assert on the URLs the unit actually
+  // *requests* — the observable outcome — not on how the list was built.
+  const requested = [];
+  const fetchStub = (url) => {
+    requested.push(String(url));
+    return Promise.reject(new Error("network disabled in test"));
+  };
+  const YahooFinanceAPI = loadYahooFinanceAPI({ fetch: fetchStub });
+  const api = new YahooFinanceAPI();
+
+  // validateFXPair() loops over the configured proxies, calling fetch() once
+  // per proxy with `proxy + encodeURIComponent(yahooUrl)`.
+  const result = await api.validateFXPair("AUDUSD");
+  assert.equal(result, false, "all proxies rejected, so validation must fail");
+
   assert.ok(
-    !/thingproxy\.freeboard\.io/i.test(joined),
-    `proxy URLs must not reference thingproxy.freeboard.io — got: ${joined}`,
+    requested.length >= 1,
+    "expected at least one proxy request to be issued",
   );
+  for (const url of requested) {
+    assert.ok(
+      !bannedHostRe.test(url),
+      `no request URL may target ${BANNED_PROXY_HOST} — got: ${url}`,
+    );
+  }
+});
+
+test("YahooFinanceAPI routes requests through every configured proxy", async () => {
+  // Confirms a real configured proxy is actually exercised (not that the
+  // method silently issued zero requests, which would vacuously pass above).
+  const requested = [];
+  const fetchStub = (url) => {
+    requested.push(String(url));
+    return Promise.reject(new Error("network disabled in test"));
+  };
+  const YahooFinanceAPI = loadYahooFinanceAPI({ fetch: fetchStub });
+  const api = new YahooFinanceAPI();
+  await api.validateFXPair("AUDUSD");
+
+  for (const proxy of api.proxies) {
+    assert.ok(
+      requested.some((url) => url.startsWith(proxy)),
+      `expected a request through configured proxy ${proxy}`,
+    );
+  }
 });
 
 test("CSP connect-src does not allow thingproxy.freeboard.io", () => {
