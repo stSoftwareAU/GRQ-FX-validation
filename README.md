@@ -258,6 +258,14 @@ ShellCheck (`.github/workflows/shellcheck.yml`), Gitleaks
 (`.github/workflows/semgrep.yml`) and `actions/dependency-review`
 (`.github/workflows/dependency-review.yml`).
 
+A Deno dependency audit (`.github/workflows/deno-audit.yml`) runs
+`deno audit` to cross-reference `deno.lock` against the OSV advisory
+database. Unlike `dependency-review` — which only inspects dependencies
+added or changed in a PR diff and is blind to Deno's `deno.lock` — this
+audit scans the full dependency tree on every pull request *and* on a
+weekly schedule, so a freshly-disclosed CVE in an existing, unchanged
+dependency is still caught.
+
 ## Browser Compatibility
 
 - Chrome 60+
