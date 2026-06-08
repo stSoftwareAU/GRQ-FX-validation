@@ -1,0 +1,63 @@
+name: Deno Dependency Audit
+
+# Issue #82 (SCR-VULN-SCAN): audit the full Deno dependency tree for
+# known advisories. SAST (semgrep.yml) analyses our own source, secret
+# scanning (gitleaks.yml) finds leaked credentials, and
+# dependency-review.yml only inspects dependencies added or changed in a
+# PR diff (and is blind to Deno's deno.lock / URL imports). None of them
+# learn that a dependency we *already* ship has become vulnerable.
+#
+# `deno audit` cross-references deno.lock against the OSV advisory
+# database. Running it on every pull request catches a vulnerable
+# dependency the moment it lands, and the weekly schedule catches a
+# freshly-disclosed CVE in an existing, unchanged dependency without
+# waiting for a PR.
+#
+# Third-party actions are pinned to 40-character commit SHAs so a
+# hijacked tag cannot tamper with this repository's CI gates (matches
+# the policy in ci.yml, Issue #14).
+
+on:
+  pull_request:
+    branches: ["*"]
+  schedule:
+    # Monday 07:00 UTC - staggered an hour after deno-outdated.yml so the
+    # two weekly Deno jobs do not contend for a runner, and early in the
+    # working week so a maintainer can triage any advisory promptly.
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+# Issue #40: cancel superseded runs so a force-push or rapid pushes do
+# not leave a previous audit job churning while a new one starts.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# The audit only reads deno.lock to cross-reference advisories; it needs
+# no write scopes.
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: Deno Audit (OSV advisory scan)
+    runs-on: ubuntu-latest
+    # Issue #39: deno audit is a single lockfile cross-reference that
+    # finishes in seconds. 10 leaves headroom for Deno's first-run
+    # module fetch without leaving a wedged runner billing for the
+    # 360-minute GitHub default.
+    timeout-minutes: 10
+    steps:
+      # actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      # denoland/setup-deno@v2
+      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282
+        with:
+          deno-version: v2.x
+
+      # `deno audit` cross-references deno.lock against the OSV advisory
+      # database and exits non-zero when a known advisory affects the
+      # dependency tree.
+      - name: deno audit
+        run: deno audit
