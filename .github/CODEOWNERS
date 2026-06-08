@@ -1,0 +1,21 @@
+# CODEOWNERS — required reviewers for privileged repository configuration.
+#
+# Issue #75: the GitHub Actions workflows in this repository run with
+# privileged scopes and secrets — `id-token: write` (OIDC) deploying to
+# the live GitHub Pages site, plus CODECOV_TOKEN, SEMGREP_APP_TOKEN,
+# GITLEAKS_LICENSE and a create-pull-request token. A compromised or
+# self-approving account could edit one of these workflows and exfiltrate
+# tokens or publish arbitrary content. Requiring an explicit code-owner
+# review on every workflow / action change is the canonical
+# defence-in-depth control against that supply-chain attack class.
+#
+# The LAST matching pattern wins, so the workflow and action rules below
+# override any broader default added later in the file.
+
+# Workflow and composite-action definitions run with repository secrets —
+# require owner review before merge.
+/.github/workflows/   @stSoftwareAU/maintainers
+/.github/actions/     @stSoftwareAU/maintainers
+
+# The CODEOWNERS policy itself must not be weakened without owner review.
+/.github/CODEOWNERS   @stSoftwareAU/maintainers
