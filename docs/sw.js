@@ -1,9 +1,9 @@
 // Service Worker for GRQ FX Validation Dashboard
-// Version 1.0.109 - Correct pathname matching for data files (CSV + predictions.json)
+// Version 1.0.110 - Correct pathname matching for data files (CSV + predictions.json)
 
-const CACHE_NAME = "grq-fx-v1.0.109";
-const STATIC_CACHE_NAME = "grq-fx-static-v1.0.109";
-const DYNAMIC_CACHE_NAME = "grq-fx-dynamic-v1.0.109";
+const CACHE_NAME = "grq-fx-v1.0.110";
+const STATIC_CACHE_NAME = "grq-fx-static-v1.0.110";
+const DYNAMIC_CACHE_NAME = "grq-fx-dynamic-v1.0.110";
 
 // Files to cache immediately (static assets)
 const STATIC_ASSETS = [

@@ -258,6 +258,14 @@ ShellCheck (`.github/workflows/shellcheck.yml`), Gitleaks
 (`.github/workflows/semgrep.yml`) and `actions/dependency-review`
 (`.github/workflows/dependency-review.yml`).
 
+An accessibility gate (`.github/workflows/accessibility.yml`, issue #78)
+runs [`pa11y-ci`](https://github.com/pa11y/pa11y-ci) against the built PWA
+whenever a PR touches `docs/`. It serves the static site over loopback and
+drives headless Chromium to assert the `docs/index.html` entry point against
+the WCAG 2.1 AA standard (configured in `pa11yci.json`), so contrast,
+labelling and semantic-markup regressions fail the PR before they reach the
+live Pages deploy rather than relying on manual review.
+
 A Deno dependency audit (`.github/workflows/deno-audit.yml`) runs
 `deno audit` to cross-reference `deno.lock` against the OSV advisory
 database. Unlike `dependency-review` — which only inspects dependencies

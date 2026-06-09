@@ -866,9 +866,12 @@ body.dark-mode-forced .header-gradient p {
   z-index: 9999 !important;
 }
 
-  /* Ensure version number is always visible */
+  /* Ensure version number is always visible.
+     Issue #78: darkened from #6c757d to #5f666c so the footer version
+     text meets the WCAG 2.1 AA 4.5:1 contrast ratio against the
+     near-white page background (the lighter grey measured 4.45:1). */
   #version {
-    color: #6c757d !important;
+    color: #5f666c !important;
     font-weight: 500;
   }
   

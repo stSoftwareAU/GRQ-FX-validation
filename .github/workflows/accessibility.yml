@@ -1,0 +1,80 @@
+name: Accessibility
+
+# Issue #78: the dashboard is a public-facing PWA (docs/index.html,
+# docs/index.js, docs/styles.css) but no automated accessibility gate
+# ran in CI, so a11y regressions (missing labels, poor contrast,
+# non-semantic markup) were invisible to the test suite and only
+# surfaced through manual review. This workflow runs pa11y-ci against
+# the built static site so WCAG 2.1 AA violations fail the PR before
+# they reach the live Pages deploy.
+#
+# Third-party actions are pinned to 40-character commit SHAs (Issue #14)
+# to match this repo's supply-chain posture: a hijacked tag cannot
+# tamper with the gate or exfiltrate CI secrets.
+
+on:
+  pull_request:
+    branches: ["Develop"]
+    paths:
+      - "docs/**"
+      - "pa11yci.json"
+      - ".github/workflows/accessibility.yml"
+  push:
+    branches: ["Develop"]
+    paths:
+      - "docs/**"
+      - "pa11yci.json"
+      - ".github/workflows/accessibility.yml"
+
+# Issue #40: cancel superseded runs on the same ref so a force-push or
+# rapid back-to-back commits do not leave a stale a11y run churning.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Issue #37: least-privilege token. The a11y scan only reads the
+# checked-out tree; it never needs write access.
+permissions:
+  contents: read
+
+jobs:
+  accessibility:
+    name: Accessibility (pa11y)
+    runs-on: ubuntu-latest
+    # Issue #39: pa11y-ci spins up headless Chromium over a single
+    # static page and finishes in a couple of minutes. 10 caps a
+    # wedged browser without truncating a slow Chromium download.
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        # actions/checkout@v6.0.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+
+      - name: Setup Node.js
+        # actions/setup-node@v6.4.0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version: "22"
+
+      - name: Install pa11y-ci
+        # Pin the version so a hijacked latest tag cannot run arbitrary
+        # code in CI (external dep, past the supply-chain quarantine).
+        run: npm install -g pa11y-ci@3.1.0
+
+      - name: Serve docs and run accessibility checks
+        # Serve the built static site over loopback, wait for it to
+        # accept connections, then run pa11y-ci against the config in
+        # pa11yci.json. `set -euo pipefail` makes any interim failure
+        # (server never comes up, pa11y errors) fail the job.
+        run: |
+          set -euo pipefail
+          python3 -m http.server 8080 --directory docs &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8080/index.html >/dev/null; then
+              break
+            fi
+            sleep 1
+          done
+          pa11y-ci --config pa11yci.json < /dev/null
