@@ -58,3 +58,35 @@ test("SECURITY.md emergency-bump steer references the Deno toolchain", () => {
   assert.match(text, /deno audit/, "the deno audit verification step must be documented");
   assert.match(text, /\.\/quality\.sh/, "the ./quality.sh verification step must be documented");
 });
+
+// Issue #77: a GitHub-recognised disclosure policy must also state the
+// expected initial response time and which versions are supported, so a
+// reporter knows what to expect and which release a fix will land on.
+
+test("SECURITY.md states an expected initial response time", () => {
+  const text = read("SECURITY.md");
+  assert.match(
+    text,
+    /\b(?:\d+|one|two|three|four|five|several)\s+business days?\b/i,
+    "an expected initial response time (e.g. 'within two business days') must be present",
+  );
+});
+
+test("SECURITY.md documents supported versions", () => {
+  const text = read("SECURITY.md");
+  assert.ok(
+    hasSection(text, "supported"),
+    `expected a supported-versions section, saw: ${sectionTitles(text).join(", ")}`,
+  );
+});
+
+test("SECURITY.md supported-versions section includes a table", () => {
+  const text = read("SECURITY.md");
+  // A GitHub-flavoured markdown table has a header separator row of
+  // pipes and dashes, e.g. `| --- | --- |`.
+  assert.match(
+    text,
+    /\|\s*-+\s*\|/,
+    "the supported-versions section must contain a markdown table",
+  );
+});
