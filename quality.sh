@@ -21,7 +21,16 @@ cd "$(dirname "$0")"
 echo "[quality] Node.js test suite (tests/*.test.js)"
 node --test tests/*.test.js
 
-if command -v deno >/dev/null 2>&1; then
+# Issue #104: in CI the Deno suite is the canonical gate of
+# deno-quality.yml, which exercises tests/*.test.ts with coverage and
+# uploads to Codecov on every PR. Running the same suite again here
+# doubled the runner minutes for it on every Develop PR and split its
+# source of truth across two files. GitHub Actions exports CI=true, so
+# skip the Deno block there and let deno-quality.yml own it. Contributors
+# running quality.sh off-CI still execute the full Deno suite locally.
+if [ -n "${CI:-}" ]; then
+  echo "[quality] Skipping Deno test suite in CI; deno-quality.yml gates it with coverage (issue #104)"
+elif command -v deno >/dev/null 2>&1; then
   echo "[quality] Deno test suite (tests/*.test.ts)"
   # Issue #57: --frozen makes deno.lock drift a CI failure so URL
   # imports (helpers/server.ts, tests/*.test.ts) are integrity-pinned.
