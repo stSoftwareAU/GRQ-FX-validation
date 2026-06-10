@@ -275,7 +275,6 @@ async function loadGRQFXValidator(
     matchMedia: () => ({ matches: false, addEventListener() {} }),
     fetch: () => Promise.reject(new Error("network disabled in tests")),
   };
-  // deno-lint-ignore no-explicit-any
   const factory = new Function(
     "document",
     "window",
