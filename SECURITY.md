@@ -52,5 +52,26 @@ follows:
    fix, request an expedited review and merge once the quality gate is
    green.
 
+### Bypassing the 24-hour quarantine for an actively-exploited CVE
+
+Renovate quarantines every external dependency update for 24 hours
+(`minimumReleaseAge: "24 hours"` in [`renovate.json`](renovate.json)) so a
+freshly-published — and therefore not-yet-flagged — version cannot land
+instantly. That window is the right default, but when a CVE is being
+**actively exploited** the fix must land sooner. The agreed fast-lane is:
+
+- A maintainer may **bypass the 24-hour quarantine** by bumping the
+  dependency by hand (`deno outdated --update <pkg>`, or the *Deno
+  Dependency Updates* workflow via `workflow_dispatch`) and opening a pull
+  request directly. Renovate's release-age gate only governs the
+  Renovate-raised PRs — a hand-raised PR is the documented override and
+  does not wait out the window.
+- The override **skips the waiting period, not the safety checks.** The PR
+  must still pass `deno audit` and `./quality.sh` (including the `--frozen`
+  `deno.lock` integrity check) and be **reviewed** by a second maintainer
+  before merge. Do **not** lower or disable the quarantine in
+  `renovate.json` to push a fix through — the override is per-PR and
+  leaves the 24-hour default intact for every other update.
+
 For the broader contribution workflow, see
 [`CONTRIBUTING.md`](CONTRIBUTING.md).

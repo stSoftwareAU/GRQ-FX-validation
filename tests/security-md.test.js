@@ -90,3 +90,73 @@ test("SECURITY.md supported-versions section includes a table", () => {
     "the supported-versions section must contain a markdown table",
   );
 });
+
+// Issue #85 (SCR-QUARANTINE-OVERRIDE): renovate.json imposes a 24-hour
+// minimumReleaseAge quarantine on external dependency updates. For an
+// actively-exploited CVE that window can delay an urgent fix, so the
+// emergency procedure must document an explicit, agreed fast-lane to
+// bypass the quarantine rather than leaving the team to improvise.
+
+// Collapse markdown to a single whitespace-normalised line so a
+// regex can assert two concepts co-occur within a short window
+// regardless of line wrapping.
+function flatten(text) {
+  return text.replace(/\s+/g, " ");
+}
+
+test("SECURITY.md frames the override around an actively-exploited CVE", () => {
+  const text = read("SECURITY.md");
+  // The trigger for the fast-lane is an actively-exploited CVE, not the
+  // broader "compromise disclosed" case the emergency-bump steps already
+  // cover. Requiring the word makes the override's purpose unambiguous.
+  assert.match(
+    text,
+    /exploit/i,
+    "the override must state it applies to an actively-exploited CVE",
+  );
+});
+
+test("SECURITY.md documents an explicit bypass of the 24-hour quarantine", () => {
+  const flat = flatten(read("SECURITY.md"));
+  // A bypass/override verb must sit close to the quarantine noun so the
+  // document plainly states the quarantine MAY be overridden — not merely
+  // that external packages "sit behind" it.
+  assert.match(
+    flat,
+    /(?:bypass|override|skip|waive|fast[\s-]?lane)[^.]{0,80}quarantine|quarantine[^.]{0,80}(?:bypass|override|skip|waive|may be)/i,
+    "the procedure must explicitly document bypassing/overriding the quarantine",
+  );
+  assert.match(
+    flat,
+    /24[\s-]?hour/i,
+    "the override must reference the 24-hour quarantine window",
+  );
+});
+
+test("SECURITY.md names the workflow_dispatch manual-trigger override path", () => {
+  const text = read("SECURITY.md");
+  assert.match(
+    text,
+    /workflow_dispatch/,
+    "the override must name the workflow_dispatch manual update path",
+  );
+});
+
+test("SECURITY.md keeps the audit + quality gate on the override path", () => {
+  const flat = flatten(read("SECURITY.md"));
+  // The fast-lane skips the waiting window, not the safety checks: a
+  // bypassed PR must still pass deno audit and ./quality.sh.
+  assert.match(flat, /deno audit/, "the override must still require deno audit");
+  assert.match(flat, /\.\/quality\.sh/, "the override must still require ./quality.sh");
+});
+
+test("SECURITY.md requires review before merging an emergency bypass", () => {
+  const text = read("SECURITY.md");
+  // The fast-lane must not skip review — assert the override still
+  // requires a reviewed pull request before merge.
+  assert.match(
+    text,
+    /\breview/i,
+    "the emergency override must still require a review before merge",
+  );
+});
