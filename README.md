@@ -314,6 +314,13 @@ locally with:
 node --test tests/renovate-quarantine.test.js
 ```
 
+## Licence
+
+This project is licensed under the **Apache-2.0** licence (SPDX:
+`Apache-2.0`). The full text lives in [`LICENSE`](LICENSE) and the same
+SPDX identifier is declared in `deno.json` so the manifest and file
+agree.
+
 ## Further Reading
 
 The repository also contains a number of standalone notes:
