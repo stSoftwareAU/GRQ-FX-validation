@@ -43,10 +43,14 @@ behaviour-preserving reimplementation of `docs/index.js`.
 Backend/test-only change — no web UI was altered, so no screenshot applies.
 
 Verified the new test is a genuine WHAT-test (fails on a real regression, not
-just benign refactors): temporarily injecting an
-`container.innerHTML += \`<div onclick="select('${pair.pair}')">x</div>\``
-regression into `populateFXPairsList` makes the new test **fail**; reverting
-makes it pass.
+just benign refactors): temporarily injecting this regression into
+`populateFXPairsList`:
+
+```js
+container.innerHTML += `<div onclick="select('${pair.pair}')">x</div>`;
+```
+
+makes the new test **fail**; reverting makes it pass.
 
 ```
 populateFXPairsList renders pair names as encoded text with no inline handlers => FAILED   (regressed impl)
