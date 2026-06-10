@@ -29,6 +29,7 @@ interface MockNode {
   click: () => void;
   querySelector: (selector: string) => MockNode | null;
   outerHTML: string;
+  innerHTML: string;
 }
 
 function createElement(tag: string): MockNode {
@@ -125,6 +126,24 @@ function createElement(tag: string): MockNode {
         return `<${tag}${attrStr}>${body}</${tag}>`;
       };
       return serialise(node);
+    },
+  });
+
+  // `populateFXPairsList` clears its container with `innerHTML = ""` before
+  // appending fresh cards. We only ever assign the empty string, so the
+  // setter just resets the subtree; the getter serialises children.
+  Object.defineProperty(node, "innerHTML", {
+    get() {
+      return node._children.map((c) => c.outerHTML).join("");
+    },
+    set(v: string) {
+      node._textContent = "";
+      node._children = [];
+      if (String(v).length > 0) {
+        throw new Error(
+          "mock innerHTML only supports clearing with an empty string",
+        );
+      }
     },
   });
 
@@ -238,29 +257,98 @@ Deno.test("buildFXPairCard places the pair name as h5 textContent", async () => 
   }
 });
 
-Deno.test("populateFXPairsList in docs/index.js uses the safe card builder", async () => {
-  // Source-level guard against regression: the old implementation
-  // string-concatenated pair.pair into an innerHTML template literal with an
-  // inline onclick=. This regression test ensures the unsafe pattern does not
-  // come back.
+// Load the real `GRQFXValidator` class from `docs/index.js` and exercise its
+// actual `populateFXPairsList` method against test doubles. We evaluate the
+// production source (rather than grepping it) so the test asserts on the DOM
+// the method *produces*, surviving any behaviour-preserving refactor of how
+// the cards are built. The bare `document`/`window`/`buildFXPairCard` globals
+// the module closes over are wired to test doubles via `new Function` params.
+async function loadGRQFXValidator(
+  indexDocument: { createElement: (tag: string) => MockNode },
+): Promise<new () => unknown> {
+  const buildFXPairCard = await loadBuildFXPairCard();
   const src = await Deno.readTextFile(
     new URL("../docs/index.js", import.meta.url),
   );
-  // Locate the populateFXPairsList method body.
-  const idx = src.indexOf("populateFXPairsList()");
-  if (idx === -1) {
-    throw new Error("Could not find populateFXPairsList in docs/index.js");
-  }
-  // Read the next ~3000 chars — enough to cover the whole method.
-  const slice = src.slice(idx, idx + 3000);
-  if (/onclick="[^"]*\$\{pair\.pair\}/.test(slice)) {
+  const mockWindow = {
+    addEventListener() {},
+    matchMedia: () => ({ matches: false, addEventListener() {} }),
+    fetch: () => Promise.reject(new Error("network disabled in tests")),
+  };
+  // deno-lint-ignore no-explicit-any
+  const factory = new Function(
+    "document",
+    "window",
+    "buildFXPairCard",
+    src + "\nreturn GRQFXValidator;",
+  ) as (...args: unknown[]) => new () => unknown;
+  return factory(indexDocument, mockWindow, buildFXPairCard);
+}
+
+Deno.test("populateFXPairsList renders pair names as encoded text with no inline handlers", async () => {
+  // A persistent container the method renders into via getElementById.
+  const container = createElement("div");
+  const indexDocument = {
+    title: "",
+    createElement,
+    addEventListener() {},
+    getElementById: (id: string): MockNode | null =>
+      id === "fxPairsList" ? container : null,
+  };
+
+  const GRQFXValidator = await loadGRQFXValidator(indexDocument);
+
+  // Skip the constructor (which kicks off network/DOM bootstrap) and drive the
+  // real method directly with the collaborators it reads off `this`.
+  // deno-lint-ignore no-explicit-any
+  const validator = Object.create(GRQFXValidator.prototype) as any;
+  const malicious = "<img src=x onerror=alert(1)>";
+  validator.predictionData = {
+    results: [
+      { pair: "EUR/USD", currentRate: 1.1, predictions: [] },
+      { pair: malicious, currentRate: 2.2, predictions: [] },
+    ],
+  };
+  validator.calculateBestFitSlope = () => null;
+  validator.selectFXPair = () => {};
+
+  validator.populateFXPairsList();
+
+  // Both pairs should have produced a card.
+  if (container._children.length !== 2) {
     throw new Error(
-      "populateFXPairsList still string-interpolates pair.pair into an inline onclick= attribute (XSS regression)",
+      `Expected 2 rendered cards; got ${container._children.length}`,
     );
   }
-  if (!slice.includes("buildFXPairCard(")) {
+
+  // No rendered element may carry an inline event-handler attribute
+  // (onclick/onerror/...). We inspect the produced DOM, not the source text,
+  // so an addEventListener-based handler passes and a differently spelled
+  // inline-handler sink would fail.
+  const hasInlineHandler = (node: MockNode): boolean => {
+    // deno-lint-ignore no-explicit-any
+    const attrs = (node as any)._attrs as Record<string, string>;
+    if (Object.keys(attrs).some((k) => /^on/i.test(k))) return true;
+    // deno-lint-ignore no-explicit-any
+    return (node as any)._children.some(hasInlineHandler);
+  };
+  if (hasInlineHandler(container)) {
     throw new Error(
-      "populateFXPairsList should delegate to the safe buildFXPairCard helper",
+      "Rendered FX-pair card carries an inline event-handler attribute (XSS risk)",
+    );
+  }
+
+  // The malicious pair name must appear only as HTML-encoded text, never as
+  // live markup.
+  const html = container.outerHTML;
+  if (html.includes("<img")) {
+    throw new Error(
+      "Malicious pair name must be rendered as encoded text, never as raw HTML",
+    );
+  }
+  if (!html.includes("&lt;img src=x onerror=alert(1)&gt;")) {
+    throw new Error(
+      "Expected the malicious pair name to appear as HTML-encoded text",
     );
   }
 });
