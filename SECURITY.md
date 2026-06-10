@@ -16,6 +16,23 @@ possible, reproduction steps. Do **not** open a public GitHub issue for an
 undisclosed vulnerability. We aim to acknowledge a report within two
 business days and will keep you informed as we investigate.
 
+## Supported versions
+
+The dashboard is a continuously deployed Progressive Web App. GitHub Pages
+serves a single live instance built from the `Develop` branch, so there is
+no parallel release stream to back-port fixes to — security fixes are rolled
+forward into the next deployment, which every visitor receives automatically
+on their next load.
+
+| Version                          | Supported          |
+| -------------------------------- | ------------------ |
+| Latest deployed (live `Develop`) | :white_check_mark: |
+| Any earlier cached build         | :x:                |
+
+If you are running a fork or a self-hosted copy, only the latest commit on
+`Develop` is supported. Re-deploy from the current `Develop` head to pick up
+security fixes.
+
 ## Emergency-bump procedure
 
 When a supply-chain compromise of a dependency is disclosed, response speed
