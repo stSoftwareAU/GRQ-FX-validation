@@ -52,6 +52,20 @@ follows:
    fix, request an expedited review and merge once the quality gate is
    green.
 
+### Automated OSV-driven security updates
+
+Renovate also raises security-update PRs automatically. With
+`osvVulnerabilityAlerts` enabled in [`renovate.json`](renovate.json), it
+queries the OSV advisory database — the same source `deno audit` uses —
+for the `deno_std` URL imports and CDN libraries the custom managers
+track, datasources GitHub's native vulnerability-alert API never sees. A
+confirmed security bump is exempt from the 24-hour `minimumReleaseAge`
+quarantine (`vulnerabilityAlerts.minimumReleaseAge: "0 hours"`) and is
+tagged with a `security` label so it can be fast-tracked per the
+emergency-bump procedure above. This is the automated counterpart to the
+manual override below; both leave the 24-hour default intact for every
+routine update.
+
 ### Bypassing the 24-hour quarantine for an actively-exploited CVE
 
 Renovate quarantines every external dependency update for 24 hours

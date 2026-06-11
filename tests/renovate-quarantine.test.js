@@ -164,6 +164,61 @@ test("renovate.json includes a custom manager for CDN-loaded browser libraries",
   );
 });
 
+test("renovate.json enables OSV-driven security alerts", () => {
+  // Issue #110: GitHub's native vulnerabilityAlerts API does not see
+  // Deno URL imports or CDN <script> references — the dependency
+  // surface this repo actually ships. osvVulnerabilityAlerts queries
+  // the OSV advisory database directly (the same source deno audit
+  // uses) so Renovate can raise an automated security-update PR for
+  // the github-releases (deno_std) and npm (CDN) datasources the
+  // custom managers already track. It is off by default and must be
+  // explicitly enabled.
+  const config = loadConfig();
+  assert.equal(
+    config.osvVulnerabilityAlerts,
+    true,
+    "renovate.json must set osvVulnerabilityAlerts: true so OSV-sourced security updates are raised automatically",
+  );
+});
+
+test("renovate.json fast-lanes confirmed security updates past the quarantine", () => {
+  // Issue #110: a confirmed security update must be able to bypass the
+  // 24-hour minimumReleaseAge quarantine — this is the per-PR override
+  // already sanctioned in SECURITY.md. The vulnerabilityAlerts rule
+  // sets minimumReleaseAge to 0 hours for security bumps only; every
+  // other update keeps the 24-hour default.
+  const config = loadConfig();
+  assert.ok(
+    config.vulnerabilityAlerts &&
+      typeof config.vulnerabilityAlerts === "object",
+    "renovate.json must define a vulnerabilityAlerts rule",
+  );
+  assert.ok(
+    typeof config.vulnerabilityAlerts.minimumReleaseAge === "string",
+    "vulnerabilityAlerts must override minimumReleaseAge",
+  );
+  const hours = parseDurationToHours(
+    config.vulnerabilityAlerts.minimumReleaseAge,
+  );
+  assert.equal(
+    hours,
+    0,
+    "confirmed security updates must skip the quarantine (0 hours)",
+  );
+});
+
+test("renovate.json labels security-update PRs", () => {
+  // Issue #110: tagging the automated security PRs with a `security`
+  // label lets maintainers spot and fast-track them per the SECURITY.md
+  // emergency-bump runbook.
+  const config = loadConfig();
+  const labels = config.vulnerabilityAlerts?.labels ?? [];
+  assert.ok(
+    Array.isArray(labels) && labels.includes("security"),
+    "vulnerabilityAlerts must apply a `security` label to raised PRs",
+  );
+});
+
 test("renovate.json applies a minimum release age to GitHub Actions", () => {
   // Defence in depth: if a future edit accidentally sets
   // `minimumReleaseAge: 0` at the top level but leaves a per-manager
