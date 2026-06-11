@@ -8,6 +8,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
+import vm from "node:vm";
 
 const REPO_ROOT = path.resolve(process.cwd());
 const DOCS_DIR = path.join(REPO_ROOT, "docs");
@@ -60,7 +61,15 @@ test("`docs/index.json` includes the latest prediction date folder", () => {
 //
 // This test verifies the behavioural suite exists so a careless
 // `git rm` cannot silently drop the runtime coverage.
-test("Service worker runtime behaviour is covered by sw-pathname-guards.test.ts", () => {
+//
+// Issue #93: this test previously also grep'd the sibling suite's source
+// for a `dispatchFetch(` token to "prove" it dispatches synthetic fetch
+// events. That was a source-grep HOW-test — the substring's presence
+// does not prove the suite dispatches anything (it could sit in a
+// comment or a renamed no-op). The real signal that the runtime
+// behaviour is covered is `sw-pathname-guards.test.ts` running green in
+// the Deno gate, so only the anti-deletion `existsSync` guard remains.
+test("Service worker runtime behaviour suite (sw-pathname-guards.test.ts) exists", () => {
   const behaviouralPath = path.join(
     REPO_ROOT,
     "tests",
@@ -70,20 +79,13 @@ test("Service worker runtime behaviour is covered by sw-pathname-guards.test.ts"
     fs.existsSync(behaviouralPath),
     `Expected ${behaviouralPath} to exist as the runtime replacement for the deleted source-grep tests`,
   );
-  const src = fs.readFileSync(behaviouralPath, "utf8");
-  // The harness must actually dispatch synthetic fetch events — that is
-  // the distinguishing trait of a WHAT-test in this file.
-  assert.ok(
-    /dispatchFetch\s*\(/.test(src),
-    "sw-pathname-guards.test.ts must dispatch synthetic fetch events (runtime behaviour, not source grep)",
-  );
 });
 
-test("`docs/sw-register.js` has a valid service worker registration call (no broken string)", () => {
+test("`docs/index.html` references the extracted sw-register.js script", () => {
   // Issue #23: the inline SW registration block was extracted out of
   // docs/index.html into docs/sw-register.js so the page can ship a strict
-  // CSP without 'unsafe-inline' on script-src. The sanity check now runs
-  // against the extracted file. docs/index.html must still reference it.
+  // CSP without 'unsafe-inline' on script-src. docs/index.html must still
+  // reference it.
   const htmlPath = path.join(DOCS_DIR, "index.html");
   const html = fs.readFileSync(htmlPath, "utf8");
   assert.match(
@@ -91,15 +93,88 @@ test("`docs/sw-register.js` has a valid service worker registration call (no bro
     /<script[^>]*\bsrc\s*=\s*["']sw-register\.js[^"']*["']/i,
     "Expected docs/index.html to reference sw-register.js via <script src=...>",
   );
+});
 
+// Issue #93: this used to grep sw-register.js source text for a
+// `navigator.serviceWorker.register('./sw.js?v=...').then(...)` literal —
+// a HOW-test that passed whenever the literal appeared (even in a
+// comment) and broke on harmless refactors. It is now a WHAT-test: load
+// sw-register.js into a scope with a stubbed `navigator.serviceWorker`,
+// fire the `load` event, and assert `register` was actually invoked with
+// a versioned `./sw.js?v=…` URL and a `.then` handler attached —
+// exercising the registration behaviour directly.
+test("`docs/sw-register.js` registers ./sw.js?v=… and attaches a .then handler", () => {
   const swRegisterPath = path.join(DOCS_DIR, "sw-register.js");
-  const swRegister = fs.readFileSync(swRegisterPath, "utf8");
+  const src = fs.readFileSync(swRegisterPath, "utf8");
 
-  // Basic sanity check to catch a missing quote/paren which prevents SW updates.
+  const registerCalls = [];
+  let thenAttached = false;
+
+  // A thenable standing in for the promise returned by register(). We
+  // only observe that a fulfilment handler is attached; we do not run it
+  // (the success path wires up update polling we are not asserting on).
+  const registrationPromise = {
+    then(onFulfilled) {
+      thenAttached = typeof onFulfilled === "function";
+      return { catch() {} };
+    },
+  };
+
+  const navigatorStub = {
+    serviceWorker: {
+      register(url) {
+        registerCalls.push(url);
+        return registrationPromise;
+      },
+      addEventListener() {},
+      controller: null,
+    },
+  };
+
+  let loadHandler = null;
+  const windowStub = {
+    addEventListener(type, fn) {
+      if (type === "load") loadHandler = fn;
+    },
+    location: { reload() {} },
+  };
+
+  const sandbox = {
+    navigator: navigatorStub,
+    window: windowStub,
+    console: { log() {} },
+    setInterval() {
+      return 0;
+    },
+  };
+
+  vm.createContext(sandbox);
+  vm.runInContext(src, sandbox);
+
+  // The IIFE only wires up registration when serviceWorker is present,
+  // and defers it to the window `load` event.
+  assert.equal(
+    typeof loadHandler,
+    "function",
+    "Expected sw-register.js to attach a window 'load' handler",
+  );
+
+  // Firing 'load' is what triggers the actual registration call.
+  loadHandler();
+
+  assert.equal(
+    registerCalls.length,
+    1,
+    "Expected exactly one navigator.serviceWorker.register call on load",
+  );
   assert.match(
-    swRegister,
-    /navigator\.serviceWorker\.register\(\s*['"]\.\/sw\.js\?v=[^'"]+['"]\s*\)\s*\.then\(/,
-    "Expected a complete navigator.serviceWorker.register('./sw.js?v=...').then(...) call",
+    registerCalls[0],
+    /^\.\/sw\.js\?v=.+/,
+    "Expected register to be called with a versioned ./sw.js?v=… URL",
+  );
+  assert.ok(
+    thenAttached,
+    "Expected a .then fulfilment handler attached to the registration promise",
   );
 });
 
