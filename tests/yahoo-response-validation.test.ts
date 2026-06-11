@@ -16,6 +16,8 @@
 //
 // Date: 22-May-2026
 
+import { assertScriptLoadsBefore } from "./helpers/script_order.ts";
+
 async function loadValidator(): Promise<
   (
     data: unknown,
@@ -413,21 +415,15 @@ Deno.test("Every YahooFinanceAPI fetch path rejects payloads the validator marks
   }
 });
 
+// WHAT-test (issue #92): the validator global must be defined before index.js
+// executes. Classic <script src> tags run in document order, so we parse the
+// real script elements and assert their order — independent of the
+// cache-busting query format and unaffected by unrelated textual mentions.
 Deno.test("docs/index.html loads yahoo-validate.js before index.js", async () => {
   const html = await Deno.readTextFile(
     new URL("../docs/index.html", import.meta.url),
   );
-  const validatorIdx = html.indexOf("yahoo-validate.js");
-  const indexIdx = html.indexOf("index.js?v=");
-  if (validatorIdx === -1) {
-    throw new Error("docs/index.html must reference yahoo-validate.js");
-  }
-  if (indexIdx === -1) {
-    throw new Error("Could not locate index.js script tag in docs/index.html");
-  }
-  if (validatorIdx > indexIdx) {
-    throw new Error("yahoo-validate.js must load before index.js");
-  }
+  assertScriptLoadsBefore(html, "yahoo-validate.js", "index.js");
 });
 
 // Issue #73: this guard previously grep'd docs/sw.js for the quoted
