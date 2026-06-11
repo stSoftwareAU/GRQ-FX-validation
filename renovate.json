@@ -2,6 +2,11 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
   "minimumReleaseAge": "24 hours",
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "minimumReleaseAge": "0 hours",
+    "labels": ["security"]
+  },
   "packageRules": [
     {
       "description": "Internal stSoftwareAU/* packages are trusted and may update immediately (issue #17).",
