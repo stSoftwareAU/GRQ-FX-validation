@@ -7,6 +7,8 @@
 //
 // Date: 22-May-2026
 
+import { assertScriptLoadsBefore } from "./helpers/script_order.ts";
+
 // Minimal hand-rolled DOM mock mirroring the surface used by the
 // safe-error-banner helper (createElement, textContent, className,
 // appendChild, replaceChildren). Kept deliberately tiny so the test
@@ -319,19 +321,13 @@ Deno.test("showYahooFinanceError renders attacker-controlled messages as encoded
   }
 });
 
+// WHAT-test (issue #92): the banner global must be defined before index.js
+// executes. Classic <script src> tags run in document order, so we parse the
+// real script elements and assert their order — independent of the
+// cache-busting query format and unaffected by unrelated textual mentions.
 Deno.test("docs/index.html loads safe-error-banner.js before index.js", async () => {
   const html = await Deno.readTextFile(
     new URL("../docs/index.html", import.meta.url),
   );
-  const bannerIdx = html.indexOf("safe-error-banner.js");
-  const indexIdx = html.indexOf("index.js?v=");
-  if (bannerIdx === -1) {
-    throw new Error("docs/index.html must include safe-error-banner.js");
-  }
-  if (indexIdx === -1) {
-    throw new Error("Could not locate index.js script tag in docs/index.html");
-  }
-  if (bannerIdx > indexIdx) {
-    throw new Error("safe-error-banner.js must load before index.js");
-  }
+  assertScriptLoadsBefore(html, "safe-error-banner.js", "index.js");
 });
