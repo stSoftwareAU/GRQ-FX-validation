@@ -274,6 +274,45 @@ audit scans the full dependency tree on every pull request *and* on a
 weekly schedule, so a freshly-disclosed CVE in an existing, unchanged
 dependency is still caught.
 
+## Software Bill of Materials (SBOM)
+
+Every build emits a CycloneDX Software Bill of Materials describing exactly
+what the deployed PWA ships, so that when a supply-chain advisory lands the
+team can answer "which version did we deploy?" with a lookup rather than a
+hand reconstruction (issue #111).
+
+`scripts/gen-sbom.ts` derives the SBOM from the two real dependency
+surfaces:
+
+- the locked Deno tree in `deno.lock` (the `deno.land/std` modules that
+  back the dev server and tests), and
+- the CDN-loaded browser libraries (Bootstrap, Chart.js and the date-fns
+  adapter) referenced from `docs/index.html` and `docs/sw.js`, including
+  their Subresource Integrity digests.
+
+Generate it locally with:
+
+```bash
+deno run --allow-read --allow-write scripts/gen-sbom.ts
+```
+
+The output `sbom.cdx.json` is a generated build artefact (git-ignored, not
+checked in). In CI, `.github/workflows/sbom.yml` regenerates it on every
+push to the default branch, every pull request and a weekly schedule, then
+publishes it via `actions/upload-artifact` (pinned to a commit SHA, with
+`permissions: contents: read`).
+
+```mermaid
+flowchart LR
+    Lock["deno.lock"] --> Gen["scripts/gen-sbom.ts"]
+    Html["docs/index.html + docs/sw.js"] --> Gen
+    Gen --> Sbom["sbom.cdx.json (CycloneDX)"]
+    Sbom --> Artefact["CI upload-artifact"]
+```
+
+Regression coverage lives in `tests/gen-sbom.test.ts` (generator logic)
+and `tests/sbom-workflow.test.js` (workflow wiring).
+
 ## Browser Compatibility
 
 - Chrome 60+
