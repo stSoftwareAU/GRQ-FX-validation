@@ -32,6 +32,10 @@ target
 *.json.orig
 *.json.tmp
 
+# Generated CycloneDX SBOM (issue #111) — produced per build by
+# scripts/gen-sbom.ts and uploaded as a CI artefact, never checked in.
+sbom.cdx.json
+
 # Transient worker runtime-state files (issue #89) — per-run heartbeat
 # timestamps, comment-refresh markers, and leftover PR-response drafts.
 # Generated state, not source; must never be committed.
