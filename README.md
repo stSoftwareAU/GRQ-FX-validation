@@ -1,7 +1,7 @@
 # GRQ FX Validation Dashboard
 
 A JAMstack-based Progressive Web App (PWA) for validating AI FX predictions
-against actual rates over time
+against actual rates over time.
 
 ## Architecture
 
