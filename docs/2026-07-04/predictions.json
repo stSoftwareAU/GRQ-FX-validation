@@ -1,7 +1,7 @@
 {
   "date": "2026-07-04",
-  "timestamp": "2026-07-03T14:00:58.638Z",
-  "totalPredictions": 8,
+  "timestamp": "2026-07-03T14:00:58.775Z",
+  "totalPredictions": 9,
   "complete": false,
   "results": [
     {
@@ -256,6 +256,38 @@
           "days": 365,
           "predictedRate": 5.2699286218251045,
           "predictedChangePercent": 10.074079016820559
+        }
+      ],
+      "predictionDate": "2026-07-04T00:00:00.000Z"
+    },
+    {
+      "pair": "CADEUR",
+      "currentRate": 0.61674,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 0.6209740752908128,
+          "predictedChangePercent": 0.6865251630854147
+        },
+        {
+          "days": 90,
+          "predictedRate": 0.616744466547074,
+          "predictedChangePercent": 0.0007242188076033212
+        },
+        {
+          "days": 180,
+          "predictedRate": 0.6084926286755047,
+          "predictedChangePercent": -1.3372525415078163
+        },
+        {
+          "days": 270,
+          "predictedRate": 0.6312412870125248,
+          "predictedChangePercent": 2.3512804443565996
+        },
+        {
+          "days": 365,
+          "predictedRate": 0.6937614171791122,
+          "predictedChangePercent": 12.488474426680964
         }
       ],
       "predictionDate": "2026-07-04T00:00:00.000Z"
