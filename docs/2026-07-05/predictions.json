@@ -1,7 +1,7 @@
 {
   "date": "2026-07-05",
-  "timestamp": "2026-07-04T15:46:56.053Z",
-  "totalPredictions": 36,
+  "timestamp": "2026-07-04T15:46:56.122Z",
+  "totalPredictions": 37,
   "complete": false,
   "results": [
     {
@@ -1152,6 +1152,38 @@
           "days": 365,
           "predictedRate": 17.045942337382776,
           "predictedChangePercent": -2.3434984968044796
+        }
+      ],
+      "predictionDate": "2026-07-05T00:00:00.000Z"
+    },
+    {
+      "pair": "USDMYR",
+      "currentRate": 4.067,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 4.067,
+          "predictedChangePercent": 0
+        },
+        {
+          "days": 90,
+          "predictedRate": 4.1035247759882125,
+          "predictedChangePercent": 0.8980766163809211
+        },
+        {
+          "days": 180,
+          "predictedRate": 4.0911765027468325,
+          "predictedChangePercent": 0.5944554400499653
+        },
+        {
+          "days": 270,
+          "predictedRate": 3.6628503776824664,
+          "predictedChangePercent": -9.93729093478076
+        },
+        {
+          "days": 365,
+          "predictedRate": 4.081556324874562,
+          "predictedChangePercent": 0.35791307781071474
         }
       ],
       "predictionDate": "2026-07-05T00:00:00.000Z"
