@@ -1,7 +1,7 @@
 {
   "date": "2026-07-08",
-  "timestamp": "2026-07-07T14:57:28.494Z",
-  "totalPredictions": 2,
+  "timestamp": "2026-07-07T14:57:28.692Z",
+  "totalPredictions": 3,
   "complete": false,
   "results": [
     {
@@ -64,6 +64,38 @@
           "days": 365,
           "predictedRate": 6.508664881928246,
           "predictedChangePercent": 37.73815244727412
+        }
+      ],
+      "predictionDate": "2026-07-08T00:00:00.000Z"
+    },
+    {
+      "pair": "AUDEUR",
+      "currentRate": 0.60754,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 0.6195102904613755,
+          "predictedChangePercent": 1.970288452015586
+        },
+        {
+          "days": 90,
+          "predictedRate": 0.5778489172145196,
+          "predictedChangePercent": -4.887099250334203
+        },
+        {
+          "days": 180,
+          "predictedRate": 0.5884623066132233,
+          "predictedChangePercent": -3.1401542921909145
+        },
+        {
+          "days": 270,
+          "predictedRate": 0.5801598046431738,
+          "predictedChangePercent": -4.506731302766259
+        },
+        {
+          "days": 365,
+          "predictedRate": 0.6716526228270634,
+          "predictedChangePercent": 10.55282332472979
         }
       ],
       "predictionDate": "2026-07-08T00:00:00.000Z"
