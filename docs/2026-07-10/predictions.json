@@ -1,7 +1,7 @@
 {
   "date": "2026-07-10",
-  "timestamp": "2026-07-09T14:34:54.135Z",
-  "totalPredictions": 7,
+  "timestamp": "2026-07-09T14:34:54.244Z",
+  "totalPredictions": 8,
   "complete": false,
   "results": [
     {
@@ -224,6 +224,38 @@
           "days": 365,
           "predictedRate": 1.0584613078637908,
           "predictedChangePercent": 3.9164031793387593
+        }
+      ],
+      "predictionDate": "2026-07-10T00:00:00.000Z"
+    },
+    {
+      "pair": "CADCNY",
+      "currentRate": 4.80143,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 4.801389506543198,
+          "predictedChangePercent": -0.000843362431643968
+        },
+        {
+          "days": 90,
+          "predictedRate": 4.7294808129816985,
+          "predictedChangePercent": -1.4984949695882448
+        },
+        {
+          "days": 180,
+          "predictedRate": 4.765965732014924,
+          "predictedChangePercent": -0.7386188694842063
+        },
+        {
+          "days": 270,
+          "predictedRate": 4.599125891058572,
+          "predictedChangePercent": -4.213413690117904
+        },
+        {
+          "days": 365,
+          "predictedRate": 5.305823188730926,
+          "predictedChangePercent": 10.505061798900059
         }
       ],
       "predictionDate": "2026-07-10T00:00:00.000Z"
