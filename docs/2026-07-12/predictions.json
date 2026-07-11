@@ -1,7 +1,7 @@
 {
   "date": "2026-07-12",
-  "timestamp": "2026-07-11T15:24:59.505Z",
-  "totalPredictions": 39,
+  "timestamp": "2026-07-11T15:24:59.568Z",
+  "totalPredictions": 40,
   "complete": false,
   "results": [
     {
@@ -1248,6 +1248,38 @@
           "days": 365,
           "predictedRate": 1.496276362469108,
           "predictedChangePercent": -13.829316666622034
+        }
+      ],
+      "predictionDate": "2026-07-12T00:00:00.000Z"
+    },
+    {
+      "pair": "USDPEN",
+      "currentRate": 3.3904999999999994,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 3.4636420383461615,
+          "predictedChangePercent": 2.157264071557659
+        },
+        {
+          "days": 90,
+          "predictedRate": 3.6691922461427264,
+          "predictedChangePercent": 8.219797851134853
+        },
+        {
+          "days": 180,
+          "predictedRate": 4.766220740293551,
+          "predictedChangePercent": 40.57574812840441
+        },
+        {
+          "days": 270,
+          "predictedRate": 3.5531554910121605,
+          "predictedChangePercent": 4.797389500432422
+        },
+        {
+          "days": 365,
+          "predictedRate": 3.3091565461489547,
+          "predictedChangePercent": -2.399158054889984
         }
       ],
       "predictionDate": "2026-07-12T00:00:00.000Z"
