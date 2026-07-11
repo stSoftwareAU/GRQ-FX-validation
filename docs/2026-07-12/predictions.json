@@ -1,7 +1,7 @@
 {
   "date": "2026-07-12",
-  "timestamp": "2026-07-11T15:24:58.462Z",
-  "totalPredictions": 20,
+  "timestamp": "2026-07-11T15:24:58.525Z",
+  "totalPredictions": 21,
   "complete": false,
   "results": [
     {
@@ -640,6 +640,38 @@
           "days": 365,
           "predictedRate": 3.8674934582785254,
           "predictedChangePercent": -24.298900775538268
+        }
+      ],
+      "predictionDate": "2026-07-12T00:00:00.000Z"
+    },
+    {
+      "pair": "USDCAD",
+      "currentRate": 1.4152999999999998,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 1.3762439430701192,
+          "predictedChangePercent": -2.759560300281265
+        },
+        {
+          "days": 90,
+          "predictedRate": 1.4188085975328981,
+          "predictedChangePercent": 0.24790486348464422
+        },
+        {
+          "days": 180,
+          "predictedRate": 1.452445688462084,
+          "predictedChangePercent": 2.624580545614661
+        },
+        {
+          "days": 270,
+          "predictedRate": 1.3393318385880055,
+          "predictedChangePercent": -5.367636643255447
+        },
+        {
+          "days": 365,
+          "predictedRate": 1.229974585666762,
+          "predictedChangePercent": -13.094426222937741
         }
       ],
       "predictionDate": "2026-07-12T00:00:00.000Z"
