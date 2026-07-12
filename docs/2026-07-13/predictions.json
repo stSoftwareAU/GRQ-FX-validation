@@ -1,7 +1,7 @@
 {
   "date": "2026-07-13",
-  "timestamp": "2026-07-12T15:19:37.950Z",
-  "totalPredictions": 46,
+  "timestamp": "2026-07-12T15:19:37.998Z",
+  "totalPredictions": 47,
   "complete": false,
   "results": [
     {
@@ -1472,6 +1472,38 @@
           "days": 365,
           "predictedRate": 1.312931241855127,
           "predictedChangePercent": 1.6672790657524434
+        }
+      ],
+      "predictionDate": "2026-07-13T00:00:00.000Z"
+    },
+    {
+      "pair": "USDTHB",
+      "currentRate": 33.25,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 33.401963323776336,
+          "predictedChangePercent": 0.4570325527107993
+        },
+        {
+          "days": 90,
+          "predictedRate": 31.318627006535426,
+          "predictedChangePercent": -5.808640581848344
+        },
+        {
+          "days": 180,
+          "predictedRate": 34.21404964363413,
+          "predictedChangePercent": 2.8993974244635377
+        },
+        {
+          "days": 270,
+          "predictedRate": 30.558832883012457,
+          "predictedChangePercent": -8.093735690188103
+        },
+        {
+          "days": 365,
+          "predictedRate": 33.1367656121422,
+          "predictedChangePercent": -0.34055454994827195
         }
       ],
       "predictionDate": "2026-07-13T00:00:00.000Z"
