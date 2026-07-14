@@ -1,7 +1,7 @@
 {
   "date": "2026-07-15",
-  "timestamp": "2026-07-14T23:57:30.595Z",
-  "totalPredictions": 21,
+  "timestamp": "2026-07-14T23:57:30.704Z",
+  "totalPredictions": 22,
   "complete": false,
   "results": [
     {
@@ -672,6 +672,38 @@
           "days": 365,
           "predictedRate": 1.27524546643185,
           "predictedChangePercent": -9.902114848675284
+        }
+      ],
+      "predictionDate": "2026-07-15T00:00:00.000Z"
+    },
+    {
+      "pair": "USDCHF",
+      "currentRate": 0.8089,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 0.7981386238231206,
+          "predictedChangePercent": -1.330371637641163
+        },
+        {
+          "days": 90,
+          "predictedRate": 0.7921210813395702,
+          "predictedChangePercent": -2.0742883743886527
+        },
+        {
+          "days": 180,
+          "predictedRate": 0.8048076992215991,
+          "predictedChangePercent": -0.5059093557177536
+        },
+        {
+          "days": 270,
+          "predictedRate": 0.7788846763535041,
+          "predictedChangePercent": -3.7106346453821057
+        },
+        {
+          "days": 365,
+          "predictedRate": 0.7688115768517042,
+          "predictedChangePercent": -4.955918302422509
         }
       ],
       "predictionDate": "2026-07-15T00:00:00.000Z"
