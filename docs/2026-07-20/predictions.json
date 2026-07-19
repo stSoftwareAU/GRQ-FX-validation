@@ -1,7 +1,7 @@
 {
   "date": "2026-07-20",
-  "timestamp": "2026-07-19T16:47:29.941Z",
-  "totalPredictions": 47,
+  "timestamp": "2026-07-19T16:47:30.010Z",
+  "totalPredictions": 48,
   "complete": false,
   "results": [
     {
@@ -1504,6 +1504,38 @@
           "days": 365,
           "predictedRate": 35.20069478422067,
           "predictedChangePercent": 4.82636922043083
+        }
+      ],
+      "predictionDate": "2026-07-20T00:00:00.000Z"
+    },
+    {
+      "pair": "USDTRY",
+      "currentRate": 47.1374,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 47.1374,
+          "predictedChangePercent": 0
+        },
+        {
+          "days": 90,
+          "predictedRate": 48.701577432326566,
+          "predictedChangePercent": 3.3183362517376094
+        },
+        {
+          "days": 180,
+          "predictedRate": 48.2440819663015,
+          "predictedChangePercent": 2.347778974448113
+        },
+        {
+          "days": 270,
+          "predictedRate": 54.90095972953869,
+          "predictedChangePercent": 16.47006353667935
+        },
+        {
+          "days": 365,
+          "predictedRate": 66.60449202042977,
+          "predictedChangePercent": 41.29861218571619
         }
       ],
       "predictionDate": "2026-07-20T00:00:00.000Z"
