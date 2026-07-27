@@ -1,7 +1,7 @@
 {
   "date": "2026-07-27",
-  "timestamp": "2026-07-27T11:59:45.826Z",
-  "totalPredictions": 1,
+  "timestamp": "2026-07-27T11:59:45.965Z",
+  "totalPredictions": 2,
   "complete": false,
   "results": [
     {
@@ -32,6 +32,38 @@
           "days": 365,
           "predictedRate": 0.9779010321573374,
           "predictedChangePercent": -0.5672680524934552
+        }
+      ],
+      "predictionDate": "2026-07-27T00:00:00.000Z"
+    },
+    {
+      "pair": "AUDCNY",
+      "currentRate": 4.7264,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 4.806189008313457,
+          "predictedChangePercent": 1.6881560662122812
+        },
+        {
+          "days": 90,
+          "predictedRate": 4.617341711398016,
+          "predictedChangePercent": -2.3074282456411708
+        },
+        {
+          "days": 180,
+          "predictedRate": 4.701591624139094,
+          "predictedChangePercent": -0.52488946895959
+        },
+        {
+          "days": 270,
+          "predictedRate": 4.88935343268134,
+          "predictedChangePercent": 3.447728348877378
+        },
+        {
+          "days": 365,
+          "predictedRate": 6.271918866128314,
+          "predictedChangePercent": 32.69970519059567
         }
       ],
       "predictionDate": "2026-07-27T00:00:00.000Z"
