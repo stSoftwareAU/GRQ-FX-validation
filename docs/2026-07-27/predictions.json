@@ -1,7 +1,7 @@
 {
   "date": "2026-07-27",
-  "timestamp": "2026-07-27T11:59:48.564Z",
-  "totalPredictions": 40,
+  "timestamp": "2026-07-27T11:59:48.637Z",
+  "totalPredictions": 41,
   "complete": false,
   "results": [
     {
@@ -1280,6 +1280,38 @@
           "days": 365,
           "predictedRate": 3.6562411140603666,
           "predictedChangePercent": 7.530178050125488
+        }
+      ],
+      "predictionDate": "2026-07-27T00:00:00.000Z"
+    },
+    {
+      "pair": "USDPHP",
+      "currentRate": 61.667,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 63.35347297564373,
+          "predictedChangePercent": 2.734806258847891
+        },
+        {
+          "days": 90,
+          "predictedRate": 62.538728302874794,
+          "predictedChangePercent": 1.4136058230087292
+        },
+        {
+          "days": 180,
+          "predictedRate": 66.38643818312245,
+          "predictedChangePercent": 7.6531016315411025
+        },
+        {
+          "days": 270,
+          "predictedRate": 73.16619588855554,
+          "predictedChangePercent": 18.64724388823119
+        },
+        {
+          "days": 365,
+          "predictedRate": 81.42823673931592,
+          "predictedChangePercent": 32.04507554983365
         }
       ],
       "predictionDate": "2026-07-27T00:00:00.000Z"
