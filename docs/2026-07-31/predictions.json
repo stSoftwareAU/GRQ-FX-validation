@@ -1,7 +1,7 @@
 {
   "date": "2026-07-31",
-  "timestamp": "2026-07-31T06:25:59.262Z",
-  "totalPredictions": 6,
+  "timestamp": "2026-07-31T06:25:59.394Z",
+  "totalPredictions": 7,
   "complete": false,
   "results": [
     {
@@ -192,6 +192,38 @@
           "days": 365,
           "predictedRate": 0.7783784016662231,
           "predictedChangePercent": 11.932470760170126
+        }
+      ],
+      "predictionDate": "2026-07-31T00:00:00.000Z"
+    },
+    {
+      "pair": "CADAUD",
+      "currentRate": 1.02394,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 1.1161593505990035,
+          "predictedChangePercent": 9.006323671211554
+        },
+        {
+          "days": 90,
+          "predictedRate": 1.022426935079862,
+          "predictedChangePercent": -0.14776890444148644
+        },
+        {
+          "days": 180,
+          "predictedRate": 1.023940000495767,
+          "predictedChangePercent": 4.8417586606674945e-8
+        },
+        {
+          "days": 270,
+          "predictedRate": 0.9906608884121849,
+          "predictedChangePercent": -3.250103676759889
+        },
+        {
+          "days": 365,
+          "predictedRate": 1.1622269150777196,
+          "predictedChangePercent": 13.505372881000808
         }
       ],
       "predictionDate": "2026-07-31T00:00:00.000Z"
