@@ -1,7 +1,7 @@
 {
   "date": "2026-08-01",
-  "timestamp": "2026-08-01T01:45:12.891Z",
-  "totalPredictions": 49,
+  "timestamp": "2026-08-01T01:45:13.030Z",
+  "totalPredictions": 50,
   "complete": false,
   "results": [
     {
@@ -1568,6 +1568,38 @@
           "days": 365,
           "predictedRate": 29.960674779730077,
           "predictedChangePercent": -7.494520255248614
+        }
+      ],
+      "predictionDate": "2026-08-01T00:00:00.000Z"
+    },
+    {
+      "pair": "USDVND",
+      "currentRate": 26279,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 26279,
+          "predictedChangePercent": 0
+        },
+        {
+          "days": 90,
+          "predictedRate": 27327.033253532532,
+          "predictedChangePercent": 3.9881017296416466
+        },
+        {
+          "days": 180,
+          "predictedRate": 26756.47899638861,
+          "predictedChangePercent": 1.8169602967716068
+        },
+        {
+          "days": 270,
+          "predictedRate": 26314.367367321403,
+          "predictedChangePercent": 0.13458414445529407
+        },
+        {
+          "days": 365,
+          "predictedRate": 28416.238889669286,
+          "predictedChangePercent": 8.132877543549172
         }
       ],
       "predictionDate": "2026-08-01T00:00:00.000Z"
