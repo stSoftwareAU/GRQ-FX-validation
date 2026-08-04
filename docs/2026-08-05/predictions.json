@@ -1,7 +1,7 @@
 {
   "date": "2026-08-05",
-  "timestamp": "2026-08-04T22:24:47.002Z",
-  "totalPredictions": 9,
+  "timestamp": "2026-08-04T22:24:47.092Z",
+  "totalPredictions": 10,
   "complete": false,
   "results": [
     {
@@ -288,6 +288,38 @@
           "days": 365,
           "predictedRate": 0.6388406720530307,
           "predictedChangePercent": 3.2603281318038158
+        }
+      ],
+      "predictionDate": "2026-08-05T00:00:00.000Z"
+    },
+    {
+      "pair": "CADGBP",
+      "currentRate": 0.53031,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 0.5375450732288639,
+          "predictedChangePercent": 1.3643101636522046
+        },
+        {
+          "days": 90,
+          "predictedRate": 0.5303084064275857,
+          "predictedChangePercent": -0.0003004982772845274
+        },
+        {
+          "days": 180,
+          "predictedRate": 0.5302657349063054,
+          "predictedChangePercent": -0.008347022250122252
+        },
+        {
+          "days": 270,
+          "predictedRate": 0.4744764108638756,
+          "predictedChangePercent": -10.528481291343619
+        },
+        {
+          "days": 365,
+          "predictedRate": 0.6223565423207909,
+          "predictedChangePercent": 17.357119858345303
         }
       ],
       "predictionDate": "2026-08-05T00:00:00.000Z"
