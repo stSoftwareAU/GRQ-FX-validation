@@ -1,7 +1,7 @@
 {
   "date": "2026-08-13",
-  "timestamp": "2026-08-12T22:29:58.345Z",
-  "totalPredictions": 34,
+  "timestamp": "2026-08-12T22:29:58.445Z",
+  "totalPredictions": 35,
   "complete": false,
   "results": [
     {
@@ -1088,6 +1088,38 @@
           "days": 365,
           "predictedRate": 0.8275,
           "predictedChangePercent": 0
+        }
+      ],
+      "predictionDate": "2026-08-13T00:00:00.000Z"
+    },
+    {
+      "pair": "USDKZT",
+      "currentRate": 466.19,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 466.19,
+          "predictedChangePercent": 0
+        },
+        {
+          "days": 90,
+          "predictedRate": 463.45998582265696,
+          "predictedChangePercent": -0.5856011877867477
+        },
+        {
+          "days": 180,
+          "predictedRate": 436.7478782224497,
+          "predictedChangePercent": -6.315476903741037
+        },
+        {
+          "days": 270,
+          "predictedRate": 593.705559690596,
+          "predictedChangePercent": 27.352701621784263
+        },
+        {
+          "days": 365,
+          "predictedRate": 554.1609978495828,
+          "predictedChangePercent": 18.870202674785553
         }
       ],
       "predictionDate": "2026-08-13T00:00:00.000Z"
