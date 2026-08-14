@@ -1,7 +1,7 @@
 {
   "date": "2026-08-14",
-  "timestamp": "2026-08-14T01:47:34.488Z",
-  "totalPredictions": 32,
+  "timestamp": "2026-08-14T01:47:34.590Z",
+  "totalPredictions": 33,
   "complete": false,
   "results": [
     {
@@ -1024,6 +1024,38 @@
           "days": 365,
           "predictedRate": 153.9307806722169,
           "predictedChangePercent": -3.4371867058422247
+        }
+      ],
+      "predictionDate": "2026-08-14T00:00:00.000Z"
+    },
+    {
+      "pair": "USDKRW",
+      "currentRate": 1417.99,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 1417.99,
+          "predictedChangePercent": 0
+        },
+        {
+          "days": 90,
+          "predictedRate": 1301.1196710048994,
+          "predictedChangePercent": -8.241971311158789
+        },
+        {
+          "days": 180,
+          "predictedRate": 1494.4334308397667,
+          "predictedChangePercent": 5.390971081584973
+        },
+        {
+          "days": 270,
+          "predictedRate": 1180.216732792194,
+          "predictedChangePercent": -16.768331737727763
+        },
+        {
+          "days": 365,
+          "predictedRate": 1070.913481354953,
+          "predictedChangePercent": -24.47665488790801
         }
       ],
       "predictionDate": "2026-08-14T00:00:00.000Z"
