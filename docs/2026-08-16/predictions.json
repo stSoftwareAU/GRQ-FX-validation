@@ -1,7 +1,7 @@
 {
   "date": "2026-08-16",
-  "timestamp": "2026-08-15T16:49:45.315Z",
-  "totalPredictions": 14,
+  "timestamp": "2026-08-15T16:49:45.381Z",
+  "totalPredictions": 15,
   "complete": false,
   "results": [
     {
@@ -448,6 +448,38 @@
           "days": 365,
           "predictedRate": 1.1564078248347789,
           "predictedChangePercent": -0.042542584944345
+        }
+      ],
+      "predictionDate": "2026-08-16T00:00:00.000Z"
+    },
+    {
+      "pair": "GBPCNY",
+      "currentRate": 9.12217,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 9.204222353858011,
+          "predictedChangePercent": 0.8994828407934927
+        },
+        {
+          "days": 90,
+          "predictedRate": 9.007108675148157,
+          "predictedChangePercent": -1.2613372130956007
+        },
+        {
+          "days": 180,
+          "predictedRate": 9.210788936189308,
+          "predictedChangePercent": 0.9714677120609173
+        },
+        {
+          "days": 270,
+          "predictedRate": 9.810603545576091,
+          "predictedChangePercent": 7.54681775910875
+        },
+        {
+          "days": 365,
+          "predictedRate": 9.479576999672727,
+          "predictedChangePercent": 3.91800415551043
         }
       ],
       "predictionDate": "2026-08-16T00:00:00.000Z"
