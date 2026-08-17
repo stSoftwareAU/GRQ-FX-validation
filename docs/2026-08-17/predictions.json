@@ -1,7 +1,7 @@
 {
   "date": "2026-08-17",
-  "timestamp": "2026-08-17T01:49:15.698Z",
-  "totalPredictions": 50,
+  "timestamp": "2026-08-17T01:49:15.783Z",
+  "totalPredictions": 51,
   "complete": false,
   "results": [
     {
@@ -1600,6 +1600,38 @@
           "days": 365,
           "predictedRate": 28565.852220260025,
           "predictedChangePercent": 9.250974185413336
+        }
+      ],
+      "predictionDate": "2026-08-17T00:00:00.000Z"
+    },
+    {
+      "pair": "USDZAR",
+      "currentRate": 16.1664,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 16.303641698109637,
+          "predictedChangePercent": 0.8489317232632944
+        },
+        {
+          "days": 90,
+          "predictedRate": 17.056012054310575,
+          "predictedChangePercent": 5.502845743706544
+        },
+        {
+          "days": 180,
+          "predictedRate": 14.347235046378355,
+          "predictedChangePercent": -11.252752335842516
+        },
+        {
+          "days": 270,
+          "predictedRate": 16.98946284559718,
+          "predictedChangePercent": 5.091194363600933
+        },
+        {
+          "days": 365,
+          "predictedRate": 17.951422415743604,
+          "predictedChangePercent": 11.041557896276258
         }
       ],
       "predictionDate": "2026-08-17T00:00:00.000Z"
