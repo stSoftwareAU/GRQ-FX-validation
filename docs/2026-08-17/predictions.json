@@ -1,7 +1,7 @@
 {
   "date": "2026-08-17",
-  "timestamp": "2026-08-17T01:49:10.225Z",
-  "totalPredictions": 4,
+  "timestamp": "2026-08-17T01:49:10.331Z",
+  "totalPredictions": 5,
   "complete": false,
   "results": [
     {
@@ -128,6 +128,38 @@
           "days": 365,
           "predictedRate": 0.46100499949061835,
           "predictedChangePercent": -11.914361148995276
+        }
+      ],
+      "predictionDate": "2026-08-17T00:00:00.000Z"
+    },
+    {
+      "pair": "AUDJPY",
+      "currentRate": 112.80033,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 105.18158934217689,
+          "predictedChangePercent": -6.75418295125831
+        },
+        {
+          "days": 90,
+          "predictedRate": 118.77332590127727,
+          "predictedChangePercent": 5.295193641080018
+        },
+        {
+          "days": 180,
+          "predictedRate": 112.48796584836585,
+          "predictedChangePercent": -0.27691776401199775
+        },
+        {
+          "days": 270,
+          "predictedRate": 115.43600101556645,
+          "predictedChangePercent": 2.336580944015368
+        },
+        {
+          "days": 365,
+          "predictedRate": 127.60598875321531,
+          "predictedChangePercent": 13.125545601874848
         }
       ],
       "predictionDate": "2026-08-17T00:00:00.000Z"
