@@ -1,7 +1,7 @@
 {
   "date": "2026-08-17",
-  "timestamp": "2026-08-17T01:49:14.253Z",
-  "totalPredictions": 38,
+  "timestamp": "2026-08-17T01:49:14.403Z",
+  "totalPredictions": 39,
   "complete": false,
   "results": [
     {
@@ -1216,6 +1216,38 @@
           "days": 365,
           "predictedRate": 7.580911074192718,
           "predictedChangePercent": -19.536049735257464
+        }
+      ],
+      "predictionDate": "2026-08-17T00:00:00.000Z"
+    },
+    {
+      "pair": "USDNZD",
+      "currentRate": 1.69808,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 1.7247633279954027,
+          "predictedChangePercent": 1.5713822667602522
+        },
+        {
+          "days": 90,
+          "predictedRate": 2.0482495509923315,
+          "predictedChangePercent": 20.621499045529752
+        },
+        {
+          "days": 180,
+          "predictedRate": 1.8724839982066823,
+          "predictedChangePercent": 10.27065852060459
+        },
+        {
+          "days": 270,
+          "predictedRate": 1.7938817594565206,
+          "predictedChangePercent": 5.641769495931918
+        },
+        {
+          "days": 365,
+          "predictedRate": 1.7599511583919911,
+          "predictedChangePercent": 3.643595024497728
         }
       ],
       "predictionDate": "2026-08-17T00:00:00.000Z"
