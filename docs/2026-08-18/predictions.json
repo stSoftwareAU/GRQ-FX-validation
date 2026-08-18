@@ -1,7 +1,7 @@
 {
   "date": "2026-08-18",
-  "timestamp": "2026-08-18T01:56:54.729Z",
-  "totalPredictions": 47,
+  "timestamp": "2026-08-18T01:56:54.823Z",
+  "totalPredictions": 48,
   "complete": false,
   "results": [
     {
@@ -1504,6 +1504,38 @@
           "days": 365,
           "predictedRate": 35.48845490155165,
           "predictedChangePercent": 7.215875835503479
+        }
+      ],
+      "predictionDate": "2026-08-18T00:00:00.000Z"
+    },
+    {
+      "pair": "USDTRY",
+      "currentRate": 47.8791,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 47.8791,
+          "predictedChangePercent": 0
+        },
+        {
+          "days": 90,
+          "predictedRate": 47.28560882523013,
+          "predictedChangePercent": -1.2395620944626622
+        },
+        {
+          "days": 180,
+          "predictedRate": 52.340896089582124,
+          "predictedChangePercent": 9.318880450096435
+        },
+        {
+          "days": 270,
+          "predictedRate": 61.07798245002343,
+          "predictedChangePercent": 27.56710642017797
+        },
+        {
+          "days": 365,
+          "predictedRate": 78.04207691986241,
+          "predictedChangePercent": 62.99821199617871
         }
       ],
       "predictionDate": "2026-08-18T00:00:00.000Z"
