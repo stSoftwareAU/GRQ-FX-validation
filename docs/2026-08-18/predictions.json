@@ -1,7 +1,7 @@
 {
   "date": "2026-08-18",
-  "timestamp": "2026-08-18T01:56:52.147Z",
-  "totalPredictions": 21,
+  "timestamp": "2026-08-18T01:56:52.267Z",
+  "totalPredictions": 22,
   "complete": false,
   "results": [
     {
@@ -672,6 +672,38 @@
           "days": 365,
           "predictedRate": 1.3742003964788188,
           "predictedChangePercent": -0.9371109804773049
+        }
+      ],
+      "predictionDate": "2026-08-18T00:00:00.000Z"
+    },
+    {
+      "pair": "USDCHF",
+      "currentRate": 0.8131,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 0.8128641967368099,
+          "predictedChangePercent": -0.02900052431315522
+        },
+        {
+          "days": 90,
+          "predictedRate": 0.8027456228640562,
+          "predictedChangePercent": -1.273444488493906
+        },
+        {
+          "days": 180,
+          "predictedRate": 0.8350726176297992,
+          "predictedChangePercent": 2.702326605558869
+        },
+        {
+          "days": 270,
+          "predictedRate": 0.83780356611099,
+          "predictedChangePercent": 3.0381953155811257
+        },
+        {
+          "days": 365,
+          "predictedRate": 0.8153758729453252,
+          "predictedChangePercent": 0.27990074349098454
         }
       ],
       "predictionDate": "2026-08-18T00:00:00.000Z"
