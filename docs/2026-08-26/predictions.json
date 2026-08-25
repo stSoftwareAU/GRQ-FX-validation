@@ -1,7 +1,7 @@
 {
   "date": "2026-08-26",
-  "timestamp": "2026-08-25T15:13:21.215Z",
-  "totalPredictions": 35,
+  "timestamp": "2026-08-25T15:13:21.307Z",
+  "totalPredictions": 36,
   "complete": false,
   "results": [
     {
@@ -1120,6 +1120,38 @@
           "days": 365,
           "predictedRate": 496.85532712079834,
           "predictedChangePercent": 8.685404598227798
+        }
+      ],
+      "predictionDate": "2026-08-26T00:00:00.000Z"
+    },
+    {
+      "pair": "USDMXN",
+      "currentRate": 16.942,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 16.942,
+          "predictedChangePercent": 0
+        },
+        {
+          "days": 90,
+          "predictedRate": 16.79205738356839,
+          "predictedChangePercent": -0.885034921683445
+        },
+        {
+          "days": 180,
+          "predictedRate": 16.942288187229224,
+          "predictedChangePercent": 0.0017010224839217592
+        },
+        {
+          "days": 270,
+          "predictedRate": 15.336023674749995,
+          "predictedChangePercent": -9.479260566934276
+        },
+        {
+          "days": 365,
+          "predictedRate": 13.122108305817038,
+          "predictedChangePercent": -22.54687577725748
         }
       ],
       "predictionDate": "2026-08-26T00:00:00.000Z"
