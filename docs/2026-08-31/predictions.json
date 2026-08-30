@@ -1,7 +1,7 @@
 {
   "date": "2026-08-31",
-  "timestamp": "2026-08-30T17:39:57.492Z",
-  "totalPredictions": 10,
+  "timestamp": "2026-08-30T17:39:57.598Z",
+  "totalPredictions": 11,
   "complete": false,
   "results": [
     {
@@ -320,6 +320,38 @@
           "days": 365,
           "predictedRate": 0.606225812562057,
           "predictedChangePercent": 14.052981499079456
+        }
+      ],
+      "predictionDate": "2026-08-31T00:00:00.000Z"
+    },
+    {
+      "pair": "CADJPY",
+      "currentRate": 115.12841,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 101.88439256240868,
+          "predictedChangePercent": -11.5036917799797
+        },
+        {
+          "days": 90,
+          "predictedRate": 109.19000700695942,
+          "predictedChangePercent": -5.158069144740715
+        },
+        {
+          "days": 180,
+          "predictedRate": 127.64128608976864,
+          "predictedChangePercent": 10.86862581509521
+        },
+        {
+          "days": 270,
+          "predictedRate": 99.88003408887009,
+          "predictedChangePercent": -13.244668202340252
+        },
+        {
+          "days": 365,
+          "predictedRate": 101.56069017455911,
+          "predictedChangePercent": -11.784858164410405
         }
       ],
       "predictionDate": "2026-08-31T00:00:00.000Z"
