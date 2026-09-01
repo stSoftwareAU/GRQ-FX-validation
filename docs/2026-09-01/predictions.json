@@ -1,7 +1,7 @@
 {
   "date": "2026-09-01",
-  "timestamp": "2026-09-01T13:57:01.999Z",
-  "totalPredictions": 13,
+  "timestamp": "2026-09-01T13:57:02.141Z",
+  "totalPredictions": 14,
   "complete": false,
   "results": [
     {
@@ -416,6 +416,38 @@
           "days": 365,
           "predictedRate": 222.04111742555554,
           "predictedChangePercent": 19.672910114021526
+        }
+      ],
+      "predictionDate": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "pair": "EURUSD",
+      "currentRate": 1.1616,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 1.146055628330356,
+          "predictedChangePercent": -1.3381862663261075
+        },
+        {
+          "days": 90,
+          "predictedRate": 1.161723997687833,
+          "predictedChangePercent": 0.010674732079297401
+        },
+        {
+          "days": 180,
+          "predictedRate": 1.960827630743772,
+          "predictedChangePercent": 68.80403157229442
+        },
+        {
+          "days": 270,
+          "predictedRate": 1.9290403452858633,
+          "predictedChangePercent": 66.06752283797033
+        },
+        {
+          "days": 365,
+          "predictedRate": 1.1470292358664493,
+          "predictedChangePercent": -1.2543701905604787
         }
       ],
       "predictionDate": "2026-09-01T00:00:00.000Z"
