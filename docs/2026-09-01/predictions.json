@@ -1,7 +1,7 @@
 {
   "date": "2026-09-01",
-  "timestamp": "2026-09-01T13:57:06.963Z",
-  "totalPredictions": 47,
+  "timestamp": "2026-09-01T13:57:07.124Z",
+  "totalPredictions": 48,
   "complete": false,
   "results": [
     {
@@ -1504,6 +1504,38 @@
           "days": 365,
           "predictedRate": 35.95805905581483,
           "predictedChangePercent": 8.503497452669961
+        }
+      ],
+      "predictionDate": "2026-09-01T00:00:00.000Z"
+    },
+    {
+      "pair": "USDTRY",
+      "currentRate": 48.16,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 48.09801937913254,
+          "predictedChangePercent": -0.12869730246564892
+        },
+        {
+          "days": 90,
+          "predictedRate": 50.06119614693614,
+          "predictedChangePercent": 3.9476664180567758
+        },
+        {
+          "days": 180,
+          "predictedRate": 57.86892444665345,
+          "predictedChangePercent": 20.159726841057854
+        },
+        {
+          "days": 270,
+          "predictedRate": 60.20676105240996,
+          "predictedChangePercent": 25.01403873008713
+        },
+        {
+          "days": 365,
+          "predictedRate": 81.32524048455257,
+          "predictedChangePercent": 68.86470200280851
         }
       ],
       "predictionDate": "2026-09-01T00:00:00.000Z"
