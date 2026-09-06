@@ -1,7 +1,7 @@
 {
   "date": "2026-09-07",
-  "timestamp": "2026-09-06T22:29:16.420Z",
-  "totalPredictions": 25,
+  "timestamp": "2026-09-06T22:29:16.620Z",
+  "totalPredictions": 26,
   "complete": false,
   "results": [
     {
@@ -800,6 +800,38 @@
           "days": 365,
           "predictedRate": 3124.5,
           "predictedChangePercent": 0
+        }
+      ],
+      "predictionDate": "2026-09-07T00:00:00.000Z"
+    },
+    {
+      "pair": "USDDKK",
+      "currentRate": 6.4356,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 6.434767603956742,
+          "predictedChangePercent": -0.012934241457792416
+        },
+        {
+          "days": 90,
+          "predictedRate": 6.282784020912063,
+          "predictedChangePercent": -2.374541287338209
+        },
+        {
+          "days": 180,
+          "predictedRate": 6.114878136561361,
+          "predictedChangePercent": -4.983558074439659
+        },
+        {
+          "days": 270,
+          "predictedRate": 6.2054199082547035,
+          "predictedChangePercent": -3.5766687137997426
+        },
+        {
+          "days": 365,
+          "predictedRate": 6.399178315028299,
+          "predictedChangePercent": -0.565940782082499
         }
       ],
       "predictionDate": "2026-09-07T00:00:00.000Z"
