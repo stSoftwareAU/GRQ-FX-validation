@@ -208,3 +208,30 @@ test("ci workflow declares a top-level minimal permissions block (issue #37)", (
     `expected top-level contents: read, saw '${wf.permissions.contents}'`,
   );
 });
+
+test("ci workflow check-changes checkout does not persist credentials (issue #121)", () => {
+  // By default actions/checkout writes the workflow's GITHUB_TOKEN into
+  // .git/config as an auth header, where any later step in the job — a
+  // compromised dependency or an injected script — can read it and act
+  // as the token. The check-changes job only diffs locally; it never
+  // pushes back or fetches a private submodule, so the credential must
+  // not be left on disk.
+  const wf = loadWorkflow(WORKFLOW);
+  const job = wf.jobs["check-changes"];
+  assert.ok(job, "expected a 'check-changes' job in ci.yml");
+  const checkouts = (job.steps ?? []).filter(
+    (s) =>
+      typeof s?.uses === "string" && s.uses.startsWith("actions/checkout@"),
+  );
+  assert.ok(
+    checkouts.length > 0,
+    "expected an actions/checkout step in the check-changes job",
+  );
+  for (const step of checkouts) {
+    assert.equal(
+      step.with?.["persist-credentials"],
+      false,
+      "check-changes checkout must set `persist-credentials: false`",
+    );
+  }
+});
