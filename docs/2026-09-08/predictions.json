@@ -1,7 +1,7 @@
 {
   "date": "2026-09-08",
-  "timestamp": "2026-09-08T10:37:32.113Z",
-  "totalPredictions": 39,
+  "timestamp": "2026-09-08T10:37:32.313Z",
+  "totalPredictions": 40,
   "complete": false,
   "results": [
     {
@@ -1248,6 +1248,38 @@
           "days": 365,
           "predictedRate": 1.764789609183454,
           "predictedChangePercent": 3.769645623130412
+        }
+      ],
+      "predictionDate": "2026-09-08T00:00:00.000Z"
+    },
+    {
+      "pair": "USDPEN",
+      "currentRate": 3.3574,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 3.3942241379780533,
+          "predictedChangePercent": 1.0968052057560262
+        },
+        {
+          "days": 90,
+          "predictedRate": 3.3574714949959947,
+          "predictedChangePercent": 0.002129475069845205
+        },
+        {
+          "days": 180,
+          "predictedRate": 3.342120679927859,
+          "predictedChangePercent": -0.45509382474954235
+        },
+        {
+          "days": 270,
+          "predictedRate": 3.358153093969149,
+          "predictedChangePercent": 0.022430868206024166
+        },
+        {
+          "days": 365,
+          "predictedRate": 3.600237972879671,
+          "predictedChangePercent": 7.23291752188213
         }
       ],
       "predictionDate": "2026-09-08T00:00:00.000Z"
