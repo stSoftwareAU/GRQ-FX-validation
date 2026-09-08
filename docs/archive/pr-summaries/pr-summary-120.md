@@ -34,7 +34,8 @@ $ node --test tests/accessibility-workflow.test.js
 ```
 
 Full gate: `./quality.sh < /dev/null` → `[quality] All checks passed.`
-(257 Node assertions, 95 Deno tests).
+(257 Node assertions, 95 Deno tests). Workflow hygiene re-scanned after the
+fix: no strict-mode violations remain.
 
 ```mermaid
 flowchart LR
@@ -43,6 +44,16 @@ flowchart LR
     B --> D[headless Chromium run]
     A -.->|after: persistence disabled| E[no credential on disk]
 ```
+
+## Unrequested but required change
+
+The workflow-hygiene gate blocked this PR on two pre-existing violations in
+workflows unrelated to the a11y job — `deno-quality.yml` (the folded
+`deno test` block) and `markdown-lint.yml` (the Deno-detect block) — neither
+of which opened with `set -euo pipefail`, so a failing command mid-block
+would have been swallowed. Both now open with the strict-mode preamble; the
+folded scalar became a literal block with line continuations, leaving the
+`deno test` command byte-identical. Without this the PR could not be raised.
 
 ## Test Plan
 
