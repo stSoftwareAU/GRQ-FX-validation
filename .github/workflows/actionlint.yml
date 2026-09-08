@@ -1,0 +1,66 @@
+name: Actionlint
+
+# Issue #119: nothing linted the workflow YAML itself, so a syntax
+# error, an invalid `${{ }}` expression or a shell bug inside a `run:`
+# block only surfaced when a workflow failed at runtime. actionlint is
+# the standard linter for GitHub Actions workflows — it also runs
+# ShellCheck over every `run:` block — so workflow regressions now fail
+# the build on the pull request that introduces them.
+
+on:
+  pull_request:
+    branches: ["*"]
+  push:
+    branches: [main, master]
+
+# Issue #40: cancel superseded runs so a force-push or rapid pushes do
+# not leave the previous actionlint job churning while the new one
+# starts.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    name: Actionlint
+    runs-on: ubuntu-latest
+    # Issue #39: linting a dozen workflow files takes seconds. 5 minutes
+    # is a generous cap that still surfaces a wedged download instead of
+    # billing for the 360-minute GitHub default.
+    timeout-minutes: 5
+    env:
+      # Pinned release plus the SHA-256 of its linux_amd64 tarball
+      # (Issue #14 pinning policy). Renovate's github-actions manager
+      # cannot see a release downloaded by URL, so bump both values
+      # together from the release's `*_checksums.txt`.
+      ACTIONLINT_VERSION: 1.7.12
+      ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+    steps:
+      # actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Install actionlint
+        shell: bash
+        # Values are read from `env:` rather than interpolated with
+        # `${{ }}` so no workflow expression is ever spliced into the
+        # shell — the injection pattern actionlint itself flags.
+        run: |
+          set -euo pipefail
+          tarball="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          url="https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${tarball}"
+          curl --fail --silent --show-error --location --output "$tarball" "$url"
+          # A tampered or truncated download fails the job here rather
+          # than installing an unverified binary.
+          echo "${ACTIONLINT_SHA256}  ${tarball}" | sha256sum --check --strict -
+          tar -xzf "$tarball" actionlint
+          sudo install -m 0755 actionlint /usr/local/bin/actionlint
+          rm -f "$tarball" actionlint
+
+      - name: Run actionlint
+        shell: bash
+        run: |
+          set -euo pipefail
+          actionlint -color

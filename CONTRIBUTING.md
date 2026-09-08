@@ -63,9 +63,9 @@ The gate runs:
   --allow-net=127.0.0.1 tests/*.test.ts`.
 
 Redirect stdin from `/dev/null` (`< /dev/null`) so the run never blocks waiting
-for input. CI additionally runs Markdown lint, ShellCheck, Gitleaks, Semgrep,
-`dependency-review`, a `pa11y-ci` accessibility check and a Deno dependency
-audit — see the **Quality Gate** section of [`README.md`](README.md) for the
+for input. CI additionally runs Markdown lint, ShellCheck, actionlint,
+Gitleaks, Semgrep, `dependency-review`, a `pa11y-ci` accessibility check and a
+Deno dependency audit — see the **Quality Gate** section of [`README.md`](README.md) for the
 full list.
 
 ### Writing tests
