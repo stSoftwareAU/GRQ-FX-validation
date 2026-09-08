@@ -49,6 +49,12 @@ jobs:
       - name: Checkout code
         # actions/checkout@v6.0.2
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          # Issue #120: do not write GITHUB_TOKEN into .git/config. The
+          # a11y scan only reads the checked-out tree and never pushes
+          # back, so persisting the credential would only let a later
+          # step (or a compromised npm dependency) act as the token.
+          persist-credentials: false
 
       - name: Setup Node.js
         # actions/setup-node@v6.4.0
