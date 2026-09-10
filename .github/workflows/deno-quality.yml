@@ -54,11 +54,12 @@ jobs:
       # --frozen mirrors quality.sh so URL imports remain integrity
       # pinned via deno.lock (Issue #57).
       - name: deno test (with coverage)
-        run: >-
-          deno test --frozen
-          --allow-read --allow-env --allow-net=127.0.0.1
-          --coverage=cov_profile
-          tests/*.test.ts
+        run: |
+          set -euo pipefail
+          deno test --frozen \
+            --allow-read --allow-env --allow-net=127.0.0.1 \
+            --coverage=cov_profile \
+            tests/*.test.ts
 
       - name: deno coverage
         run: deno coverage cov_profile --lcov --output=coverage.lcov

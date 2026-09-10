@@ -115,3 +115,20 @@ test("pa11yci config is present and enforces WCAG2AA on the PWA entry point", ()
     "chromeLaunchConfig must pass --no-sandbox for the CI runner",
   );
 });
+
+test("checkout does not persist the workflow token in .git/config", () => {
+  // Issue #120: actions/checkout writes GITHUB_TOKEN into .git/config as
+  // an auth header by default, where any later step in the job — a
+  // compromised npm dependency, an injected script — can read it and act
+  // as the token. This job only reads the checked-out tree, so the
+  // credential must not be persisted to disk.
+  const checkout = steps().find(
+    (s) => typeof s.uses === "string" && s.uses.startsWith("actions/checkout@"),
+  );
+  assert.ok(checkout, "expected a step that uses actions/checkout");
+  assert.equal(
+    checkout.with?.["persist-credentials"],
+    false,
+    "actions/checkout must set persist-credentials: false",
+  );
+});
