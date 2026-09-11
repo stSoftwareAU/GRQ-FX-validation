@@ -1,7 +1,7 @@
 {
   "date": "2026-09-12",
-  "timestamp": "2026-09-11T16:34:14.620Z",
-  "totalPredictions": 45,
+  "timestamp": "2026-09-11T16:34:14.728Z",
+  "totalPredictions": 46,
   "complete": false,
   "results": [
     {
@@ -1440,6 +1440,38 @@
           "days": 365,
           "predictedRate": 9.770033227325333,
           "predictedChangePercent": 1.0511897245183752
+        }
+      ],
+      "predictionDate": "2026-09-12T00:00:00.000Z"
+    },
+    {
+      "pair": "USDSGD",
+      "currentRate": 1.268,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 1.2677189904932729,
+          "predictedChangePercent": -0.022161633022659034
+        },
+        {
+          "days": 90,
+          "predictedRate": 1.2711869474849604,
+          "predictedChangePercent": 0.2513365524416669
+        },
+        {
+          "days": 180,
+          "predictedRate": 1.2987601634022223,
+          "predictedChangePercent": 2.4258803944970238
+        },
+        {
+          "days": 270,
+          "predictedRate": 1.3022970643494725,
+          "predictedChangePercent": 2.704815800431589
+        },
+        {
+          "days": 365,
+          "predictedRate": 1.2836695624989058,
+          "predictedChangePercent": 1.2357699131629196
         }
       ],
       "predictionDate": "2026-09-12T00:00:00.000Z"
