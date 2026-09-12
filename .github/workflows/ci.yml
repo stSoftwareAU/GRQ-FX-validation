@@ -170,6 +170,13 @@ jobs:
       - name: Checkout code
         # actions/checkout@v6.0.2
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          # Issue #122: checkout writes GITHUB_TOKEN into .git/config as an
+          # auth header by default, where any later step in the job can read
+          # it and act as the token. This job only reads the tree (upload
+          # ./docs, activate the Pages deployment) — it never pushes back and
+          # fetches no private submodules — so keep the credential off disk.
+          persist-credentials: false
 
       - name: Setup Pages
         # actions/configure-pages@v4
