@@ -208,3 +208,26 @@ test("ci workflow declares a top-level minimal permissions block (issue #37)", (
     `expected top-level contents: read, saw '${wf.permissions.contents}'`,
   );
 });
+
+test("ci workflow deploy-pages checkout does not persist the workflow token (issue #122)", () => {
+  // actions/checkout writes GITHUB_TOKEN into .git/config as an auth
+  // header by default, where any later step in the job — a compromised
+  // action, an injected script — can read it and act as the token. The
+  // deploy-pages job only reads the checked-out tree (upload ./docs as a
+  // Pages artefact and activate the deployment); it never pushes back and
+  // fetches no private submodules, so the credential must not reach disk.
+  const wf = loadWorkflow(WORKFLOW);
+  const job = wf.jobs["deploy-pages"];
+  assert.ok(job, "expected a 'deploy-pages' job in ci.yml");
+  const checkouts = (job.steps ?? []).filter(
+    (s) => typeof s?.uses === "string" && s.uses.startsWith("actions/checkout@"),
+  );
+  assert.ok(checkouts.length > 0, "expected an actions/checkout step in deploy-pages");
+  for (const step of checkouts) {
+    assert.equal(
+      step.with?.["persist-credentials"],
+      false,
+      "deploy-pages actions/checkout must set persist-credentials: false",
+    );
+  }
+});
