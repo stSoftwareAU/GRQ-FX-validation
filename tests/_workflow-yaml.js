@@ -325,3 +325,50 @@ function splitFlow(text) {
   parts.push(text.slice(start).trim());
   return parts;
 }
+
+// --------------------------------------------------------------------
+// Branch filter matching
+// --------------------------------------------------------------------
+
+// Issue #144: GitHub's `branches:` filters are globs, not plain strings.
+// A single `*` matches any run of characters **except** `/`, so a filter
+// of ["*"] silently excludes `milestone/<name>` branches and the
+// workflow never runs on a milestone sub-issue PR. These helpers
+// implement GitHub's glob semantics so workflow tests can assert on the
+// branches a filter actually selects rather than on its literal text.
+//
+//   *   zero or more characters, excluding `/`
+//   **  zero or more characters, including `/`
+//   ?   exactly one character, excluding `/`
+export function branchFilterToRegExp(pattern) {
+  if (typeof pattern !== "string") {
+    throw new TypeError(`branch filter must be a string (saw ${typeof pattern})`);
+  }
+  let out = "";
+  for (let i = 0; i < pattern.length; i++) {
+    const c = pattern[i];
+    if (c === "*") {
+      if (pattern[i + 1] === "*") {
+        out += ".*";
+        i++;
+      } else {
+        out += "[^/]*";
+      }
+    } else if (c === "?") {
+      out += "[^/]";
+    } else {
+      out += c.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+    }
+  }
+  return new RegExp(`^${out}$`);
+}
+
+// True when `branch` is selected by at least one of the `branches:`
+// filters. A missing / empty filter list means the trigger is
+// unrestricted, so every branch matches.
+export function branchMatchesFilters(filters, branch) {
+  if (filters === null || filters === undefined) return true;
+  const list = Array.isArray(filters) ? filters : [filters];
+  if (list.length === 0) return true;
+  return list.some((pattern) => branchFilterToRegExp(pattern).test(branch));
+}

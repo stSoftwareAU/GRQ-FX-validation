@@ -6,7 +6,10 @@ name: Dependency Review
 
 on:
   pull_request:
-    branches: ["*"]
+    # Issue #144: GitHub's `*` glob stops at `/`, so ["*"] alone excludes
+    # milestone/<name> branches and every milestone sub-issue PR merged
+    # without this dependency-vulnerability scan ever running.
+    branches: ["*", "milestone/*"]
 
 # Issue #40: cancel superseded PR runs so a force-push does not leave
 # the previous dependency-review run churning while the new one starts.

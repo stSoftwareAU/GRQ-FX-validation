@@ -13,7 +13,12 @@
 
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseYaml, collectActionRefs } from "./_workflow-yaml.js";
+import {
+  branchFilterToRegExp,
+  branchMatchesFilters,
+  collectActionRefs,
+  parseYaml,
+} from "./_workflow-yaml.js";
 
 test("parser extracts top-level scalar keys", () => {
   const out = parseYaml(`name: Gitleaks
@@ -153,4 +158,48 @@ test("collectActionRefs surfaces a floating @v4 tag as a non-SHA ref", () => {
   assert.equal(refs.length, 1);
   assert.equal(refs[0].ref, "v4");
   assert.doesNotMatch(refs[0].ref, /^[0-9a-f]{40}$/);
+});
+
+// Issue #144: branch-filter glob semantics. GitHub treats `*` as
+// "anything but a slash", which is what silently excluded milestone
+// branches from the dependency-review gate.
+
+test("branch filter '*' matches a flat branch but not a milestone branch", () => {
+  assert.equal(branchMatchesFilters(["*"], "Develop"), true);
+  assert.equal(branchMatchesFilters(["*"], "milestone/scan-20260910"), false);
+});
+
+test("branch filter 'milestone/*' matches a single-level milestone branch", () => {
+  assert.equal(branchMatchesFilters(["milestone/*"], "milestone/scan-1"), true);
+  assert.equal(branchMatchesFilters(["milestone/*"], "Develop"), false);
+  // A nested slash is out of reach of the single-level glob.
+  assert.equal(branchMatchesFilters(["milestone/*"], "milestone/a/b"), false);
+});
+
+test("branch filter '**' matches across slashes", () => {
+  assert.equal(branchMatchesFilters(["**"], "milestone/a/b"), true);
+});
+
+test("branch filter '?' matches exactly one non-slash character", () => {
+  assert.equal(branchMatchesFilters(["v?"], "v1"), true);
+  assert.equal(branchMatchesFilters(["v?"], "v12"), false);
+});
+
+test("branch filter escapes regex metacharacters in literal text", () => {
+  assert.equal(branchMatchesFilters(["release.1"], "release.1"), true);
+  assert.equal(branchMatchesFilters(["release.1"], "releaseX1"), false);
+});
+
+test("an absent or empty branch filter selects every branch", () => {
+  assert.equal(branchMatchesFilters(undefined, "milestone/scan-1"), true);
+  assert.equal(branchMatchesFilters(null, "anything"), true);
+  assert.equal(branchMatchesFilters([], "anything"), true);
+});
+
+test("a bare string branch filter is treated as a one-element list", () => {
+  assert.equal(branchMatchesFilters("milestone/*", "milestone/scan-1"), true);
+});
+
+test("branchFilterToRegExp rejects a non-string pattern", () => {
+  assert.throws(() => branchFilterToRegExp(42), TypeError);
 });
