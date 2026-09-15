@@ -340,27 +340,41 @@ function splitFlow(text) {
 //   *   zero or more characters, excluding `/`
 //   **  zero or more characters, including `/`
 //   ?   exactly one character, excluding `/`
-export function branchFilterToRegExp(pattern) {
+//
+// The match walks the pattern directly instead of compiling it into a
+// `RegExp`: a dynamically built regex trips semgrep's
+// `detect-non-literal-regexp` ReDoS rule, and backtracking over `*` here
+// is bounded by the branch name's length.
+export function branchFilterMatches(pattern, branch) {
   if (typeof pattern !== "string") {
     throw new TypeError(`branch filter must be a string (saw ${typeof pattern})`);
   }
-  let out = "";
-  for (let i = 0; i < pattern.length; i++) {
-    const c = pattern[i];
+  return matchGlob(pattern, 0, branch, 0);
+}
+
+// Match `pattern` from index `p` against `branch` from index `b`.
+function matchGlob(pattern, p, branch, b) {
+  while (p < pattern.length) {
+    const c = pattern[p];
     if (c === "*") {
-      if (pattern[i + 1] === "*") {
-        out += ".*";
-        i++;
-      } else {
-        out += "[^/]*";
+      // `**` spans slashes; a single `*` stops at the next `/`.
+      const crossesSlashes = pattern[p + 1] === "*";
+      const rest = crossesSlashes ? p + 2 : p + 1;
+      for (let end = b; end <= branch.length; end++) {
+        if (matchGlob(pattern, rest, branch, end)) return true;
+        if (!crossesSlashes && branch[end] === "/") break;
       }
-    } else if (c === "?") {
-      out += "[^/]";
-    } else {
-      out += c.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+      return false;
     }
+    if (c === "?") {
+      if (b >= branch.length || branch[b] === "/") return false;
+    } else if (branch[b] !== c) {
+      return false;
+    }
+    p++;
+    b++;
   }
-  return new RegExp(`^${out}$`);
+  return b === branch.length;
 }
 
 // True when `branch` is selected by at least one of the `branches:`
@@ -370,5 +384,5 @@ export function branchMatchesFilters(filters, branch) {
   if (filters === null || filters === undefined) return true;
   const list = Array.isArray(filters) ? filters : [filters];
   if (list.length === 0) return true;
-  return list.some((pattern) => branchFilterToRegExp(pattern).test(branch));
+  return list.some((pattern) => branchFilterMatches(pattern, branch));
 }

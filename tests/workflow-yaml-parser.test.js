@@ -14,7 +14,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  branchFilterToRegExp,
+  branchFilterMatches,
   branchMatchesFilters,
   collectActionRefs,
   parseYaml,
@@ -185,7 +185,7 @@ test("branch filter '?' matches exactly one non-slash character", () => {
   assert.equal(branchMatchesFilters(["v?"], "v12"), false);
 });
 
-test("branch filter escapes regex metacharacters in literal text", () => {
+test("branch filter treats regex metacharacters as literal text", () => {
   assert.equal(branchMatchesFilters(["release.1"], "release.1"), true);
   assert.equal(branchMatchesFilters(["release.1"], "releaseX1"), false);
 });
@@ -200,6 +200,6 @@ test("a bare string branch filter is treated as a one-element list", () => {
   assert.equal(branchMatchesFilters("milestone/*", "milestone/scan-1"), true);
 });
 
-test("branchFilterToRegExp rejects a non-string pattern", () => {
-  assert.throws(() => branchFilterToRegExp(42), TypeError);
+test("branchFilterMatches rejects a non-string pattern", () => {
+  assert.throws(() => branchFilterMatches(42, "Develop"), TypeError);
 });
