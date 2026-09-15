@@ -6,7 +6,10 @@ name: Dependency Review
 
 on:
   pull_request:
-    branches: ["*"]
+    # Issue #144: GitHub's `*` glob stops at `/`, so ["*"] alone excludes
+    # milestone/<name> branches and every milestone sub-issue PR merged
+    # without this dependency-vulnerability scan ever running.
+    branches: ["*", "milestone/*"]
 
 # Issue #40: cancel superseded PR runs so a force-push does not leave
 # the previous dependency-review run churning while the new one starts.
@@ -25,7 +28,7 @@ jobs:
     # runner without truncating a slow but legitimate scan.
     timeout-minutes: 5
     steps:
-      # actions/checkout@v4.3.1
+      # actions/checkout@v4
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       # actions/dependency-review-action@v4.9.0
       - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48
