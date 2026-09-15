@@ -1,0 +1,40 @@
+{
+  "date": "2026-09-16",
+  "timestamp": "2026-09-15T19:58:41.057Z",
+  "totalPredictions": 1,
+  "complete": false,
+  "results": [
+    {
+      "pair": "AUDCAD",
+      "currentRate": 0.9919,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 0.9670045795407382,
+          "predictedChangePercent": -2.5098720092007043
+        },
+        {
+          "days": 90,
+          "predictedRate": 0.98310358865548,
+          "predictedChangePercent": -0.88682441219074
+        },
+        {
+          "days": 180,
+          "predictedRate": 0.9919,
+          "predictedChangePercent": 0
+        },
+        {
+          "days": 270,
+          "predictedRate": 0.9791947001330662,
+          "predictedChangePercent": -1.2809053197836295
+        },
+        {
+          "days": 365,
+          "predictedRate": 0.9855279790582406,
+          "predictedChangePercent": -0.6424055793688233
+        }
+      ],
+      "predictionDate": "2026-09-16T00:00:00.000Z"
+    }
+  ]
+}
