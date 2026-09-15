@@ -1,7 +1,7 @@
 {
   "date": "2026-09-16",
-  "timestamp": "2026-09-15T19:58:41.723Z",
-  "totalPredictions": 5,
+  "timestamp": "2026-09-15T19:58:41.924Z",
+  "totalPredictions": 6,
   "complete": false,
   "results": [
     {
@@ -160,6 +160,38 @@
           "days": 365,
           "predictedRate": 119.17492301283112,
           "predictedChangePercent": 8.18388395674958
+        }
+      ],
+      "predictionDate": "2026-09-16T00:00:00.000Z"
+    },
+    {
+      "pair": "AUDUSD",
+      "currentRate": 0.7137,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 0.6997128053845854,
+          "predictedChangePercent": -1.9598142938790328
+        },
+        {
+          "days": 90,
+          "predictedRate": 0.7116646243983374,
+          "predictedChangePercent": -0.28518643711118513
+        },
+        {
+          "days": 180,
+          "predictedRate": 0.6924485488554717,
+          "predictedChangePercent": -2.97764482899373
+        },
+        {
+          "days": 270,
+          "predictedRate": 0.7519565106840174,
+          "predictedChangePercent": 5.360306947459339
+        },
+        {
+          "days": 365,
+          "predictedRate": 0.774015948856089,
+          "predictedChangePercent": 8.451162793343023
         }
       ],
       "predictionDate": "2026-09-16T00:00:00.000Z"
