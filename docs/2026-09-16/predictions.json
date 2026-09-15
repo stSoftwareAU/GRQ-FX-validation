@@ -1,7 +1,7 @@
 {
   "date": "2026-09-16",
-  "timestamp": "2026-09-15T19:58:45.058Z",
-  "totalPredictions": 24,
+  "timestamp": "2026-09-15T19:58:45.230Z",
+  "totalPredictions": 25,
   "complete": false,
   "results": [
     {
@@ -768,6 +768,38 @@
           "days": 365,
           "predictedRate": 7.911715647546782,
           "predictedChangePercent": 17.85663112686999
+        }
+      ],
+      "predictionDate": "2026-09-16T00:00:00.000Z"
+    },
+    {
+      "pair": "USDCOP",
+      "currentRate": 3077.5,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 3077.5,
+          "predictedChangePercent": 0
+        },
+        {
+          "days": 90,
+          "predictedRate": 3021.9893529052774,
+          "predictedChangePercent": -1.8037578259861045
+        },
+        {
+          "days": 180,
+          "predictedRate": 2966.455383659301,
+          "predictedChangePercent": -3.608273479795257
+        },
+        {
+          "days": 270,
+          "predictedRate": 2860.3285407317467,
+          "predictedChangePercent": -7.0567492857271565
+        },
+        {
+          "days": 365,
+          "predictedRate": 3078.7948038415225,
+          "predictedChangePercent": 0.04207323611770602
         }
       ],
       "predictionDate": "2026-09-16T00:00:00.000Z"
