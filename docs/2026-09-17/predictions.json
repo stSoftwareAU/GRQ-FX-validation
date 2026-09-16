@@ -1,7 +1,7 @@
 {
   "date": "2026-09-17",
-  "timestamp": "2026-09-16T21:56:38.306Z",
-  "totalPredictions": 44,
+  "timestamp": "2026-09-16T21:56:38.502Z",
+  "totalPredictions": 45,
   "complete": false,
   "results": [
     {
@@ -1408,6 +1408,38 @@
           "days": 365,
           "predictedRate": 3.7559016612122496,
           "predictedChangePercent": -0.0026181785875976616
+        }
+      ],
+      "predictionDate": "2026-09-17T00:00:00.000Z"
+    },
+    {
+      "pair": "USDSEK",
+      "currentRate": 9.7756,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 9.716039986683697,
+          "predictedChangePercent": -0.6092722013615982
+        },
+        {
+          "days": 90,
+          "predictedRate": 9.30738064226706,
+          "predictedChangePercent": -4.78967385871907
+        },
+        {
+          "days": 180,
+          "predictedRate": 9.431610324546556,
+          "predictedChangePercent": -3.5188599723131557
+        },
+        {
+          "days": 270,
+          "predictedRate": 9.634208497102476,
+          "predictedChangePercent": -1.446371607855522
+        },
+        {
+          "days": 365,
+          "predictedRate": 9.833200287796993,
+          "predictedChangePercent": 0.5892250889663272
         }
       ],
       "predictionDate": "2026-09-17T00:00:00.000Z"
