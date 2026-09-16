@@ -253,10 +253,18 @@ parseable `predictions.json` — exactly the failure mode that produced the
 "Failed to load prediction data" screen.
 
 CI additionally runs Markdown lint (`.github/workflows/markdown-lint.yml`),
-ShellCheck (`.github/workflows/shellcheck.yml`), Gitleaks
+ShellCheck (`.github/workflows/shellcheck.yml`), actionlint
+(`.github/workflows/actionlint.yml`), Gitleaks
 (`.github/workflows/gitleaks.yml`), Semgrep SAST
 (`.github/workflows/semgrep.yml`) and `actions/dependency-review`
 (`.github/workflows/dependency-review.yml`).
+
+[actionlint](https://github.com/rhysd/actionlint) lints the workflow YAML
+itself (issue #119) — syntax, invalid `${{ }}` expressions, unknown runner
+labels and ShellCheck findings inside every `run:` block — so a broken
+workflow fails the PR that introduces it instead of at runtime. The linter
+is installed from a pinned release whose SHA-256 digest is verified before
+the binary is used.
 
 An accessibility gate (`.github/workflows/accessibility.yml`, issue #78)
 runs [`pa11y-ci`](https://github.com/pa11y/pa11y-ci) against the built PWA
