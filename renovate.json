@@ -9,14 +9,9 @@
   },
   "packageRules": [
     {
-      "description": "Internal stSoftwareAU/* packages are trusted and may update immediately (issue #17).",
+      "description": "Internal stSoftwareAU/* packages are trusted and may update immediately (issue #17). null clears the top-level minimumReleaseAge for these packages (Renovate treats null and \"0 days\" alike) and is the only exemption form the semgrep p/default rule renovate-missing-minimum-release-age accepts inside packageRules (issue #159). The github-actions manager needs no explicit rule: the top-level 24-hour minimumReleaseAge already applies to it.",
       "matchPackagePatterns": ["^stSoftwareAU/"],
-      "minimumReleaseAge": "0 hours"
-    },
-    {
-      "description": "Apply the 24-hour quarantine explicitly to the github-actions manager so a freshly-pushed tag/SHA cannot land instantly (issue #17).",
-      "matchManagers": ["github-actions"],
-      "minimumReleaseAge": "24 hours"
+      "minimumReleaseAge": null
     }
   ],
   "customManagers": [

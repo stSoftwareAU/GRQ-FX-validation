@@ -96,15 +96,19 @@ test("renovate.json exempts internal stSoftwareAU/* packages from the quarantine
     internalRule,
     "renovate.json must contain a packageRules entry that matches stSoftwareAU/*",
   );
+  // Issue #159: `null` is Renovate's own "no minimum age" value (the schema
+  // types the option string|null, and Renovate treats "0 days" and null
+  // alike). It is also the only exemption form the semgrep p/default rule
+  // renovate-missing-minimum-release-age accepts inside packageRules, so a
+  // "0 hours" string is no longer allowed here.
   assert.ok(
-    typeof internalRule.minimumReleaseAge === "string",
+    "minimumReleaseAge" in internalRule,
     "the stSoftwareAU/* rule must override minimumReleaseAge",
   );
-  const hours = parseDurationToHours(internalRule.minimumReleaseAge);
-  assert.equal(
-    hours,
-    0,
-    "internal stSoftwareAU/* packages must update immediately (0 hours)",
+  const age = internalRule.minimumReleaseAge;
+  assert.ok(
+    age === null || parseDurationToHours(String(age)) === 0,
+    `internal stSoftwareAU/* packages must update immediately (null or 0), got ${JSON.stringify(age)}`,
   );
 });
 
