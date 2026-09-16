@@ -36,7 +36,7 @@ jobs:
     # leaving a wedged runner billing for the 360-minute GitHub default.
     timeout-minutes: 15
     steps:
-      # actions/checkout@v4
+      # actions/checkout@v4.3.1
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
 
       # denoland/setup-deno@v2

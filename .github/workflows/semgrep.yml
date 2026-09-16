@@ -2,7 +2,10 @@ name: Semgrep
 
 on:
   pull_request:
-    branches: ["*"]
+    # Issue #144: GitHub's `*` glob stops at `/`, so ["*"] alone excludes
+    # milestone/<name> branches and this gate never runs on a milestone
+    # sub-issue PR.
+    branches: ["*", "milestone/*"]
 
 # Issue #40: cancel superseded PR runs so a force-push does not leave
 # the previous Semgrep SAST scan churning while the new one starts.
@@ -28,7 +31,7 @@ jobs:
       # the tag (for human readability) and the digest from Docker Hub.
       image: semgrep/semgrep:1.163.0@sha256:7cad2bc2d1e44f87f0bf4be6d1fa23aa90fb72015bebc89fb91385d813987a03
     steps:
-      # actions/checkout@v4
+      # actions/checkout@v4.3.1
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - name: Run Semgrep CI
         run: semgrep ci --config p/default
