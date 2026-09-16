@@ -102,3 +102,19 @@ test("markdownlint-cli2 config is present and parses as JSONC", () => {
   assert.ok(Array.isArray(parsed.globs), "globs must be an array");
   assert.ok(parsed.config, "config block must be present");
 });
+
+// Issue #144: GitHub's single-level `*` glob does not match a `/`, so a
+// pull_request filter without `milestone/*` silently skips PRs into
+// milestone/<name> branches and the milestone ruleset's required check
+// can never report, leaving those PRs permanently blocked.
+test("markdown lint workflow runs on PRs into milestone/* branches", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const branches = wf.on.pull_request.branches;
+  assert.ok(Array.isArray(branches), "pull_request.branches must be a list");
+  assert.ok(
+    branches.includes("milestone/*"),
+    `pull_request.branches must include "milestone/*", got ${
+      JSON.stringify(branches)
+    }`,
+  );
+});

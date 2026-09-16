@@ -2,7 +2,10 @@ name: Semgrep
 
 on:
   pull_request:
-    branches: ["*"]
+    # Issue #144: GitHub's `*` glob stops at `/`, so ["*"] alone excludes
+    # milestone/<name> branches and this gate never runs on a milestone
+    # sub-issue PR.
+    branches: ["*", "milestone/*"]
 
 # Issue #40: cancel superseded PR runs so a force-push does not leave
 # the previous Semgrep SAST scan churning while the new one starts.
