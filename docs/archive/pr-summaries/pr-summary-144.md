@@ -7,7 +7,7 @@ was ever scanned by the dependency-vulnerability gate — a vulnerable dependenc
 could reach a milestone branch and only be caught, if at all, at the rollup PR.
 
 The filter is now `branches: ["*", "milestone/*"]`, so flat branches keep their
-existing coverage and milestone branches gain it. Closes #144.
+existing coverage and milestone branches gain it. Closes #144
 
 ```mermaid
 flowchart LR
