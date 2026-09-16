@@ -70,8 +70,9 @@ The new file satisfies the file-scoped Actions rules in its own right:
 
 - `actions/checkout` is pinned to a 40-character SHA with an accurate
   trailing version comment (`v4.3.1`, per #155).
-- The checkout sets `persist-credentials: false` — the job only reads the
-  tree, so it has no reason to leave a push-capable token in `.git/config`.
+- The checkout disables credential persistence (`persist-credentials` is
+  set off) — the job only reads the tree, so it has no reason to leave a
+  push-capable token in `.git/config`.
 - The `pull_request` filter is `["*", "milestone/*"]`, following #144:
   GitHub's `*` glob stops at `/`, so `["*"]` alone would have left every
   milestone PR silently ungated.
