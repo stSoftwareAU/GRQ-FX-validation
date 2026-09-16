@@ -2,7 +2,10 @@ name: ShellCheck
 
 on:
   pull_request:
-    branches: ["*"]
+    # Issue #144: GitHub's `*` glob stops at `/`, so ["*"] alone excludes
+    # milestone/<name> branches and this gate never runs on a milestone
+    # sub-issue PR.
+    branches: ["*", "milestone/*"]
   push:
     branches: [main, master]
 

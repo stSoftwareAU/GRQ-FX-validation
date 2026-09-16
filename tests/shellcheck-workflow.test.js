@@ -94,3 +94,19 @@ test("shellcheck workflow runs on ubuntu-latest", () => {
   const wf = loadWorkflow(WORKFLOW);
   assert.equal(wf.jobs.shellcheck["runs-on"], "ubuntu-latest");
 });
+
+// Issue #144: GitHub's single-level `*` glob does not match a `/`, so a
+// pull_request filter without `milestone/*` silently skips PRs into
+// milestone/<name> branches and the milestone ruleset's required check
+// can never report, leaving those PRs permanently blocked.
+test("shellcheck workflow runs on PRs into milestone/* branches", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const branches = wf.on.pull_request.branches;
+  assert.ok(Array.isArray(branches), "pull_request.branches must be a list");
+  assert.ok(
+    branches.includes("milestone/*"),
+    `pull_request.branches must include "milestone/*", got ${
+      JSON.stringify(branches)
+    }`,
+  );
+});
