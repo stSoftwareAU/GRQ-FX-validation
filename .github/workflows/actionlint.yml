@@ -9,7 +9,10 @@ name: Actionlint
 
 on:
   pull_request:
-    branches: ["*"]
+    # GitHub's `*` filter stops at `/`, so it never matches a
+    # `milestone/<slug>` branch. Listing `milestone/**` as well keeps
+    # milestone pull requests gated instead of silently unchecked.
+    branches: ["*", "milestone/**"]
   push:
     branches: [main, master]
 
@@ -39,8 +42,12 @@ jobs:
       ACTIONLINT_VERSION: 1.7.12
       ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
     steps:
-      # actions/checkout@v4
+      # actions/checkout@v4.3.1
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          # The linter only reads the tree; leaving no credentials in
+          # .git/config denies a compromised step a push-capable token.
+          persist-credentials: false
 
       - name: Install actionlint
         shell: bash

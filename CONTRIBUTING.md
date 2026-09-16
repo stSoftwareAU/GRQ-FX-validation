@@ -65,8 +65,8 @@ The gate runs:
 Redirect stdin from `/dev/null` (`< /dev/null`) so the run never blocks waiting
 for input. CI additionally runs Markdown lint, ShellCheck, actionlint,
 Gitleaks, Semgrep, `dependency-review`, a `pa11y-ci` accessibility check and a
-Deno dependency audit — see the **Quality Gate** section of [`README.md`](README.md) for the
-full list.
+Deno dependency audit — see the **Quality Gate** section of
+[`README.md`](README.md) for the full list.
 
 ### Writing tests
 

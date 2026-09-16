@@ -119,6 +119,28 @@ test("the download step verifies the checksum and fails loud", () => {
   );
 });
 
+test("actionlint workflow gates milestone branches too", () => {
+  const branches = loadWorkflow(WORKFLOW).on.pull_request.branches ?? [];
+  // GitHub's `*` filter stops at `/`, so `["*"]` alone never matches a
+  // `milestone/<slug>` pull request and the gate would skip it silently.
+  assert.ok(
+    branches.some((b) => /^(\*\*|milestone\/\*\*)$/.test(String(b))),
+    `pull_request branch filter must also match milestone/<slug> branches (saw ${JSON.stringify(branches)})`,
+  );
+});
+
+test("actionlint checkout does not persist a push-capable token", () => {
+  const step = job().steps.find(
+    (s) => typeof s?.uses === "string" && s.uses.startsWith("actions/checkout@"),
+  );
+  assert.ok(step, "expected an actions/checkout step");
+  assert.equal(
+    step.with?.["persist-credentials"],
+    false,
+    "the lint job never pushes, so checkout must not leave credentials in .git/config",
+  );
+});
+
 test("actionlint workflow actually invokes actionlint", () => {
   const scripts = stepScripts();
   assert.ok(
