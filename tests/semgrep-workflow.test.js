@@ -110,3 +110,19 @@ test("semgrep workflow wires the SEMGREP_APP_TOKEN secret via env", () => {
     "${{ secrets.SEMGREP_APP_TOKEN }}",
   );
 });
+
+// Issue #144: GitHub's single-level `*` glob does not match a `/`, so a
+// pull_request filter without `milestone/*` silently skips PRs into
+// milestone/<name> branches and the milestone ruleset's required check
+// can never report, leaving those PRs permanently blocked.
+test("semgrep workflow runs on PRs into milestone/* branches", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const branches = wf.on.pull_request.branches;
+  assert.ok(Array.isArray(branches), "pull_request.branches must be a list");
+  assert.ok(
+    branches.includes("milestone/*"),
+    `pull_request.branches must include "milestone/*", got ${
+      JSON.stringify(branches)
+    }`,
+  );
+});

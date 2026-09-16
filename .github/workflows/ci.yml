@@ -6,7 +6,9 @@ name: CI/CD Pipeline
 
 on:
   pull_request:
-    branches: ["Develop"]
+    # Issue #144: also run on PRs into milestone/<name> branches so the
+    # Quality Gate required by the milestone ruleset can report.
+    branches: ["Develop", "milestone/*"]
   push:
     branches: ["Develop"]
 
