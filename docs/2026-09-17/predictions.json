@@ -1,7 +1,7 @@
 {
   "date": "2026-09-17",
-  "timestamp": "2026-09-16T21:56:39.241Z",
-  "totalPredictions": 48,
+  "timestamp": "2026-09-16T21:56:39.545Z",
+  "totalPredictions": 49,
   "complete": false,
   "results": [
     {
@@ -1536,6 +1536,38 @@
           "days": 365,
           "predictedRate": 59.56905388201705,
           "predictedChangePercent": 22.492440761856784
+        }
+      ],
+      "predictionDate": "2026-09-17T00:00:00.000Z"
+    },
+    {
+      "pair": "USDTWD",
+      "currentRate": 31.814,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 31.19247565138034,
+          "predictedChangePercent": -1.953618999873196
+        },
+        {
+          "days": 90,
+          "predictedRate": 31.812626075651863,
+          "predictedChangePercent": -0.004318615540752919
+        },
+        {
+          "days": 180,
+          "predictedRate": 31.80940824788458,
+          "predictedChangePercent": -0.014433117858238146
+        },
+        {
+          "days": 270,
+          "predictedRate": 30.055112609790744,
+          "predictedChangePercent": -5.528658421478773
+        },
+        {
+          "days": 365,
+          "predictedRate": 30.198669855668022,
+          "predictedChangePercent": -5.077419200138237
         }
       ],
       "predictionDate": "2026-09-17T00:00:00.000Z"
