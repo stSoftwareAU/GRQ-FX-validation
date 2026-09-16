@@ -247,3 +247,38 @@ test("ci workflow runs on PRs into milestone/* branches", () => {
     }`,
   );
 });
+
+// Issues #121, #123, #124: the deploy-pages assertion above covers a
+// single job, so the other three checkout steps could regress (or ship
+// unhardened) unnoticed. No job in ci.yml pushes back to the repository
+// or fetches a private submodule — check-changes and version-guard only
+// diff the already-fetched history locally, and quality just runs
+// ./quality.sh — so every checkout in the file must keep the workflow
+// token off disk.
+test("every ci workflow checkout does not persist the workflow token (issues #121, #123, #124)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const offenders = [];
+  let seen = 0;
+  for (const [jobId, job] of Object.entries(wf.jobs ?? {})) {
+    for (const step of job?.steps ?? []) {
+      if (
+        !step || typeof step.uses !== "string" ||
+        !step.uses.startsWith("actions/checkout@")
+      ) {
+        continue;
+      }
+      seen += 1;
+      if (step.with?.["persist-credentials"] !== false) {
+        offenders.push(jobId);
+      }
+    }
+  }
+  assert.ok(seen >= 4, `expected at least 4 actions/checkout steps, saw ${seen}`);
+  assert.deepEqual(
+    offenders,
+    [],
+    `these ci.yml jobs must set persist-credentials: false on actions/checkout: ${
+      offenders.join(", ")
+    }`,
+  );
+});
