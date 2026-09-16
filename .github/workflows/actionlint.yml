@@ -9,10 +9,10 @@ name: Actionlint
 
 on:
   pull_request:
-    # GitHub's `*` filter stops at `/`, so it never matches a
-    # `milestone/<slug>` branch. Listing `milestone/**` as well keeps
-    # milestone pull requests gated instead of silently unchecked.
-    branches: ["*", "milestone/**"]
+    # Issue #144: GitHub's `*` glob stops at `/`, so ["*"] alone excludes
+    # milestone/<name> branches and this gate never runs on a milestone
+    # sub-issue PR.
+    branches: ["*", "milestone/*"]
   push:
     branches: [main, master]
 

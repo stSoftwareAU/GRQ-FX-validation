@@ -124,7 +124,7 @@ test("actionlint workflow gates milestone branches too", () => {
   // GitHub's `*` filter stops at `/`, so `["*"]` alone never matches a
   // `milestone/<slug>` pull request and the gate would skip it silently.
   assert.ok(
-    branches.some((b) => /^(\*\*|milestone\/\*\*)$/.test(String(b))),
+    branches.some((b) => /^(\*\*|milestone\/\*\*?)$/.test(String(b))),
     `pull_request branch filter must also match milestone/<slug> branches (saw ${JSON.stringify(branches)})`,
   );
 });
