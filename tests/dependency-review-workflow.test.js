@@ -13,6 +13,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import {
+  branchMatchesFilters,
   collectActionRefs,
   loadWorkflow,
   workflowPath,
@@ -88,4 +89,33 @@ test("dependency-review workflow uses least-privilege permissions", () => {
     "read",
     "contents permission must be 'read' for the dependency-review job",
   );
+});
+
+// Issue #144: milestone sub-issue PRs merge into a shared
+// `milestone/<name>` branch before a single rollup PR reaches the
+// default branch. GitHub's `*` glob stops at `/`, so a filter of ["*"]
+// left every milestone PR unscanned by this dependency-vulnerability
+// gate.
+
+test("dependency-review runs on a milestone branch PR", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const branches = wf.on.pull_request?.branches;
+  assert.equal(
+    branchMatchesFilters(branches, "milestone/scan-20260910"),
+    true,
+    `pull_request.branches (${JSON.stringify(branches)}) must select ` +
+      "milestone/<name> branches so milestone PRs are scanned",
+  );
+});
+
+test("dependency-review still runs on a flat branch PR", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const branches = wf.on.pull_request?.branches;
+  for (const branch of ["Develop", "main", "feature-144"]) {
+    assert.equal(
+      branchMatchesFilters(branches, branch),
+      true,
+      `pull_request.branches must still select '${branch}'`,
+    );
+  }
 });
