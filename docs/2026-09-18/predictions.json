@@ -1,7 +1,7 @@
 {
   "date": "2026-09-18",
-  "timestamp": "2026-09-17T14:36:41.464Z",
-  "totalPredictions": 27,
+  "timestamp": "2026-09-17T14:36:41.603Z",
+  "totalPredictions": 28,
   "complete": false,
   "results": [
     {
@@ -864,6 +864,38 @@
           "days": 365,
           "predictedRate": 64.66801632282616,
           "predictedChangePercent": 24.00386639084594
+        }
+      ],
+      "predictionDate": "2026-09-18T00:00:00.000Z"
+    },
+    {
+      "pair": "USDHKD",
+      "currentRate": 7.8447,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 7.848590323976807,
+          "predictedChangePercent": 0.04959174954819242
+        },
+        {
+          "days": 90,
+          "predictedRate": 7.8456289326277115,
+          "predictedChangePercent": 0.011841531578152927
+        },
+        {
+          "days": 180,
+          "predictedRate": 7.825231953137242,
+          "predictedChangePercent": -0.24816814999627565
+        },
+        {
+          "days": 270,
+          "predictedRate": 7.784113385376707,
+          "predictedChangePercent": -0.7723254506009478
+        },
+        {
+          "days": 365,
+          "predictedRate": 7.827369695727572,
+          "predictedChangePercent": -0.22091736168914008
         }
       ],
       "predictionDate": "2026-09-18T00:00:00.000Z"
