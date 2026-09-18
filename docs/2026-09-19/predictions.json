@@ -1,7 +1,7 @@
 {
   "date": "2026-09-19",
-  "timestamp": "2026-09-18T14:32:03.432Z",
-  "totalPredictions": 49,
+  "timestamp": "2026-09-18T14:32:03.604Z",
+  "totalPredictions": 50,
   "complete": false,
   "results": [
     {
@@ -1568,6 +1568,38 @@
           "days": 365,
           "predictedRate": 29.98647148760046,
           "predictedChangePercent": -5.877549553970755
+        }
+      ],
+      "predictionDate": "2026-09-19T00:00:00.000Z"
+    },
+    {
+      "pair": "USDVND",
+      "currentRate": 26009.000000000004,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 26000.686771186618,
+          "predictedChangePercent": -0.031962892896250934
+        },
+        {
+          "days": 90,
+          "predictedRate": 26174.511993002558,
+          "predictedChangePercent": 0.6363643085184034
+        },
+        {
+          "days": 180,
+          "predictedRate": 26356.61539471095,
+          "predictedChangePercent": 1.3365196459338924
+        },
+        {
+          "days": 270,
+          "predictedRate": 26854.551570703516,
+          "predictedChangePercent": 3.25099608098547
+        },
+        {
+          "days": 365,
+          "predictedRate": 28835.6573574148,
+          "predictedChangePercent": 10.8679970679949
         }
       ],
       "predictionDate": "2026-09-19T00:00:00.000Z"
