@@ -76,9 +76,21 @@ test("gitleaks workflow fetches the PR base branch before scanning", () => {
   // The fetch command must reference github.base_ref so the commit
   // range gitleaks-action computes resolves on the runner. We assert
   // on the structured `run:` value rather than the surrounding YAML.
+  // Issue #159: the ref must reach the shell through `env:` rather than a
+  // `${{ }}` splice inside `run:` (semgrep run-shell-injection), so assert
+  // the env binding carries github.base_ref and the command uses the
+  // variable — never the expression itself.
+  const envRef = Object.values(fetchStep.env ?? {}).some(
+    (v) => typeof v === "string" && /github\.base_ref/.test(v),
+  );
+  assert.ok(envRef, "fetch step must bind github.base_ref through env:");
   assert.ok(
-    /github\.base_ref/.test(fetchStep.run),
-    "fetch step must reference github.base_ref",
+    !/\$\{\{/.test(fetchStep.run),
+    "fetch step run: must not splice a ${{ }} expression into the shell",
+  );
+  assert.ok(
+    /\$\{?BASE_REF\}?/.test(fetchStep.run),
+    "fetch step must fetch the branch named by $BASE_REF",
   );
   // The step must only run on pull_request events — otherwise the
   // command would fail on push runs where github.base_ref is empty.
