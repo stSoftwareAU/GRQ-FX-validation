@@ -1,7 +1,7 @@
 {
   "date": "2026-09-21",
-  "timestamp": "2026-09-20T20:40:18.943Z",
-  "totalPredictions": 15,
+  "timestamp": "2026-09-20T20:40:19.118Z",
+  "totalPredictions": 16,
   "complete": false,
   "results": [
     {
@@ -480,6 +480,38 @@
           "days": 365,
           "predictedRate": 10.368493871120316,
           "predictedChangePercent": 15.58628003500773
+        }
+      ],
+      "predictionDate": "2026-09-21T00:00:00.000Z"
+    },
+    {
+      "pair": "GBPUSD",
+      "currentRate": 1.3393,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 1.3797204271095276,
+          "predictedChangePercent": 3.018026365230155
+        },
+        {
+          "days": 90,
+          "predictedRate": 1.3396021600989332,
+          "predictedChangePercent": 0.02256104673586203
+        },
+        {
+          "days": 180,
+          "predictedRate": 1.3374158181915083,
+          "predictedChangePercent": -0.1406840744039141
+        },
+        {
+          "days": 270,
+          "predictedRate": 1.238853479424854,
+          "predictedChangePercent": -7.499926870390943
+        },
+        {
+          "days": 365,
+          "predictedRate": 1.4494151183373252,
+          "predictedChangePercent": 8.22184113621482
         }
       ],
       "predictionDate": "2026-09-21T00:00:00.000Z"
