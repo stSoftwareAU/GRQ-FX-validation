@@ -128,6 +128,32 @@ test("workflow declares a concurrency group that cancels superseded runs", () =>
   assert.equal(wf.concurrency["cancel-in-progress"], true);
 });
 
+// Issue #126: actions/checkout writes GITHUB_TOKEN into .git/config as an
+// auth header by default, where any later step in the job — a compromised
+// dependency, an injected script — can read it and act as the token. The
+// quality job only reads the checked-out tree (deno lint/fmt/check/test and
+// a Codecov upload); it never pushes back to the repository and fetches no
+// private submodules, so the credential must not reach disk.
+test("quality job checkout does not persist the workflow token (issue #126)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const job = wf.jobs.quality;
+  const checkouts = (job.steps ?? []).filter(
+    (s) => typeof s?.uses === "string" &&
+      s.uses.startsWith("actions/checkout@"),
+  );
+  assert.ok(
+    checkouts.length > 0,
+    "expected an actions/checkout step in quality",
+  );
+  for (const step of checkouts) {
+    assert.equal(
+      step.with?.["persist-credentials"],
+      false,
+      "quality job actions/checkout must set persist-credentials: false",
+    );
+  }
+});
+
 test("deno.json scopes lint and fmt to Deno-only paths", () => {
   assert.ok(fs.existsSync(DENO_JSON), `Expected deno.json at ${DENO_JSON}`);
   const cfg = JSON.parse(fs.readFileSync(DENO_JSON, "utf8"));
