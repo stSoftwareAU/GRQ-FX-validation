@@ -40,6 +40,27 @@ const EXPECTED_GITLEAKS_TAG = "v3.0.0";
 // inputs, outputs or behaviour.
 const MIN_GITLEAKS_MAJOR = 3;
 
+// Issue #137: gitleaks-action needs an organisation licence on org-owned
+// repos, and a Dependabot-authored PR receives no Actions secrets — the
+// action exits with ErrLicense before scanning anything while the job
+// still reports green. The open-source CLI needs no licence, so it runs
+// as the fallback whenever the licence is absent. Version and digest were
+// read during this change from the GitHub releases API and the release's
+// own published `gitleaks_<version>_checksums.txt`.
+const EXPECTED_CLI_VERSION = "8.30.1";
+const EXPECTED_CLI_SHA256 =
+  "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb";
+const LICENCE_PRESENT = "env.GITLEAKS_LICENSE != ''";
+const LICENCE_ABSENT = "env.GITLEAKS_LICENSE == ''";
+
+// The scanning step that runs when no licence is available.
+function fallbackStep(wf) {
+  return wf.jobs.gitleaks.steps.find(
+    (s) => typeof s.run === "string" && /\bgitleaks\b/.test(s.run) &&
+      s.run.includes("--exit-code"),
+  );
+}
+
 test("gitleaks workflow file exists", () => {
   assert.ok(
     fs.existsSync(workflowPath(WORKFLOW)),
@@ -193,6 +214,12 @@ test("gitleaks workflow uses least-privilege permissions", () => {
   );
 });
 
+// Issue #137: the licence moved from the step's own `env:` to the job's,
+// because a step-level `if:` cannot read the `secrets` context and so has
+// no other way to branch on the licence being absent. The wiring the
+// action sees is unchanged — job env is inherited by every step — so this
+// test now asserts the effective environment rather than the level it
+// happens to be declared at.
 test("gitleaks workflow wires GITHUB_TOKEN and GITLEAKS_LICENSE via env", () => {
   const wf = loadWorkflow(WORKFLOW);
   const action = wf.jobs.gitleaks.steps.find(
@@ -200,12 +227,123 @@ test("gitleaks workflow wires GITHUB_TOKEN and GITLEAKS_LICENSE via env", () => 
       s.uses.startsWith("gitleaks/gitleaks-action@"),
   );
   assert.ok(action, "expected gitleaks-action step");
-  assert.ok(action.env, "gitleaks-action step must declare env wiring");
-  assert.equal(action.env.GITHUB_TOKEN, "${{ secrets.GITHUB_TOKEN }}");
+  const effective = { ...(wf.jobs.gitleaks.env ?? {}), ...(action.env ?? {}) };
+  assert.equal(effective.GITHUB_TOKEN, "${{ secrets.GITHUB_TOKEN }}");
+  assert.equal(effective.GITLEAKS_LICENSE, "${{ secrets.GITLEAKS_LICENSE }}");
+});
+
+// Issue #137: `if:` is evaluated before the step runs and the `secrets`
+// context is unavailable there, so the licence must reach the job's own
+// `env:` block for either branch condition to be expressible at all.
+test("the licence is exposed at job level so an `if:` can read it (issue #137)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const jobEnv = wf.jobs.gitleaks.env ?? {};
   assert.equal(
-    action.env.GITLEAKS_LICENSE,
+    jobEnv.GITLEAKS_LICENSE,
     "${{ secrets.GITLEAKS_LICENSE }}",
+    "GITLEAKS_LICENSE must be bound in the job's env: — a step-level `if:` " +
+      "cannot read the secrets context",
   );
+});
+
+// Issue #137: without this guard the licensed action runs on a Dependabot
+// PR, exits with ErrLicense before scanning, and leaves the job green over
+// an unscanned diff — worse than no gate, because it reads as covered.
+test("the licensed action only runs when a licence is present (issue #137)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const action = wf.jobs.gitleaks.steps.find(
+    (s) => typeof s.uses === "string" &&
+      s.uses.startsWith("gitleaks/gitleaks-action@"),
+  );
+  assert.ok(action, "expected gitleaks-action step");
+  assert.equal(
+    action.if,
+    LICENCE_PRESENT,
+    `gitleaks-action must be gated on \`${LICENCE_PRESENT}\`, saw '${action.if}'`,
+  );
+});
+
+test("a licence-less CLI fallback scans the diff (issue #137)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const fallback = fallbackStep(wf);
+  assert.ok(
+    fallback,
+    "expected a `run:` step invoking the open-source gitleaks CLI",
+  );
+  assert.equal(
+    fallback.if,
+    LICENCE_ABSENT,
+    `the fallback must be gated on \`${LICENCE_ABSENT}\`, saw '${fallback.if}'`,
+  );
+  // The two conditions must be complementary so exactly one scanner runs.
+  assert.match(fallback.run, /gitleaks(["']?)\s+git\b/);
+  assert.match(
+    fallback.run,
+    /--exit-code\s+1/,
+    "the fallback must fail the job on a finding, not merely report one",
+  );
+  assert.match(
+    fallback.run,
+    /--redact/,
+    "the fallback must redact matches so a secret is not echoed into the log",
+  );
+  assert.match(
+    fallback.run,
+    /--log-opts/,
+    "the fallback must scan the PR commit range, not the whole history",
+  );
+});
+
+test("the fallback pins the CLI version and verifies its digest (issue #137)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const fallback = fallbackStep(wf);
+  assert.ok(fallback, "expected the CLI fallback step");
+  // The version and digest may be declared in the step's env: or written
+  // inline in the shell — either way they must be literal, so assert on
+  // everything the step contributes rather than on one of the two spellings.
+  const declared = fallback.run + "\n" +
+    Object.values(fallback.env ?? {}).join("\n");
+  assert.ok(
+    declared.includes(EXPECTED_CLI_VERSION),
+    `the fallback must pin gitleaks ${EXPECTED_CLI_VERSION} exactly — an ` +
+      "unpinned download is an unreviewed binary in CI",
+  );
+  assert.ok(
+    !/latest/.test(declared),
+    "the fallback must not resolve a floating `latest` release",
+  );
+  assert.ok(
+    declared.includes(EXPECTED_CLI_SHA256),
+    "the fallback must carry the published SHA-256 of the pinned archive",
+  );
+  assert.match(
+    fallback.run,
+    /sha256sum\s+(--check|-c)/,
+    "the pinned digest must actually be checked, not merely recorded",
+  );
+});
+
+test("the fallback run: is strict-mode and injection-free (issue #137)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const fallback = fallbackStep(wf);
+  assert.ok(fallback, "expected the CLI fallback step");
+  assert.equal(
+    fallback.run.split("\n")[0].trim(),
+    "set -euo pipefail",
+    "a multi-line run: must abort on the first failure, an unset variable " +
+      "or a broken pipe",
+  );
+  // Issue #159's rule applies to every run: in this workflow — the commit
+  // range reaches the shell through env: and is quoted there, never
+  // spliced in as a ${{ }} expression.
+  assert.ok(
+    !/\$\{\{/.test(fallback.run),
+    "fallback run: must not splice a ${{ }} expression into the shell",
+  );
+  const env = fallback.env ?? {};
+  assert.match(String(env.BASE_SHA), /github\.event\.pull_request\.base\.sha/);
+  assert.match(String(env.HEAD_SHA), /github\.event\.pull_request\.head\.sha/);
+  assert.match(fallback.run, /"\$\{BASE_SHA\}\.\.\$\{HEAD_SHA\}"/);
 });
 
 // Issue #144: GitHub's single-level `*` glob does not match a `/`, so a
