@@ -43,7 +43,14 @@ jobs:
         with:
           node-version: "lts/*"
       - name: Install markdownlint-cli2
-        run: npm install -g markdownlint-cli2
+        # Issue #138: pin the version so a hijacked release cannot run
+        # arbitrary code on the runner — which holds GITHUB_TOKEN — the
+        # instant it is published (external dep, past the supply-chain
+        # quarantine). A `run:` block is not a manifest, so Renovate's
+        # minimumReleaseAge cannot reach it; the renovate.json custom
+        # manager for .github/workflows keeps this pin current inside
+        # the quarantine window.
+        run: npm install -g markdownlint-cli2@0.23.3
       - name: Run markdownlint-cli2
         run: markdownlint-cli2
       # Optional: mirror the local check-mermaid quality gate when Deno

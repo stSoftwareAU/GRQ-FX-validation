@@ -168,6 +168,60 @@ test("renovate.json includes a custom manager for CDN-loaded browser libraries",
   );
 });
 
+// Issue #138: workflow `run:` steps install npm tooling
+// (markdownlint-cli2, pa11y-ci) directly. A `run:` block is not a
+// manifest, so no built-in Renovate manager reads it and the pinned
+// versions would sit un-refreshed forever — the quarantine only helps
+// if something keeps the pin moving inside the 24-hour window. These
+// two tests exercise the custom manager against the real workflow
+// rather than merely asserting the config entry exists.
+const WORKFLOW_REL = ".github/workflows/markdown-lint.yml";
+
+function workflowRunManager(config) {
+  const managers = config.customManagers ?? config.regexManagers ?? [];
+  return managers.find((m) => {
+    const patterns = [].concat(m.fileMatch ?? m.managerFilePatterns ?? []);
+    return patterns.some((p) => new RegExp(String(p)).test(WORKFLOW_REL));
+  });
+}
+
+test("renovate.json includes a custom manager covering .github/workflows", () => {
+  const config = loadConfig();
+  const manager = workflowRunManager(config);
+  assert.ok(
+    manager,
+    `a customManagers entry must have a file pattern matching ${WORKFLOW_REL} so npm installs in run: steps are quarantined`,
+  );
+  assert.equal(
+    manager.datasourceTemplate,
+    "npm",
+    "the workflow run: manager must resolve versions from the npm datasource",
+  );
+});
+
+test("the workflow custom manager extracts the pinned npm install", () => {
+  const config = loadConfig();
+  const manager = workflowRunManager(config);
+  assert.ok(manager, "expected a customManagers entry for .github/workflows");
+  const raw = fs.readFileSync(path.join(REPO_ROOT, WORKFLOW_REL), "utf8");
+  const hits = [];
+  for (const pattern of [].concat(manager.matchStrings ?? [])) {
+    for (const m of raw.matchAll(new RegExp(String(pattern), "g"))) {
+      hits.push(m.groups ?? {});
+    }
+  }
+  const mdl = hits.find((g) => g.depName === "markdownlint-cli2");
+  assert.ok(
+    mdl,
+    `the manager's matchStrings must capture markdownlint-cli2 as depName in ${WORKFLOW_REL}, got ${JSON.stringify(hits)}`,
+  );
+  assert.match(
+    String(mdl.currentValue),
+    /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/,
+    "the manager must capture the exact pinned version as currentValue",
+  );
+});
+
 test("renovate.json enables OSV-driven security alerts", () => {
   // Issue #110: GitHub's native vulnerabilityAlerts API does not see
   // Deno URL imports or CDN <script> references — the dependency
