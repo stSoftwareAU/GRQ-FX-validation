@@ -153,3 +153,25 @@ test("workflow cancels superseded runs via a concurrency group", () => {
   );
   assert.equal(wf.concurrency["cancel-in-progress"], true);
 });
+
+// Issue #125: actions/checkout writes GITHUB_TOKEN into .git/config as an
+// auth header by default, where any later step in the job — a compromised
+// dependency, an injected script — can read it and act as the token. The
+// audit job only reads deno.lock (`deno audit`); it never pushes back to
+// the repository and fetches no private submodules, so the credential
+// must not reach disk.
+test("audit job checkout does not persist the workflow token (issue #125)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const job = wf.jobs.audit;
+  const checkouts = (job.steps ?? []).filter(
+    (s) => typeof s?.uses === "string" && s.uses.startsWith("actions/checkout@"),
+  );
+  assert.ok(checkouts.length > 0, "expected an actions/checkout step in audit");
+  for (const step of checkouts) {
+    assert.equal(
+      step.with?.["persist-credentials"],
+      false,
+      "audit job actions/checkout must set persist-credentials: false",
+    );
+  }
+});
