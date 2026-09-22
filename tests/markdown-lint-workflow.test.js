@@ -118,3 +118,28 @@ test("markdown lint workflow runs on PRs into milestone/* branches", () => {
     }`,
   );
 });
+
+// Issue #128: actions/checkout writes GITHUB_TOKEN into .git/config as an
+// auth header by default, where any later step in the job can read it and
+// act as the token. The markdownlint job runs `npm install -g
+// markdownlint-cli2` and a Deno script, so third-party code executes after
+// the checkout; the job never pushes back to the repository and fetches no
+// private submodules, so the credential must not reach disk.
+test("markdownlint checkout does not persist the workflow token (issue #128)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const checkouts = (wf.jobs.markdownlint.steps ?? []).filter(
+    (s) => typeof s?.uses === "string" &&
+      s.uses.startsWith("actions/checkout@"),
+  );
+  assert.ok(
+    checkouts.length > 0,
+    "expected an actions/checkout step in markdownlint",
+  );
+  for (const step of checkouts) {
+    assert.equal(
+      step.with?.["persist-credentials"],
+      false,
+      "markdownlint actions/checkout must set persist-credentials: false",
+    );
+  }
+});

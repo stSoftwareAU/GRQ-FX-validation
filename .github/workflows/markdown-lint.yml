@@ -30,6 +30,14 @@ jobs:
     steps:
       # actions/checkout@v4.3.1
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          # Issue #128: the markdownlint job only reads the tree so
+          # markdownlint-cli2 and the Mermaid validator can scan it. It
+          # never pushes back to the repository and fetches no private
+          # submodules, while `npm install -g markdownlint-cli2` runs
+          # third-party code in the same job, so GITHUB_TOKEN must not be
+          # written to .git/config where a later step could read it.
+          persist-credentials: false
       # actions/setup-node@v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
