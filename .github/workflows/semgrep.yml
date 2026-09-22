@@ -33,6 +33,14 @@ jobs:
     steps:
       # actions/checkout@v4.3.1
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          # Issue #130: the semgrep job only reads the tree so `semgrep ci`
+          # can scan it. It never pushes back to the repository and fetches
+          # no private submodules, while `semgrep ci` downloads and runs
+          # third-party rule packs alongside SEMGREP_APP_TOKEN in the same
+          # job, so GITHUB_TOKEN must not be written to .git/config where a
+          # later step could read it.
+          persist-credentials: false
       - name: Run Semgrep CI
         run: semgrep ci --config p/default
         env:
