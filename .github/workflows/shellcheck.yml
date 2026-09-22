@@ -29,6 +29,14 @@ jobs:
     steps:
       # actions/checkout@v4.3.1
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          # Issue #131: the shellcheck job only reads the tree so the
+          # linter can scan it. It never pushes back to the repository and
+          # fetches no private submodules, while the third-party
+          # ludeeus/action-shellcheck runs over that tree afterwards, so
+          # GITHUB_TOKEN must not be written to .git/config where a later
+          # step could read it.
+          persist-credentials: false
       # ludeeus/action-shellcheck@2.0.0
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38
