@@ -17,10 +17,28 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { loadWorkflow, workflowPath } from "./_workflow-yaml.js";
+import {
+  collectActionRefs,
+  loadWorkflow,
+  workflowPath,
+} from "./_workflow-yaml.js";
 
 const WORKFLOW = "gitleaks.yml";
 const SHA_RE = /^[0-9a-f]{40}$/;
+
+// Issue #136: the SHA gitleaks/gitleaks-action@v3.0.0 resolves to,
+// read from the GitHub API during this change
+// (`gh api repos/gitleaks/gitleaks-action/tags`). Locking the value —
+// not merely its 40-hex shape — makes an upgrade a deliberate test edit
+// and makes a drifted pin fail loudly instead of passing the presence
+// check while scanning with a frozen release.
+const EXPECTED_GITLEAKS_SHA = "e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e";
+const EXPECTED_GITLEAKS_TAG = "v3.0.0";
+// gitleaks-action v2 runs on the Node 20 runtime, which GitHub removed
+// from hosted runners on 16 September 2026; any v2 pin is dead weight
+// however immutable it is. v3 moved to Node 24 with no change to
+// inputs, outputs or behaviour.
+const MIN_GITLEAKS_MAJOR = 3;
 
 test("gitleaks workflow file exists", () => {
   assert.ok(
@@ -109,6 +127,55 @@ test("gitleaks workflow uses pinned commit SHA for gitleaks-action", () => {
     ref,
     SHA_RE,
     `gitleaks-action must be pinned to a 40-character commit SHA (Issue #1756), saw '${ref}'`,
+  );
+});
+
+// Issue #136: a shape-only assertion (40 hex characters) is satisfied by
+// any SHA, so a pin left behind on an old release still passes while the
+// scan it runs has drifted from the ref the fleet emits today. Assert the
+// value.
+test("gitleaks-action is pinned to the canonical SHA (issue #136)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const ref = collectActionRefs(wf).find(
+    (r) => r.action === "gitleaks/gitleaks-action",
+  );
+  assert.ok(ref, "expected a gitleaks/gitleaks-action step");
+  assert.equal(
+    ref.ref,
+    EXPECTED_GITLEAKS_SHA,
+    `gitleaks-action must be pinned to ${EXPECTED_GITLEAKS_TAG} ` +
+      `(${EXPECTED_GITLEAKS_SHA}), saw '${ref.ref}'`,
+  );
+});
+
+// Issue #136: the trailing `# owner/repo@tag` comment is the only record
+// of which release a SHA is, so it must move with the pin. A comment left
+// on v2.x also flags a runtime GitHub no longer provides.
+test("gitleaks-action version comment tracks the pin (issue #136)", () => {
+  const raw = fs.readFileSync(workflowPath(WORKFLOW), "utf8").split("\n");
+  const pinIndex = raw.findIndex((line) =>
+    line.includes(`gitleaks/gitleaks-action@${EXPECTED_GITLEAKS_SHA}`)
+  );
+  assert.ok(pinIndex > 0, "expected the canonical gitleaks-action pin");
+
+  const comment = raw[pinIndex - 1].match(
+    /^\s*#\s*gitleaks\/gitleaks-action@(\S+)\s*$/,
+  );
+  assert.ok(
+    comment,
+    `line ${pinIndex} must annotate the pin with its tag, saw '${
+      raw[pinIndex - 1]
+    }'`,
+  );
+  assert.equal(comment[1], EXPECTED_GITLEAKS_TAG);
+
+  const major = Number.parseInt(comment[1].replace(/^v/, ""), 10);
+  assert.ok(
+    Number.isInteger(major) && major >= MIN_GITLEAKS_MAJOR,
+    `gitleaks-action must be v${MIN_GITLEAKS_MAJOR} or newer — v2 runs on ` +
+      `the Node 20 runtime GitHub removed from hosted runners, saw '${
+        comment[1]
+      }'`,
   );
 });
 
