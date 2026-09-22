@@ -6,7 +6,9 @@
   ],
   "ignores": [
     "node_modules/**",
-    ".git/**"
+    ".git/**",
+    // Local, git-excluded tooling scratch directory — generated summaries.
+    "graft/**"
   ],
   "config": {
     // Allow long lines — many of the existing docs include URLs and tables
