@@ -30,5 +30,12 @@ jobs:
     steps:
       # actions/checkout@v4.3.1
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          # Issue #127: the dependency-review job only checks out the tree
+          # for actions/dependency-review-action to scan; it never pushes
+          # back to the repository and fetches no private submodules, so
+          # GITHUB_TOKEN must not be written to .git/config where a later
+          # step could read it.
+          persist-credentials: false
       # actions/dependency-review-action@v4.9.0
       - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48

@@ -91,6 +91,32 @@ test("dependency-review workflow uses least-privilege permissions", () => {
   );
 });
 
+// Issue #127: actions/checkout writes GITHUB_TOKEN into .git/config as an
+// auth header by default, where any later step in the job — a compromised
+// dependency, an injected script — can read it and act as the token. The
+// dependency-review job only checks out the tree so
+// actions/dependency-review-action can scan it; it never pushes back to the
+// repository and fetches no private submodules, so the credential must not
+// reach disk.
+test("dependency-review checkout does not persist the workflow token (issue #127)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const checkouts = (wf.jobs["dependency-review"].steps ?? []).filter(
+    (s) => typeof s?.uses === "string" &&
+      s.uses.startsWith("actions/checkout@"),
+  );
+  assert.ok(
+    checkouts.length > 0,
+    "expected an actions/checkout step in dependency-review",
+  );
+  for (const step of checkouts) {
+    assert.equal(
+      step.with?.["persist-credentials"],
+      false,
+      "dependency-review actions/checkout must set persist-credentials: false",
+    );
+  }
+});
+
 // Issue #144: milestone sub-issue PRs merge into a shared
 // `milestone/<name>` branch before a single rollup PR reaches the
 // default branch. GitHub's `*` glob stops at `/`, so a filter of ["*"]
