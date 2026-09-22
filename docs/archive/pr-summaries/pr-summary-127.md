@@ -10,7 +10,7 @@ compromised dependency or an injected script — can read the credential and act
 as the token. The `dependency-review` job in
 `.github/workflows/dependency-review.yml` had no such guard.
 
-The job needs no write credential: it checks the tree out purely so
+The job needs no write credential — it checks the tree out purely so
 `actions/dependency-review-action` can scan the PR's dependency changes, and
 that action authenticates through its own `github-token` input rather than
 through `.git/config`. Nothing in the job pushes back to the repository,
