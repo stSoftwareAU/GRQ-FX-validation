@@ -7,7 +7,11 @@ name: Deno Quality
 
 on:
   pull_request:
-    branches: ["*"]
+    # Issue #132: GitHub's `*` glob stops at `/`, so ["*"] alone excludes
+    # milestone/<name> branches and this gate never runs on a milestone
+    # sub-issue PR — the breakage would surface only on the rollup PR
+    # into the default branch.
+    branches: ["*", "milestone/*"]
 
 # Issue #40: cancel superseded runs so a force-push or rapid pushes do
 # not leave the previous deno-quality job churning while a new one

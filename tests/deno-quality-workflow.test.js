@@ -9,7 +9,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { loadWorkflow, workflowPath } from "./_workflow-yaml.js";
+import {
+  branchMatchesFilters,
+  loadWorkflow,
+  workflowPath,
+} from "./_workflow-yaml.js";
 
 const WORKFLOW = "deno-quality.yml";
 const SHA_RE = /^[0-9a-f]{40}$/;
@@ -150,6 +154,38 @@ test("quality job checkout does not persist the workflow token (issue #126)", ()
       step.with?.["persist-credentials"],
       false,
       "quality job actions/checkout must set persist-credentials: false",
+    );
+  }
+});
+
+// Issue #132: a milestone is delivered as a run of sub-issue PRs into a
+// shared milestone/<name> branch, and only the rollup PR reaches the
+// default branch. GitHub's single-level `*` glob stops at a `/`, so a
+// filter of ["*"] matches none of those milestone branches and every
+// sub-issue PR merges with this quality gate silently skipped — the
+// breakage surfaces once, late, on the rollup.
+test("deno-quality runs on PRs into milestone branches (issue #132)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const branches = wf.on.pull_request.branches;
+  for (const branch of ["milestone/scan-20260910", "milestone/fx-rollout"]) {
+    assert.ok(
+      branchMatchesFilters(branches, branch),
+      `pull_request.branches must select ${branch}, got ${
+        JSON.stringify(branches)
+      }`,
+    );
+  }
+});
+
+test("deno-quality still runs on ordinary PR target branches", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const branches = wf.on.pull_request.branches;
+  for (const branch of ["main", "master", "Develop"]) {
+    assert.ok(
+      branchMatchesFilters(branches, branch),
+      `pull_request.branches must select ${branch}, got ${
+        JSON.stringify(branches)
+      }`,
     );
   }
 });
