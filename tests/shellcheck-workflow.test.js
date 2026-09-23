@@ -95,6 +95,31 @@ test("shellcheck workflow runs on ubuntu-latest", () => {
   assert.equal(wf.jobs.shellcheck["runs-on"], "ubuntu-latest");
 });
 
+// Issue #131: actions/checkout writes GITHUB_TOKEN into .git/config as an
+// auth header by default, where any later step in the job can read it and
+// act as the token. The shellcheck job hands the whole tree to a
+// third-party action (ludeeus/action-shellcheck) that runs after the
+// checkout. The job never pushes back to the repository and fetches no
+// private submodules, so the credential must not reach disk.
+test("shellcheck checkout does not persist the workflow token (issue #131)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const checkouts = (wf.jobs.shellcheck.steps ?? []).filter(
+    (s) => typeof s?.uses === "string" &&
+      s.uses.startsWith("actions/checkout@"),
+  );
+  assert.ok(
+    checkouts.length > 0,
+    "expected an actions/checkout step in shellcheck",
+  );
+  for (const step of checkouts) {
+    assert.equal(
+      step.with?.["persist-credentials"],
+      false,
+      "shellcheck actions/checkout must set persist-credentials: false",
+    );
+  }
+});
+
 // Issue #144: GitHub's single-level `*` glob does not match a `/`, so a
 // pull_request filter without `milestone/*` silently skips PRs into
 // milestone/<name> branches and the milestone ruleset's required check

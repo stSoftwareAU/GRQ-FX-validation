@@ -14,7 +14,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { loadWorkflow, workflowPath } from "./_workflow-yaml.js";
+import { branchMatchesFilters, loadWorkflow, workflowPath } from "./_workflow-yaml.js";
 
 const WORKFLOW = "accessibility.yml";
 const SHA_RE = /^[0-9a-f]{40}$/;
@@ -130,5 +130,33 @@ test("checkout does not persist the workflow token in .git/config", () => {
     checkout.with?.["persist-credentials"],
     false,
     "actions/checkout must set persist-credentials: false",
+  );
+});
+
+// Issue #143: milestone sub-issue PRs merge into a shared
+// `milestone/<name>` branch before a single rollup PR reaches Develop.
+// GitHub's `*` glob stops at `/`, so a filter of ["Develop"] left every
+// milestone PR unchecked by this accessibility gate — a docs/PWA a11y
+// regression stayed invisible until the rollup PR, after other
+// sub-issue work had built on top of it.
+
+test("accessibility scan runs on a milestone branch PR", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const branches = wf.on.pull_request?.branches;
+  assert.equal(
+    branchMatchesFilters(branches, "milestone/scan-20260910"),
+    true,
+    `pull_request.branches (${JSON.stringify(branches)}) must select ` +
+      "milestone/<name> branches so milestone PRs are scanned",
+  );
+});
+
+test("accessibility scan still runs on a Develop PR", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const branches = wf.on.pull_request?.branches;
+  assert.equal(
+    branchMatchesFilters(branches, "Develop"),
+    true,
+    "pull_request.branches must still select 'Develop'",
   );
 });

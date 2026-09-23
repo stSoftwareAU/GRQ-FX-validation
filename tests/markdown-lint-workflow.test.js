@@ -77,6 +77,57 @@ test("workflow installs and runs markdownlint-cli2", () => {
   assert.ok(run, "expected a step that runs markdownlint-cli2");
 });
 
+// Issue #138: an `npm install` in a `run:` step that names no exact
+// version resolves whatever the registry serves at that moment, so a
+// hijacked release executes on the runner — with GITHUB_TOKEN and every
+// secret in scope — the instant it is published. Renovate's
+// minimumReleaseAge quarantine only covers manifests a manager can read
+// and a `run:` block is not a manifest, so the literal pin is the only
+// embargo available here. Asserting across every install in the job
+// (rather than the markdownlint-cli2 spelling alone) means a future
+// unpinned install added to this workflow fails too.
+const EXACT_VERSION_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
+
+// Collect the package specs named by every `npm install`/`i`/`add`
+// invocation in a run block, dropping flags and stopping at a shell
+// separator so a following command is not mistaken for a package.
+function npmInstallSpecs(run) {
+  const specs = [];
+  for (const m of run.matchAll(/\bnpm\s+(?:install|i|add)\b([^\n&|;]*)/g)) {
+    for (const word of m[1].trim().split(/\s+/).filter(Boolean)) {
+      if (word.startsWith("-")) continue;
+      specs.push(word);
+    }
+  }
+  return specs;
+}
+
+test("every npm install in the workflow pins an exact version (issue #138)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const steps = wf.jobs.markdownlint.steps ?? [];
+  const specs = steps
+    .filter((s) => typeof s.run === "string")
+    .flatMap((s) => npmInstallSpecs(s.run));
+  assert.ok(
+    specs.length > 0,
+    "expected at least one npm install step in the markdownlint job",
+  );
+  for (const spec of specs) {
+    // lastIndexOf so a scoped package (@scope/name@1.2.3) splits on the
+    // version separator, not on the scope marker.
+    const at = spec.lastIndexOf("@");
+    assert.ok(
+      at > 0,
+      `\`${spec}\` is installed without a version — pin it (e.g. ${spec}@1.2.3) so a hijacked release cannot run on the runner`,
+    );
+    assert.match(
+      spec.slice(at + 1),
+      EXACT_VERSION_RE,
+      `\`${spec}\` must name an exact version, not a range, tag or floating ref`,
+    );
+  }
+});
+
 test("workflow uses least-privilege permissions", () => {
   const wf = loadWorkflow(WORKFLOW);
   const top = wf.permissions ?? {};
@@ -117,4 +168,29 @@ test("markdown lint workflow runs on PRs into milestone/* branches", () => {
       JSON.stringify(branches)
     }`,
   );
+});
+
+// Issue #128: actions/checkout writes GITHUB_TOKEN into .git/config as an
+// auth header by default, where any later step in the job can read it and
+// act as the token. The markdownlint job runs `npm install -g
+// markdownlint-cli2` and a Deno script, so third-party code executes after
+// the checkout; the job never pushes back to the repository and fetches no
+// private submodules, so the credential must not reach disk.
+test("markdownlint checkout does not persist the workflow token (issue #128)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const checkouts = (wf.jobs.markdownlint.steps ?? []).filter(
+    (s) => typeof s?.uses === "string" &&
+      s.uses.startsWith("actions/checkout@"),
+  );
+  assert.ok(
+    checkouts.length > 0,
+    "expected an actions/checkout step in markdownlint",
+  );
+  for (const step of checkouts) {
+    assert.equal(
+      step.with?.["persist-credentials"],
+      false,
+      "markdownlint actions/checkout must set persist-credentials: false",
+    );
+  }
 });

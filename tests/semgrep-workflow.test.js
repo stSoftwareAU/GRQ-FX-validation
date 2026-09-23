@@ -111,6 +111,32 @@ test("semgrep workflow wires the SEMGREP_APP_TOKEN secret via env", () => {
   );
 });
 
+// Issue #130: actions/checkout writes GITHUB_TOKEN into .git/config as an
+// auth header by default, where any later step in the job can read it and
+// act as the token. The semgrep job runs `semgrep ci --config p/default`,
+// which downloads and executes third-party rule packs after the checkout,
+// and it holds SEMGREP_APP_TOKEN in the same environment. The job never
+// pushes back to the repository and fetches no private submodules, so the
+// credential must not reach disk.
+test("semgrep checkout does not persist the workflow token (issue #130)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const checkouts = (wf.jobs.semgrep.steps ?? []).filter(
+    (s) => typeof s?.uses === "string" &&
+      s.uses.startsWith("actions/checkout@"),
+  );
+  assert.ok(
+    checkouts.length > 0,
+    "expected an actions/checkout step in semgrep",
+  );
+  for (const step of checkouts) {
+    assert.equal(
+      step.with?.["persist-credentials"],
+      false,
+      "semgrep actions/checkout must set persist-credentials: false",
+    );
+  }
+});
+
 // Issue #144: GitHub's single-level `*` glob does not match a `/`, so a
 // pull_request filter without `milestone/*` silently skips PRs into
 // milestone/<name> branches and the milestone ruleset's required check

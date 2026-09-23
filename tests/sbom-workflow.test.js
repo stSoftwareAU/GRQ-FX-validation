@@ -139,6 +139,31 @@ test("workflow grants read-only contents and no write scopes", () => {
   }
 });
 
+// Issue #129: actions/checkout writes GITHUB_TOKEN into .git/config as an
+// auth header by default, where any later step in the job — a compromised
+// dependency, an injected script — can read it and act as the token. The
+// sbom job only reads the checked-out tree (it runs scripts/gen-sbom.ts and
+// uploads the result as an artefact); it never pushes back to the repository
+// and fetches no private submodules, so the credential must not reach disk.
+test("sbom job checkout does not persist the workflow token (issue #129)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const checkouts = (wf.jobs.sbom.steps ?? []).filter(
+    (s) => typeof s?.uses === "string" &&
+      s.uses.startsWith("actions/checkout@"),
+  );
+  assert.ok(
+    checkouts.length > 0,
+    "expected an actions/checkout step in sbom",
+  );
+  for (const step of checkouts) {
+    assert.equal(
+      step.with?.["persist-credentials"],
+      false,
+      "sbom job actions/checkout must set persist-credentials: false",
+    );
+  }
+});
+
 test("workflow runs on ubuntu-latest with a bounded timeout", () => {
   const wf = loadWorkflow(WORKFLOW);
   const job = wf.jobs.sbom;

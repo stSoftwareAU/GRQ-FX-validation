@@ -9,7 +9,11 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
-import { loadWorkflow, workflowPath } from "./_workflow-yaml.js";
+import {
+  branchMatchesFilters,
+  loadWorkflow,
+  workflowPath,
+} from "./_workflow-yaml.js";
 
 const WORKFLOW = "deno-quality.yml";
 const SHA_RE = /^[0-9a-f]{40}$/;
@@ -126,6 +130,64 @@ test("workflow declares a concurrency group that cancels superseded runs", () =>
   const wf = loadWorkflow(WORKFLOW);
   assert.ok(wf.concurrency, "workflow must declare a concurrency block");
   assert.equal(wf.concurrency["cancel-in-progress"], true);
+});
+
+// Issue #126: actions/checkout writes GITHUB_TOKEN into .git/config as an
+// auth header by default, where any later step in the job — a compromised
+// dependency, an injected script — can read it and act as the token. The
+// quality job only reads the checked-out tree (deno lint/fmt/check/test and
+// a Codecov upload); it never pushes back to the repository and fetches no
+// private submodules, so the credential must not reach disk.
+test("quality job checkout does not persist the workflow token (issue #126)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const job = wf.jobs.quality;
+  const checkouts = (job.steps ?? []).filter(
+    (s) => typeof s?.uses === "string" &&
+      s.uses.startsWith("actions/checkout@"),
+  );
+  assert.ok(
+    checkouts.length > 0,
+    "expected an actions/checkout step in quality",
+  );
+  for (const step of checkouts) {
+    assert.equal(
+      step.with?.["persist-credentials"],
+      false,
+      "quality job actions/checkout must set persist-credentials: false",
+    );
+  }
+});
+
+// Issue #132: a milestone is delivered as a run of sub-issue PRs into a
+// shared milestone/<name> branch, and only the rollup PR reaches the
+// default branch. GitHub's single-level `*` glob stops at a `/`, so a
+// filter of ["*"] matches none of those milestone branches and every
+// sub-issue PR merges with this quality gate silently skipped — the
+// breakage surfaces once, late, on the rollup.
+test("deno-quality runs on PRs into milestone branches (issue #132)", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const branches = wf.on.pull_request.branches;
+  for (const branch of ["milestone/scan-20260910", "milestone/fx-rollout"]) {
+    assert.ok(
+      branchMatchesFilters(branches, branch),
+      `pull_request.branches must select ${branch}, got ${
+        JSON.stringify(branches)
+      }`,
+    );
+  }
+});
+
+test("deno-quality still runs on ordinary PR target branches", () => {
+  const wf = loadWorkflow(WORKFLOW);
+  const branches = wf.on.pull_request.branches;
+  for (const branch of ["main", "master", "Develop"]) {
+    assert.ok(
+      branchMatchesFilters(branches, branch),
+      `pull_request.branches must select ${branch}, got ${
+        JSON.stringify(branches)
+      }`,
+    );
+  }
 });
 
 test("deno.json scopes lint and fmt to Deno-only paths", () => {

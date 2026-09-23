@@ -31,8 +31,16 @@ jobs:
       # the tag (for human readability) and the digest from Docker Hub.
       image: semgrep/semgrep:1.163.0@sha256:7cad2bc2d1e44f87f0bf4be6d1fa23aa90fb72015bebc89fb91385d813987a03
     steps:
-      # actions/checkout@v4.3.1
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      # actions/checkout@v6.0.2
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          # Issue #130: the semgrep job only reads the tree so `semgrep ci`
+          # can scan it. It never pushes back to the repository and fetches
+          # no private submodules, while `semgrep ci` downloads and runs
+          # third-party rule packs alongside SEMGREP_APP_TOKEN in the same
+          # job, so GITHUB_TOKEN must not be written to .git/config where a
+          # later step could read it.
+          persist-credentials: false
       - name: Run Semgrep CI
         run: semgrep ci --config p/default
         env:

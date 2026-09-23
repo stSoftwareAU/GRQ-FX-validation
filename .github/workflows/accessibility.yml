@@ -14,7 +14,11 @@ name: Accessibility
 
 on:
   pull_request:
-    branches: ["Develop"]
+    # Issue #143: also run on PRs into milestone/<name> branches. GitHub's
+    # `*` glob stops at `/`, so a filter of ["Develop"] left every milestone
+    # sub-issue PR unchecked and a docs/PWA a11y regression stayed hidden
+    # until the rollup PR.
+    branches: ["Develop", "milestone/*"]
     paths:
       - "docs/**"
       - "pa11yci.json"
