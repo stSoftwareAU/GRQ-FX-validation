@@ -1,7 +1,7 @@
 {
   "date": "2026-09-26",
-  "timestamp": "2026-09-25T16:52:32.707Z",
-  "totalPredictions": 31,
+  "timestamp": "2026-09-25T16:52:32.968Z",
+  "totalPredictions": 32,
   "complete": false,
   "results": [
     {
@@ -992,6 +992,38 @@
           "days": 365,
           "predictedRate": 103.22536140080119,
           "predictedChangePercent": 7.576844771821372
+        }
+      ],
+      "predictionDate": "2026-09-26T00:00:00.000Z"
+    },
+    {
+      "pair": "USDJPY",
+      "currentRate": 158.83,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 158.78751580305652,
+          "predictedChangePercent": -0.02674821944437631
+        },
+        {
+          "days": 90,
+          "predictedRate": 170.09883620554697,
+          "predictedChangePercent": 7.094904114806375
+        },
+        {
+          "days": 180,
+          "predictedRate": 175.74549990777123,
+          "predictedChangePercent": 10.650066050350194
+        },
+        {
+          "days": 270,
+          "predictedRate": 155.40333214884268,
+          "predictedChangePercent": -2.157443714132923
+        },
+        {
+          "days": 365,
+          "predictedRate": 157.39309727838963,
+          "predictedChangePercent": -0.9046796711014194
         }
       ],
       "predictionDate": "2026-09-26T00:00:00.000Z"
