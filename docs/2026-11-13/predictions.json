@@ -1,7 +1,7 @@
 {
   "date": "2026-11-13",
-  "timestamp": "2026-11-12T15:55:28.698Z",
-  "totalPredictions": 3,
+  "timestamp": "2026-11-12T15:55:28.802Z",
+  "totalPredictions": 4,
   "complete": false,
   "results": [
     {
@@ -96,6 +96,38 @@
           "days": 365,
           "predictedRate": 0.7108655514550842,
           "predictedChangePercent": 15.11060666425134
+        }
+      ],
+      "predictionDate": "2026-11-13T00:00:00.000Z"
+    },
+    {
+      "pair": "AUDGBP",
+      "currentRate": 0.51551,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 0.5215315249809479,
+          "predictedChangePercent": 1.1680714207188847
+        },
+        {
+          "days": 90,
+          "predictedRate": 0.5121501005590938,
+          "predictedChangePercent": -0.6517622239929698
+        },
+        {
+          "days": 180,
+          "predictedRate": 0.5047927031462415,
+          "predictedChangePercent": -2.0789697297353262
+        },
+        {
+          "days": 270,
+          "predictedRate": 0.5054267713817793,
+          "predictedChangePercent": -1.9559714880838008
+        },
+        {
+          "days": 365,
+          "predictedRate": 0.5186094602201001,
+          "predictedChangePercent": 0.601241531706478
         }
       ],
       "predictionDate": "2026-11-13T00:00:00.000Z"
