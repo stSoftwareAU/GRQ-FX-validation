@@ -1,7 +1,7 @@
 {
   "date": "2026-11-13",
-  "timestamp": "2026-11-12T15:55:32.119Z",
-  "totalPredictions": 39,
+  "timestamp": "2026-11-12T15:55:32.308Z",
+  "totalPredictions": 40,
   "complete": false,
   "results": [
     {
@@ -1248,6 +1248,38 @@
           "days": 365,
           "predictedRate": 1.611126976410652,
           "predictedChangePercent": -10.388897307949124
+        }
+      ],
+      "predictionDate": "2026-11-13T00:00:00.000Z"
+    },
+    {
+      "pair": "USDPEN",
+      "currentRate": 3.4063,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 3.420531195471192,
+          "predictedChangePercent": 0.41779043158829776
+        },
+        {
+          "days": 90,
+          "predictedRate": 3.4063000870034257,
+          "predictedChangePercent": 0.0000025541915249505118
+        },
+        {
+          "days": 180,
+          "predictedRate": 3.404478836611948,
+          "predictedChangePercent": -0.053464562371247526
+        },
+        {
+          "days": 270,
+          "predictedRate": 3.400248140492213,
+          "predictedChangePercent": -0.1776666620023783
+        },
+        {
+          "days": 365,
+          "predictedRate": 3.2189909337973486,
+          "predictedChangePercent": -5.498901042264373
         }
       ],
       "predictionDate": "2026-11-13T00:00:00.000Z"
