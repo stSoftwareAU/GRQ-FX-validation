@@ -1,7 +1,7 @@
 {
   "date": "2026-11-16",
-  "timestamp": "2026-11-15T21:12:46.725Z",
-  "totalPredictions": 23,
+  "timestamp": "2026-11-15T21:12:46.787Z",
+  "totalPredictions": 24,
   "complete": false,
   "results": [
     {
@@ -736,6 +736,38 @@
           "days": 365,
           "predictedRate": 909.9621661664827,
           "predictedChangePercent": -8.46924376695072
+        }
+      ],
+      "predictionDate": "2026-11-16T00:00:00.000Z"
+    },
+    {
+      "pair": "USDCNY",
+      "currentRate": 6.672000000000001,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 6.717921084460539,
+          "predictedChangePercent": 0.6882656543845612
+        },
+        {
+          "days": 90,
+          "predictedRate": 6.695949352324837,
+          "predictedChangePercent": 0.3589531223746456
+        },
+        {
+          "days": 180,
+          "predictedRate": 11.86248854005055,
+          "predictedChangePercent": 77.79509202713652
+        },
+        {
+          "days": 270,
+          "predictedRate": 7.898531463246348,
+          "predictedChangePercent": 18.383265336426067
+        },
+        {
+          "days": 365,
+          "predictedRate": 8.362063119251813,
+          "predictedChangePercent": 25.3306822429828
         }
       ],
       "predictionDate": "2026-11-16T00:00:00.000Z"
