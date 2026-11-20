@@ -1,7 +1,7 @@
 {
   "date": "2026-11-20",
-  "timestamp": "2026-11-20T03:57:41.480Z",
-  "totalPredictions": 13,
+  "timestamp": "2026-11-20T03:57:41.541Z",
+  "totalPredictions": 14,
   "complete": false,
   "results": [
     {
@@ -416,6 +416,38 @@
           "days": 365,
           "predictedRate": 209.24022500859454,
           "predictedChangePercent": 19.68210547880485
+        }
+      ],
+      "predictionDate": "2026-11-20T00:00:00.000Z"
+    },
+    {
+      "pair": "EURUSD",
+      "currentRate": 1.0973,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 1.1033554417662796,
+          "predictedChangePercent": 0.5518492450815289
+        },
+        {
+          "days": 90,
+          "predictedRate": 1.0896557315071702,
+          "predictedChangePercent": -0.6966434423429928
+        },
+        {
+          "days": 180,
+          "predictedRate": 2.129707439491104,
+          "predictedChangePercent": 94.0861605295821
+        },
+        {
+          "days": 270,
+          "predictedRate": 1.7496067366765762,
+          "predictedChangePercent": 59.44652662686379
+        },
+        {
+          "days": 365,
+          "predictedRate": 0.9942728220213692,
+          "predictedChangePercent": -9.389153192256513
         }
       ],
       "predictionDate": "2026-11-20T00:00:00.000Z"
