@@ -1,7 +1,7 @@
 {
   "date": "2026-11-22",
-  "timestamp": "2026-11-21T14:54:16.622Z",
-  "totalPredictions": 46,
+  "timestamp": "2026-11-21T14:54:16.784Z",
+  "totalPredictions": 47,
   "complete": false,
   "results": [
     {
@@ -1472,6 +1472,38 @@
           "days": 365,
           "predictedRate": 1.2806443044926041,
           "predictedChangePercent": -0.7252477137516253
+        }
+      ],
+      "predictionDate": "2026-11-22T00:00:00.000Z"
+    },
+    {
+      "pair": "USDTHB",
+      "currentRate": 33.97,
+      "predictions": [
+        {
+          "days": 30,
+          "predictedRate": 33.96042480807771,
+          "predictedChangePercent": -0.028187200242240935
+        },
+        {
+          "days": 90,
+          "predictedRate": 31.084533993701996,
+          "predictedChangePercent": -8.494159571086259
+        },
+        {
+          "days": 180,
+          "predictedRate": 31.3944250529336,
+          "predictedChangePercent": -7.581910353448337
+        },
+        {
+          "days": 270,
+          "predictedRate": 29.161812663039765,
+          "predictedChangePercent": -14.15421647618556
+        },
+        {
+          "days": 365,
+          "predictedRate": 32.77483801275537,
+          "predictedChangePercent": -3.518286686030709
         }
       ],
       "predictionDate": "2026-11-22T00:00:00.000Z"
